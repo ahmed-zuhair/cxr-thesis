@@ -35,6 +35,27 @@ from nih_dataset import make_dataloaders, DISEASE_LABELS, NUM_CLASSES
 from models import DenseNet121MultiLabel, count_parameters
 
 
+# ---- Optional: HuggingFace upload of best checkpoint ------------------------
+# Set HF_TOKEN env var + HF_REPO_ID arg to enable. Falls back gracefully if not.
+def upload_to_hf(local_path: str, repo_id: str, token: str,
+                 path_in_repo: str = "best.pth"):
+    """Upload a file to a HuggingFace model repo. Silent failure on error."""
+    try:
+        from huggingface_hub import HfApi
+        api = HfApi(token=token)
+        api.upload_file(
+            path_or_fileobj=local_path,
+            path_in_repo=path_in_repo,
+            repo_id=repo_id,
+            repo_type="model",
+        )
+        print(f"[hf] uploaded {local_path} → {repo_id}/{path_in_repo}")
+    except Exception as e:
+        print(f"[hf] upload FAILED: {e}")
+        print(f"[hf] checkpoint still saved locally at {local_path}")
+# -----------------------------------------------------------------------------
+
+
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--data_root", type=str, required=True,
@@ -51,6 +72,8 @@ def parse_args():
     p.add_argument("--resume", type=str, default=None,
                    help="Path to checkpoint to resume from")
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--hf_repo_id", type=str, default=None,
+                   help="HF repo to push best.pth, e.g. 'username/cxr-thesis-checkpoints'")
     return p.parse_args()
 
 
@@ -208,8 +231,15 @@ def main():
         if val_mean_auc > best_mean_auc:
             best_mean_auc = val_mean_auc
             ckpt_state["best_mean_auc"] = best_mean_auc
-            save_checkpoint(ckpt_state, os.path.join(args.checkpoint_dir, "best.pth"))
+            best_path = os.path.join(args.checkpoint_dir, "best.pth")
+            save_checkpoint(ckpt_state, best_path)
             print(f"[checkpoint] new best! mean_auc={best_mean_auc:.4f}")
+
+            # Auto-upload to HF if configured (safest checkpoint location)
+            hf_token = os.environ.get("HF_TOKEN")
+            if args.hf_repo_id and hf_token:
+                upload_to_hf(best_path, args.hf_repo_id, hf_token,
+                             path_in_repo=f"{args.model}/best.pth")
 
     print(f"\n[done] best val mean AUC: {best_mean_auc:.4f}")
     print(f"[done] checkpoints in: {args.checkpoint_dir}")
