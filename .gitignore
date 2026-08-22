@@ -1,3 +1,15 @@
-git add .gitignore
-git commit -m "Add gitignore"
-git push
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Restricted/raw medical data and generated artifacts must stay local.
+data/
+datasets/
+artifacts/
+checkpoints/
+*.pt
+*.pth
+

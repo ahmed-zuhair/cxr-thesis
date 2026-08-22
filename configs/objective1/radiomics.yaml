@@ -1,0 +1,21 @@
+imageType:
+  Original: {}
+  Wavelet: {}
+
+featureClass:
+  firstorder: []
+  shape: []
+  shape2D: []
+  glcm: []
+  glrlm: []
+  glszm: []
+  gldm: []
+  ngtdm: []
+
+setting:
+  binWidth: 25
+  normalize: false
+  interpolator: sitkBSpline
+  resampledPixelSpacing: null
+  correctMask: true
+

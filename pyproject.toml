@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cxr-thesis"
+version = "0.1.0"
+description = "Explainable graph-based medical imaging research pipeline"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.26",
+  "pandas>=2.0",
+  "Pillow>=10.0",
+  "opencv-python-headless>=4.8",
+  "PyYAML>=6.0",
+  "scipy>=1.11",
+  "torch>=2.2",
+]
+
+[project.optional-dependencies]
+medical = [
+  "pydicom>=2.4",
+  "SimpleITK>=2.3",
+  "pyradiomics>=3.1",
+]
+graph = ["torch-geometric>=2.5"]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
