@@ -90,6 +90,11 @@ Flags trigger focused radiologist re-review and never alter a mask automatically
 Passing the private QC table to `scripts/annotate_roi_masks.py --qc-audit`
 loads only flagged cases, displays each flag, and records whether the reviewer
 approved the saved mask unchanged or corrected it in a separate private log.
+After post-review QC, `scripts/finalize_roi_annotation_set.py` verifies the
+worklist, progress, QC, focused-review coverage, provenance, binary masks, and
+source-image alignment; it then hashes the final mask set without copying it.
+The output separates a private identifier-bearing manifest from a sanitized
+aggregate summary suitable for later publication.
 
 ## Setup
 

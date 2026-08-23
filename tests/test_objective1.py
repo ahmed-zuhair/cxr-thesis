@@ -34,6 +34,9 @@ from cxr_thesis.objective1.annotation_workspace import (
     update_projection_audit,
 )
 from cxr_thesis.objective1.annotation_qc import audit_completed_annotations
+from cxr_thesis.objective1.annotation_finalization import (
+    finalize_reviewed_annotation_set,
+)
 from cxr_thesis.objective1.features import (
     encode_clinical_features,
     extract_handcrafted_2d,
@@ -704,6 +707,100 @@ class AnnotationWorkspaceTests(unittest.TestCase):
                     action="skipped",
                     needs_review=False,
                     note="",
+                )
+
+    def test_finalization_locks_masks_and_separates_public_aggregates(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            role_root = self._write_role(
+                root, "adaptation_train", with_preannotation=True
+            )
+            preannotation = np.asarray(
+                Image.open(role_root / "preannotations" / "CASE-1.png")
+            )
+            Image.fromarray(preannotation).save(
+                role_root / "annotations" / "CASE-1.png"
+            )
+            pd.DataFrame(
+                [
+                    {
+                        "candidate_code": "CASE-1",
+                        "cohort_role": "adaptation_train",
+                        "status": "complete",
+                    }
+                ]
+            ).to_csv(role_root / "annotation_progress.csv", index=False)
+            qc_dir = root / "qc"
+            qc_result = audit_completed_annotations(
+                root, "adaptation_train", qc_dir
+            )
+            qc_path = qc_dir / "adaptation_train_annotation_qc_private.csv"
+            qc = qc_result["audit"].copy()
+            qc.loc[:, "qc_flags"] = "foreground_ratio_outlier"
+            qc.loc[:, "requires_review"] = True
+            qc.to_csv(qc_path, index=False)
+            review_path = root / "focused_review.csv"
+            update_focused_qc_review(
+                review_path,
+                candidate_code="CASE-1",
+                role="adaptation_train",
+                reviewer="RAD-01",
+                qc_flags="foreground_ratio_outlier",
+                action="approved_as_is",
+                needs_review=False,
+                note="reviewed",
+            )
+            provenance_path = root / "provenance.json"
+            provenance_path.write_text(
+                json.dumps(
+                    {
+                        "cohort_role": "adaptation_train",
+                        "reviewer_code": "RAD-01",
+                        "reviewer_professional_qualification": "Radiologist",
+                        "reviewer_years_experience": 9,
+                        "review_mode": "live_case_by_case",
+                        "cases_reviewed_by_radiologist": 1,
+                        "review_coverage_fraction": 1.0,
+                        "anonymous_description_permitted": True,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            output = root / "lock"
+            result = finalize_reviewed_annotation_set(
+                root,
+                "adaptation_train",
+                qc_audit_path=qc_path,
+                focused_review_path=review_path,
+                provenance_path=provenance_path,
+                output_dir=output,
+                expected_cases=1,
+            )
+            self.assertEqual(result["summary"]["cases"], 1)
+            private_manifest = (
+                output
+                / "private"
+                / "adaptation_train_final_mask_manifest_private.csv"
+            )
+            public_summary = (
+                output
+                / "public"
+                / "adaptation_train_annotation_summary_public.json"
+            )
+            self.assertTrue(private_manifest.is_file())
+            self.assertTrue(public_summary.is_file())
+            public_text = public_summary.read_text(encoding="utf-8")
+            self.assertNotIn("CASE-1", public_text)
+            self.assertFalse(result["summary"]["medical_images_included"])
+            with self.assertRaisesRegex(FileExistsError, "already exists"):
+                finalize_reviewed_annotation_set(
+                    root,
+                    "adaptation_train",
+                    qc_audit_path=qc_path,
+                    focused_review_path=review_path,
+                    provenance_path=provenance_path,
+                    output_dir=output,
+                    expected_cases=1,
                 )
 
 
