@@ -16,7 +16,8 @@ evaluation are required before marking segmentation complete.
 - Patient-level leakage detection and deterministic NIH validation splitting.
 - Aspect-ratio-preserving CXR preprocessing and aligned mask transforms.
 - CT HU windowing and spacing-aware 3D resampling.
-- Compact 2D U-Net, segmentation loss, connected-component postprocessing.
+- Compact 2D U-Net, segmentation loss, and relative-area fragment cleanup
+  that preserves meaningful disconnected anatomy.
 - Dice, IoU, HD95, mask failure rate, and mask plausibility checks.
 - ROI-conditioned intensity, histogram, LBP, HOG, asymmetry, and shape features.
 - Clinical metadata encoding with explicit missingness indicators.
@@ -126,11 +127,18 @@ python scripts/generate_roi_masks.py \
   --checkpoint artifacts/segmentation/lung_union/best.pt \
   --data-root /data \
   --mask-dir /data/derived/nih_lung_masks \
-  --output-manifest artifacts/manifests/nih_with_masks.csv
+  --output-manifest artifacts/manifests/nih_with_masks.csv \
+  --batch-size 32 \
+  --min-component-fraction 0.001 \
+  --expected-checkpoint-sha256 CHECKPOINT_SHA256 \
+  --resume
 ```
 
 The training script chooses the mask threshold using validation cases only.
-The generation script stores the SHA-256 checkpoint identity in the manifest.
+The generation script stores the SHA-256 checkpoint identity in the manifest,
+writes per-image QC and run-summary artifacts, checkpoints its manifest during
+long runs, and resumes only when the checkpoint and postprocessing signature
+match. It does not force every prediction to contain exactly two components.
 
 ## Radiomics protocol required next
 

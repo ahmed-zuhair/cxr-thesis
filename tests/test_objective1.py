@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import hashlib
+import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -36,6 +39,7 @@ from cxr_thesis.objective1.segmentation import (
     hausdorff95,
     iou_score,
     postprocess_binary_mask,
+    remove_small_components,
 )
 
 
@@ -157,6 +161,109 @@ class SegmentationTests(unittest.TestCase):
         probability[28:30, 28:30] = 0.9
         mask = postprocess_binary_mask(probability, Objective1Config().segmentation)
         self.assertTrue(mask[10, 10])
+
+    def test_relative_component_cleanup_preserves_meaningful_third_region(self) -> None:
+        mask = np.zeros((64, 64), dtype=np.uint8)
+        mask[2:22, 2:22] = 1
+        mask[2:20, 30:50] = 1
+        mask[30:35, 2:6] = 1
+        mask[60, 60] = 1
+        cleaned, audit = remove_small_components(
+            mask,
+            min_component_fraction=0.02,
+        )
+        self.assertTrue(cleaned[10, 10])
+        self.assertTrue(cleaned[10, 40])
+        self.assertTrue(cleaned[32, 3])
+        self.assertFalse(cleaned[60, 60])
+        self.assertEqual(audit["components_before"], 4)
+        self.assertEqual(audit["components_after"], 3)
+        self.assertEqual(audit["removed_pixels"], 1)
+
+    def test_batched_mask_generation_writes_auditable_outputs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            rows = []
+            for index in range(2):
+                image_path = root / f"image-{index}.png"
+                image = np.tile(np.arange(64, dtype=np.uint8), (48, 1))
+                Image.fromarray(image).save(image_path)
+                rows.append(
+                    dict(
+                        dataset="demo",
+                        patient_id=f"p{index}",
+                        study_id=f"s{index}",
+                        image_id=f"i{index}",
+                        image_path=str(image_path),
+                        mask_path="",
+                        modality="CXR",
+                        view="PA",
+                        split="external",
+                    )
+                )
+            manifest_path = root / "manifest.csv"
+            pd.DataFrame(rows).to_csv(manifest_path, index=False)
+            checkpoint_path = root / "checkpoint.pt"
+            model = UNet2D(channels=(4, 8, 16, 32))
+            torch.save(
+                {
+                    "architecture": "UNet2D",
+                    "channels": [4, 8, 16, 32],
+                    "epoch": 1,
+                    "model_state": model.state_dict(),
+                    "validation_metrics": {"threshold": 0.55},
+                },
+                checkpoint_path,
+            )
+            digest = hashlib.sha256(checkpoint_path.read_bytes()).hexdigest()
+            repository = Path(__file__).resolve().parents[1]
+            output_manifest = root / "output.csv"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(repository / "scripts" / "generate_roi_masks.py"),
+                    "--manifest",
+                    str(manifest_path),
+                    "--checkpoint",
+                    str(checkpoint_path),
+                    "--config",
+                    str(repository / "configs" / "objective1" / "default.yaml"),
+                    "--mask-dir",
+                    str(root / "masks"),
+                    "--output-manifest",
+                    str(output_manifest),
+                    "--batch-size",
+                    "2",
+                    "--device",
+                    "cpu",
+                    "--expected-checkpoint-sha256",
+                    digest,
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, msg=result.stderr)
+            output = pd.read_csv(output_manifest)
+            audit = pd.read_csv(root / "output_audit.csv")
+            summary = pd.read_json(root / "output_summary.json", typ="series")
+            self.assertEqual(int((output["mask_generation_status"] == "complete").sum()), 2)
+            self.assertEqual(len(audit), 2)
+            self.assertEqual(int(summary["generated_this_run"]), 2)
+            self.assertEqual(summary["checkpoint_sha256"], digest)
+            resumed = subprocess.run(
+                [
+                    *result.args,
+                    "--resume",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(resumed.returncode, 0, msg=resumed.stderr)
+            resumed_summary = pd.read_json(root / "output_summary.json", typ="series")
+            self.assertEqual(int(resumed_summary["generated_this_run"]), 0)
+            self.assertEqual(int(resumed_summary["resumed_this_run"]), 2)
 
 
 class FeatureAndGraphTests(unittest.TestCase):

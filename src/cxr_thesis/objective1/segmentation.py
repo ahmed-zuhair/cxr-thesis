@@ -111,6 +111,72 @@ def postprocess_binary_mask(
     return np.isin(labels, kept).astype(np.uint8)
 
 
+def remove_small_components(
+    mask: np.ndarray,
+    *,
+    min_component_fraction: float = 0.001,
+    min_component_pixels: int = 0,
+) -> tuple[np.ndarray, dict[str, float | int]]:
+    """Remove only components that are negligible relative to the ROI.
+
+    Unlike :func:`postprocess_binary_mask`, this function does not impose a
+    fixed component count. That matters for abnormal or cropped radiographs
+    where a valid lung region can be disconnected. A component is retained
+    when its area is at least the larger of ``min_component_pixels`` and
+    ``min_component_fraction`` times the total foreground area.
+    """
+    binary = (np.asarray(mask) > 0).astype(np.uint8)
+    if binary.ndim != 2:
+        raise ValueError("A single 2D binary mask is required")
+    if not 0.0 <= min_component_fraction <= 1.0:
+        raise ValueError("min_component_fraction must be between 0 and 1")
+    if min_component_pixels < 0:
+        raise ValueError("min_component_pixels cannot be negative")
+
+    foreground_pixels = int(binary.sum())
+    if foreground_pixels == 0:
+        return binary, {
+            "components_before": 0,
+            "components_after": 0,
+            "foreground_pixels_before": 0,
+            "foreground_pixels_after": 0,
+            "removed_pixels": 0,
+            "removed_fraction": 0.0,
+            "minimum_component_pixels": int(min_component_pixels),
+        }
+
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(binary, connectivity=8)
+    component_ids = list(range(1, count))
+    threshold_pixels = max(
+        int(min_component_pixels),
+        int(np.ceil(foreground_pixels * min_component_fraction)),
+    )
+    kept = [
+        component_id
+        for component_id in component_ids
+        if int(stats[component_id, cv2.CC_STAT_AREA]) >= threshold_pixels
+    ]
+    if not kept and component_ids:
+        kept = [
+            max(
+                component_ids,
+                key=lambda item: int(stats[item, cv2.CC_STAT_AREA]),
+            )
+        ]
+    cleaned = np.isin(labels, kept).astype(np.uint8)
+    retained_pixels = int(cleaned.sum())
+    removed_pixels = foreground_pixels - retained_pixels
+    return cleaned, {
+        "components_before": int(len(component_ids)),
+        "components_after": int(len(kept)),
+        "foreground_pixels_before": foreground_pixels,
+        "foreground_pixels_after": retained_pixels,
+        "removed_pixels": int(removed_pixels),
+        "removed_fraction": float(removed_pixels / foreground_pixels),
+        "minimum_component_pixels": int(threshold_pixels),
+    }
+
+
 def validate_roi_mask(mask: np.ndarray, config: SegmentationConfig) -> dict[str, float | bool]:
     binary = np.asarray(mask) > 0
     if binary.ndim != 2:
@@ -202,4 +268,3 @@ def predict_mask(
     model = model.to(device).eval()
     probability = torch.sigmoid(model(tensor))[0, 0].cpu().numpy()
     return postprocess_binary_mask(probability, config)
-
