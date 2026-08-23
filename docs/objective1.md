@@ -78,6 +78,11 @@ downloaded, `scripts/recover_projection_replacement_reserves.py` matches the
 and SHA-256 fingerprints. It then excludes all recovered patients and selects
 same-split, same-view/sex/finding reserves by a prediction-blind seeded hash.
 Pre-annotations are generated only after reserve membership is fixed.
+After image-only audit, `scripts/finalize_projection_replacements.py` selects
+the lowest-ranked eligible reserve for each rejected development case. It
+backs up the affected worklists and audits, leaves rejected source files as
+unreferenced private evidence, proves that locked-test hashes are unchanged,
+and writes a private rollback and replacement record before annotation begins.
 
 ## Setup
 

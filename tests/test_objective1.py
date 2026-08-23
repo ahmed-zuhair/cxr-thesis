@@ -3,6 +3,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 import hashlib
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -59,6 +60,10 @@ from cxr_thesis.objective1.segmentation import (
     probability_uncertainty_metrics,
     postprocess_binary_mask,
     remove_small_components,
+)
+from cxr_thesis.objective1.projection_replacements import (
+    finalize_projection_replacements,
+    sha256_file,
 )
 
 
@@ -292,6 +297,187 @@ class AnnotationCohortTests(unittest.TestCase):
             ] = "ineligible_lateral"
             with self.assertRaisesRegex(ValueError, "Locked target"):
                 select_blind_projection_recovery_reserves(manifest, unresolved)
+
+    def test_projection_replacement_finalization_is_rank_first_and_reversible(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            cohort = root / "cohort"
+            reserves = root / "reserves"
+            transaction = root / "transaction"
+            identity_rows = []
+
+            def write_original_role(role: str, count: int, rejected: bool) -> None:
+                role_root = cohort / role
+                for folder in ("images", "preannotations", "annotations"):
+                    (role_root / folder).mkdir(parents=True, exist_ok=True)
+                rows = []
+                audits = []
+                for index in range(1, count + 1):
+                    code = f"{role}-original-{index}"
+                    Image.fromarray(np.full((8, 10), index, dtype=np.uint8)).save(
+                        role_root / "images" / f"{code}.png"
+                    )
+                    if role != "locked_target_test":
+                        Image.fromarray(
+                            np.full((8, 10), 255, dtype=np.uint8)
+                        ).save(role_root / "preannotations" / f"{code}.png")
+                    rows.append(
+                        {
+                            "candidate_code": code,
+                            "cohort_role": role,
+                            "view": "PA",
+                            "sex": "F",
+                            "finding_group": "abnormal",
+                            "selection_basis": "active_qc_high_risk",
+                            "image_filename": f"images/{code}.png",
+                            "preannotation_filename": (
+                                f"preannotations/{code}.png"
+                                if role != "locked_target_test"
+                                else ""
+                            ),
+                            "required_output_mask": f"annotations/{code}.png",
+                        }
+                    )
+                    decision = (
+                        "ineligible_lateral" if rejected and index == 1 else "eligible_frontal"
+                    )
+                    audits.append(
+                        {
+                            "candidate_code": code,
+                            "cohort_role": role,
+                            "projection_decision": decision,
+                            "auditor": "tester",
+                            "updated_utc": "2026-01-01T00:00:00+00:00",
+                            "note": "",
+                        }
+                    )
+                pd.DataFrame(rows).to_csv(
+                    role_root / "annotation_worklist.csv", index=False
+                )
+                pd.DataFrame(audits).to_csv(
+                    role_root / "projection_audit.csv", index=False
+                )
+
+            write_original_role("adaptation_train", 3, True)
+            write_original_role("target_validation", 2, True)
+            write_original_role("locked_target_test", 2, False)
+            locked_hash_before = sha256_file(
+                cohort / "locked_target_test" / "annotation_worklist.csv"
+            )
+
+            for slot, role in enumerate(
+                ("adaptation_train", "target_validation"), start=1
+            ):
+                role_root = reserves / role
+                for folder in ("images", "preannotations", "annotations"):
+                    (role_root / folder).mkdir(parents=True, exist_ok=True)
+                rows = []
+                audits = []
+                original_code = f"{role}-original-1"
+                for rank in range(1, 6):
+                    code = f"{role}-reserve-{rank}"
+                    Image.fromarray(
+                        np.full((8, 10), 20 + rank, dtype=np.uint8)
+                    ).save(role_root / "images" / f"{code}.png")
+                    Image.fromarray(
+                        np.full((8, 10), 255, dtype=np.uint8)
+                    ).save(role_root / "preannotations" / f"{code}.png")
+                    rows.append(
+                        {
+                            "candidate_code": code,
+                            "cohort_role": role,
+                            "view": "PA",
+                            "sex": "F",
+                            "finding_group": "abnormal",
+                            "selection_basis": "active_qc_high_risk",
+                            "replacement_selection_basis": "projection_blind_hash",
+                            "replacement_slot": f"RPL-{slot:02d}",
+                            "reserve_rank": rank,
+                            "image_filename": f"images/{code}.png",
+                            "preannotation_filename": f"preannotations/{code}.png",
+                            "required_output_mask": f"annotations/{code}.png",
+                        }
+                    )
+                    audits.append(
+                        {
+                            "candidate_code": code,
+                            "cohort_role": role,
+                            "projection_decision": "eligible_frontal",
+                            "auditor": "tester",
+                            "updated_utc": "2026-01-02T00:00:00+00:00",
+                            "note": "",
+                        }
+                    )
+                    identity_rows.append(
+                        {
+                            "replacement_code": code,
+                            "candidate_code": original_code,
+                            "cohort_role": role,
+                            "patient_id": f"patient-{slot}-{rank}",
+                            "image_id": f"image-{slot}-{rank}",
+                            "replacement_slot": f"RPL-{slot:02d}",
+                            "reserve_rank": rank,
+                        }
+                    )
+                pd.DataFrame(rows).to_csv(
+                    role_root / "annotation_worklist.csv", index=False
+                )
+                pd.DataFrame(audits).to_csv(
+                    role_root / "projection_audit.csv", index=False
+                )
+
+            pd.DataFrame(identity_rows).to_csv(
+                reserves / "replacement_identity_private.csv", index=False
+            )
+            (reserves / "replacement_recovery_summary_private.json").write_text(
+                json.dumps(
+                    {
+                        "official_nih_test_used": False,
+                        "locked_target_test_modified": False,
+                        "replacement_selection_uses_predictions": False,
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            summary = finalize_projection_replacements(
+                cohort, reserves, transaction
+            )
+            self.assertEqual(summary["selected_replacements"], 2)
+            self.assertFalse(summary["locked_target_test_modified"])
+            self.assertEqual(
+                locked_hash_before,
+                sha256_file(cohort / "locked_target_test" / "annotation_worklist.csv"),
+            )
+            for role, expected_count in (
+                ("adaptation_train", 3),
+                ("target_validation", 2),
+            ):
+                role_root = cohort / role
+                worklist = pd.read_csv(role_root / "annotation_worklist.csv")
+                audit = pd.read_csv(role_root / "projection_audit.csv")
+                self.assertEqual(len(worklist), expected_count)
+                self.assertNotIn(f"{role}-original-1", set(worklist["candidate_code"]))
+                self.assertIn(f"{role}-reserve-1", set(worklist["candidate_code"]))
+                self.assertNotIn(f"{role}-reserve-2", set(worklist["candidate_code"]))
+                self.assertEqual(set(audit["projection_decision"]), {"eligible_frontal"})
+                self.assertTrue(
+                    (role_root / "images" / f"{role}-reserve-1.png").is_file()
+                )
+                self.assertTrue(
+                    (role_root / "preannotations" / f"{role}-reserve-1.png").is_file()
+                )
+            self.assertTrue(
+                (transaction / "applied_projection_replacements_private.csv").is_file()
+            )
+            self.assertTrue(
+                (
+                    transaction
+                    / "before_replacement"
+                    / "adaptation_train"
+                    / "annotation_worklist.csv"
+                ).is_file()
+            )
 
 
 class AnnotationWorkspaceTests(unittest.TestCase):
