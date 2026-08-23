@@ -83,6 +83,10 @@ the lowest-ranked eligible reserve for each rejected development case. It
 backs up the affected worklists and audits, leaves rejected source files as
 unreferenced private evidence, proves that locked-test hashes are unchanged,
 and writes a private rollback and replacement record before annotation begins.
+Completed annotations are checked with `scripts/audit_roi_annotations.py` for
+shape, binary values, foreground-area extremes, excessive connected regions,
+border contact, and unusually large changes from the frozen pre-annotation.
+Flags trigger focused radiologist re-review and never alter a mask automatically.
 
 ## Setup
 

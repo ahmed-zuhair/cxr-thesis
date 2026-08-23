@@ -32,6 +32,7 @@ from cxr_thesis.objective1.annotation_workspace import (
     update_annotation_progress,
     update_projection_audit,
 )
+from cxr_thesis.objective1.annotation_qc import audit_completed_annotations
 from cxr_thesis.objective1.features import (
     encode_clinical_features,
     extract_handcrafted_2d,
@@ -606,6 +607,64 @@ class AnnotationWorkspaceTests(unittest.TestCase):
                     decision="guess",
                     note="",
                 )
+
+    def test_completed_annotation_qc_flags_only_suspicious_masks(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            role_root = root / "adaptation_train"
+            for folder in ("images", "preannotations", "annotations"):
+                (role_root / folder).mkdir(parents=True, exist_ok=True)
+            rows = []
+            progress = []
+            for index in (1, 2):
+                code = f"CASE-{index}"
+                image = np.full((20, 20), 100, dtype=np.uint8)
+                preannotation = np.zeros((20, 20), dtype=np.uint8)
+                preannotation[4:16, 3:17] = 255
+                annotation = preannotation.copy()
+                if index == 2:
+                    annotation[:] = 0
+                    annotation[9:11, 9:11] = 255
+                Image.fromarray(image).save(role_root / "images" / f"{code}.png")
+                Image.fromarray(preannotation).save(
+                    role_root / "preannotations" / f"{code}.png"
+                )
+                Image.fromarray(annotation).save(
+                    role_root / "annotations" / f"{code}.png"
+                )
+                rows.append(
+                    {
+                        "candidate_code": code,
+                        "cohort_role": "adaptation_train",
+                        "image_filename": f"images/{code}.png",
+                        "preannotation_filename": f"preannotations/{code}.png",
+                        "required_output_mask": f"annotations/{code}.png",
+                    }
+                )
+                progress.append(
+                    {
+                        "candidate_code": code,
+                        "cohort_role": "adaptation_train",
+                        "status": "complete",
+                    }
+                )
+            pd.DataFrame(rows).to_csv(
+                role_root / "annotation_worklist.csv", index=False
+            )
+            pd.DataFrame(progress).to_csv(
+                role_root / "annotation_progress.csv", index=False
+            )
+            result = audit_completed_annotations(
+                root, "adaptation_train", root / "qc"
+            )
+            audit = result["audit"]
+            summary = result["summary"]
+            self.assertEqual(summary["worklist_cases"], 2)
+            self.assertEqual(summary["identical_to_preannotation"], 1)
+            self.assertEqual(summary["requires_focused_review"], 1)
+            flagged = audit[audit["requires_review"]].iloc[0]
+            self.assertIn("foreground_below_threshold", flagged["qc_flags"])
+            self.assertTrue((root / "qc" / "adaptation_train_annotation_qc_private.csv").is_file())
 
 
 class ManifestTests(unittest.TestCase):
