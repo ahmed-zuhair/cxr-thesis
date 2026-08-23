@@ -17,9 +17,13 @@ from cxr_thesis.objective1.cohort_selection import select_roi_annotation_cohort
 from cxr_thesis.objective1.annotation_workspace import (
     load_annotation_case,
     load_annotation_worklist,
+    load_projection_audit_worklist,
+    load_projection_image,
     resolve_annotation_case,
+    resolve_projection_audit_cases,
     save_binary_annotation,
     update_annotation_progress,
+    update_projection_audit,
 )
 from cxr_thesis.objective1.features import (
     encode_clinical_features,
@@ -187,6 +191,42 @@ class AnnotationWorkspaceTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(RuntimeError, "forbidden"):
                 load_annotation_worklist(root, "locked_target_test")
+
+    def test_projection_audit_is_image_only_and_resumable(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            role_root = self._write_role(root, "adaptation_train", with_preannotation=True)
+            worklist = pd.read_csv(role_root / "annotation_worklist.csv")
+            worklist["preannotation_filename"] = "missing-prediction-must-not-be-read.png"
+            worklist.to_csv(role_root / "annotation_worklist.csv", index=False)
+
+            frame, resolved_root = load_projection_audit_worklist(
+                root, "adaptation_train"
+            )
+            cases = resolve_projection_audit_cases(
+                frame, resolved_root, role="adaptation_train"
+            )
+            image = load_projection_image(cases[0])
+            self.assertEqual(image.shape, (6, 8))
+            audit = update_projection_audit(
+                role_root / "projection_audit.csv",
+                candidate_code="CASE-1",
+                role="adaptation_train",
+                auditor="tester",
+                decision="ineligible_lateral",
+                note="visual lateral",
+            )
+            self.assertEqual(len(audit), 1)
+            self.assertEqual(audit.iloc[0]["projection_decision"], "ineligible_lateral")
+            with self.assertRaisesRegex(ValueError, "Unsupported projection decision"):
+                update_projection_audit(
+                    role_root / "projection_audit.csv",
+                    candidate_code="CASE-1",
+                    role="adaptation_train",
+                    auditor="tester",
+                    decision="guess",
+                    note="",
+                )
 
 
 class ManifestTests(unittest.TestCase):

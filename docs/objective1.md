@@ -61,6 +61,11 @@ writes same-size binary PNG masks atomically, and keeps a resumable private
 progress log. The locked-test role refuses pre-annotation files and requires an
 explicit prediction-blind confirmation flag.
 
+Before annotation, `scripts/audit_roi_projection.py` performs a resumable,
+image-only eligibility audit. It never resolves pre-annotation paths or loads
+risk metrics, and records frontal, lateral, other-ineligible, or uncertain
+decisions for deterministic same-stratum replacement before masks are edited.
+
 ## Setup
 
 Create a Python 3.10–3.12 environment for the full medical stack. PyRadiomics
