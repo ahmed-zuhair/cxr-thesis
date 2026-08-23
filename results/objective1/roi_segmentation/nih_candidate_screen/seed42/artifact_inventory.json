@@ -1,0 +1,27 @@
+{
+  "artifact": "Objective 1 NIH ROI candidate screen public package",
+  "contains_generated_masks": false,
+  "contains_medical_images": false,
+  "contains_patient_level_data": false,
+  "files": {
+    "README.md": {
+      "sha256": "0e0e1c8dbdcfa85a2b2a91005588dac39983502cea0afdae8af8cb4932065085",
+      "size_bytes": 1620
+    },
+    "candidate_screen_metric_quantiles.csv": {
+      "sha256": "b2687d37235864d8e609e805e18a45bccf9760568335e09d6ae1d613b9d9e733",
+      "size_bytes": 4813
+    },
+    "candidate_screen_public_summary.json": {
+      "sha256": "746b4b0fdb4828486ab7842a3c5f4ab2ce877541da17b49e02c6f50959542fdc",
+      "size_bytes": 2917
+    },
+    "candidate_screen_strata.csv": {
+      "sha256": "cdbfd96fd50033d560d49a45b005b8a28d3c776a123c60374e419d97f6a76866",
+      "size_bytes": 612
+    }
+  },
+  "official_nih_test_used": false,
+  "selected_cases": 2000,
+  "version": "v1.0.0"
+}

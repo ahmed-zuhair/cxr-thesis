@@ -1,0 +1,73 @@
+{
+  "automatic_qc_counts": {
+    "automatic_failure_union": 30,
+    "completed_cases": 2000,
+    "empty_masks": 2,
+    "five_or_more_components": 41,
+    "generation_failures": 0,
+    "implausible_roi_fraction": 30,
+    "more_than_two_components": 311,
+    "structural_warning_union": 44,
+    "touches_model_border": 3
+  },
+  "checkpoint_sha256": "94a20eee892f9240df4a4534ced85e55f3677975c627ee336db7eb51a98e5642",
+  "frozen_threshold": 0.5499999999999999,
+  "generation": {
+    "batch_size": 64,
+    "completed": 2000,
+    "elapsed_seconds": 121.67533667999851,
+    "failed": 0,
+    "generated_per_second": 16.437184844287085,
+    "gpu": "Tesla T4"
+  },
+  "ideal_cases_per_stratum": 125,
+  "interpretation": "The target-domain screen is an active-QC and cohort-selection experiment. It is not a ground-truth segmentation accuracy evaluation.",
+  "model": "Frozen UNet2D union-lung ROI model",
+  "next_step": "Publish aggregate results and then lock a private 200-case manual-annotation cohort.",
+  "objective": "Objective 1 NIH target-domain ROI candidate screening",
+  "official_nih_test_used": false,
+  "postprocessing": "relative-area>=0.001;min-pixels=0;fixed-component-count=false;uncertainty-margin=0.1",
+  "privacy": {
+    "generated_masks_in_public_files": false,
+    "image_identifiers_in_public_files": false,
+    "image_paths_in_public_files": false,
+    "medical_images_in_public_files": false,
+    "patient_identifiers_in_public_files": false
+  },
+  "private_candidate_manifest_sha256": "83440f4389562ceea9277a71a2917d1371252ece317ac9984087ecbdf518801e",
+  "ranking": {
+    "base_risk_weights": {
+      "boundary_entropy_rank": 0.2,
+      "component_excess_rank": 0.1,
+      "low_foreground_confidence_rank": 0.1,
+      "mean_binary_entropy_rank": 0.25,
+      "roi_deviation_rank": 0.2,
+      "uncertain_fraction_rank": 0.15
+    },
+    "priority_rule": "Automatic empty or implausible masks are ranked before ordinary uncertainty cases. Border contact and five-or-more components receive secondary priority."
+  },
+  "repository_commit": "877c0bc1944a87fb6c3b9da85df3f73bd9f7774c",
+  "selected_cases": 2000,
+  "selection_method": "One deterministic image per patient followed by capacity-aware stratified allocation within train and validation.",
+  "selection_seed": 42,
+  "source_dataset": "NIH ChestX-ray14",
+  "source_manifest_sha256": "c7457b90eb48472995ac9f7b8a00590f4beb2176db3d02aa1d72198260aba8e9",
+  "source_splits_used": [
+    "train",
+    "val"
+  ],
+  "split_counts": {
+    "train": 1000,
+    "val": 1000
+  },
+  "status": "candidate_screen_complete_manual_review_not_yet_performed",
+  "stratification_variables": [
+    "source split",
+    "view",
+    "sex",
+    "No Finding versus abnormal"
+  ],
+  "uncertainty_margin": 0.1,
+  "uncertainty_warning": "Entropy and threshold-margin values are deterministic confidence proxies, not calibrated uncertainty estimates.",
+  "unique_patients": 2000
+}

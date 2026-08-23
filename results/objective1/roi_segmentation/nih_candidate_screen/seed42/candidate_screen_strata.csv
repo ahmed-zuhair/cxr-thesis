@@ -1,0 +1,17 @@
+split,view,sex,finding_group,available_unique_patients,ideal_requested,selected_unique_patients
+train,PA,F,no_finding,6717,125,125
+train,PA,F,abnormal,3079,125,125
+train,PA,M,no_finding,7638,125,125
+train,PA,M,abnormal,3549,125,125
+train,AP,F,no_finding,1115,125,125
+train,AP,F,abnormal,726,125,125
+train,AP,M,no_finding,1427,125,125
+train,AP,M,abnormal,956,125,125
+val,PA,F,no_finding,718,125,134
+val,PA,F,abnormal,363,125,135
+val,PA,M,no_finding,829,125,134
+val,PA,M,abnormal,408,125,134
+val,AP,F,no_finding,131,125,131
+val,AP,F,abnormal,86,125,86
+val,AP,M,no_finding,155,125,135
+val,AP,M,abnormal,111,125,111
