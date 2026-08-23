@@ -102,6 +102,43 @@ def load_projection_image(case: ProjectionAuditCase) -> np.ndarray:
         return np.asarray(handle.convert("L"), dtype=np.uint8)
 
 
+def select_flagged_projection_cases(
+    cases: list[ProjectionAuditCase],
+    audit_path: str | Path,
+) -> list[ProjectionAuditCase]:
+    """Select previously non-eligible cases without reading predictions or risk data."""
+    path = Path(audit_path)
+    if not path.is_file():
+        raise FileNotFoundError(f"Projection audit not found: {path}")
+    frame = pd.read_csv(path, keep_default_na=False)
+    required = {"candidate_code", "projection_decision"}
+    missing = sorted(required - set(frame.columns))
+    if missing:
+        raise ValueError(f"Projection audit is missing columns: {missing}")
+    if frame["candidate_code"].duplicated().any():
+        raise ValueError("Projection audit contains duplicate candidate codes")
+    invalid = sorted(set(frame["projection_decision"]) - PROJECTION_DECISIONS)
+    if invalid:
+        raise ValueError(f"Projection audit contains invalid decisions: {invalid}")
+
+    decisions = dict(zip(frame["candidate_code"], frame["projection_decision"]))
+    case_codes = {case.candidate_code for case in cases}
+    unknown = sorted(set(decisions) - case_codes)
+    if unknown:
+        raise ValueError(f"Projection audit contains unknown candidate codes: {unknown}")
+    missing_decisions = sorted(case_codes - set(decisions))
+    if missing_decisions:
+        raise ValueError(
+            "Projection audit is incomplete; missing decisions for: "
+            f"{missing_decisions}"
+        )
+    return [
+        case
+        for case in cases
+        if decisions[case.candidate_code] != "eligible_frontal"
+    ]
+
+
 def update_projection_audit(
     audit_path: str | Path,
     *,

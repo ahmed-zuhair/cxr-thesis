@@ -65,6 +65,8 @@ Before annotation, `scripts/audit_roi_projection.py` performs a resumable,
 image-only eligibility audit. It never resolves pre-annotation paths or loads
 risk metrics, and records frontal, lateral, other-ineligible, or uncertain
 decisions for deterministic same-stratum replacement before masks are edited.
+After the first pass, `--review-flagged` restricts the viewer to existing
+non-eligible or uncertain decisions for a focused, still image-only second pass.
 
 ## Setup
 

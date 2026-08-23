@@ -21,6 +21,7 @@ from cxr_thesis.objective1.annotation_workspace import (
     load_projection_image,
     resolve_annotation_case,
     resolve_projection_audit_cases,
+    select_flagged_projection_cases,
     save_binary_annotation,
     update_annotation_progress,
     update_projection_audit,
@@ -218,6 +219,24 @@ class AnnotationWorkspaceTests(unittest.TestCase):
             )
             self.assertEqual(len(audit), 1)
             self.assertEqual(audit.iloc[0]["projection_decision"], "ineligible_lateral")
+            flagged = select_flagged_projection_cases(
+                cases, role_root / "projection_audit.csv"
+            )
+            self.assertEqual([case.candidate_code for case in flagged], ["CASE-1"])
+            update_projection_audit(
+                role_root / "projection_audit.csv",
+                candidate_code="CASE-1",
+                role="adaptation_train",
+                auditor="second-reviewer",
+                decision="eligible_frontal",
+                note="confirmed frontal",
+            )
+            self.assertEqual(
+                select_flagged_projection_cases(
+                    cases, role_root / "projection_audit.csv"
+                ),
+                [],
+            )
             with self.assertRaisesRegex(ValueError, "Unsupported projection decision"):
                 update_projection_audit(
                     role_root / "projection_audit.csv",
