@@ -791,6 +791,7 @@ class AnnotationWorkspaceTests(unittest.TestCase):
             self.assertTrue(public_summary.is_file())
             public_text = public_summary.read_text(encoding="utf-8")
             self.assertNotIn("CASE-1", public_text)
+            self.assertNotIn(b"\r\n", public_summary.read_bytes())
             self.assertFalse(result["summary"]["medical_images_included"])
             with self.assertRaisesRegex(FileExistsError, "already exists"):
                 finalize_reviewed_annotation_set(

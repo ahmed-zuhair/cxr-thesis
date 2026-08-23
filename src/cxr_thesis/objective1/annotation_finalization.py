@@ -35,6 +35,13 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _write_text_lf(path: Path, text: str) -> None:
+    """Write canonical UTF-8/LF text on Windows, Linux, and macOS."""
+
+    with path.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(text)
+
+
 def _read_unique(path: Path, *, required: set[str], label: str) -> pd.DataFrame:
     if not path.is_file():
         raise FileNotFoundError(path)
@@ -245,17 +252,18 @@ def finalize_reviewed_annotation_set(
         }
         private_record_path = private_dir / f"{role}_annotation_lock_private.json"
         public_summary_path = public_dir / f"{role}_annotation_summary_public.json"
-        private_record_path.write_text(
+        _write_text_lf(
+            private_record_path,
             json.dumps(private_record, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
         )
-        public_summary_path.write_text(
+        _write_text_lf(
+            public_summary_path,
             json.dumps(public_summary, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
         )
         for path in (manifest_path, private_record_path, public_summary_path):
-            path.with_suffix(path.suffix + ".sha256").write_text(
-                f"{_sha256(path)}  {path.name}\n", encoding="utf-8"
+            _write_text_lf(
+                path.with_suffix(path.suffix + ".sha256"),
+                f"{_sha256(path)}  {path.name}\n",
             )
         temporary.replace(output)
     except Exception:
