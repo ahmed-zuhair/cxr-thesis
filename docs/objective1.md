@@ -55,6 +55,12 @@ prediction columns. Adaptation and validation cases mix high-risk predictions
 with representatives spanning the remaining risk distribution. The official NIH
 test split is never used.
 
+Manual masks are edited with `scripts/annotate_roi_masks.py`. The tool loads
+pre-annotations only for adaptation-training and target-validation roles,
+writes same-size binary PNG masks atomically, and keeps a resumable private
+progress log. The locked-test role refuses pre-annotation files and requires an
+explicit prediction-blind confirmation flag.
+
 ## Setup
 
 Create a Python 3.10–3.12 environment for the full medical stack. PyRadiomics

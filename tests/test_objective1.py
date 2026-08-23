@@ -14,6 +14,13 @@ from PIL import Image
 
 from cxr_thesis.objective1.config import Objective1Config, load_config
 from cxr_thesis.objective1.cohort_selection import select_roi_annotation_cohort
+from cxr_thesis.objective1.annotation_workspace import (
+    load_annotation_case,
+    load_annotation_worklist,
+    resolve_annotation_case,
+    save_binary_annotation,
+    update_annotation_progress,
+)
 from cxr_thesis.objective1.features import (
     encode_clinical_features,
     extract_handcrafted_2d,
@@ -106,6 +113,80 @@ class AnnotationCohortTests(unittest.TestCase):
             set(first["locked_target_test"]["image_id"]),
             set(second["locked_target_test"]["image_id"]),
         )
+
+
+class AnnotationWorkspaceTests(unittest.TestCase):
+    @staticmethod
+    def _write_role(root: Path, role: str, *, with_preannotation: bool) -> Path:
+        role_root = root / role
+        (role_root / "images").mkdir(parents=True)
+        (role_root / "annotations").mkdir()
+        image = np.arange(48, dtype=np.uint8).reshape(6, 8)
+        Image.fromarray(image).save(role_root / "images" / "CASE-1.png")
+        preannotation = ""
+        if with_preannotation:
+            (role_root / "preannotations").mkdir()
+            Image.fromarray((image > 20).astype(np.uint8) * 255).save(
+                role_root / "preannotations" / "CASE-1.png"
+            )
+            preannotation = "preannotations/CASE-1.png"
+        pd.DataFrame(
+            [
+                {
+                    "candidate_code": "CASE-1",
+                    "cohort_role": role,
+                    "image_filename": "images/CASE-1.png",
+                    "preannotation_filename": preannotation,
+                    "required_output_mask": "annotations/CASE-1.png",
+                }
+            ]
+        ).to_csv(role_root / "annotation_worklist.csv", index=False)
+        return role_root
+
+    def test_preannotation_save_and_progress(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            role_root = self._write_role(root, "adaptation_train", with_preannotation=True)
+            worklist, resolved_root = load_annotation_worklist(root, "adaptation_train")
+            case = resolve_annotation_case(
+                worklist.iloc[0], resolved_root, role="adaptation_train"
+            )
+            image, mask, source = load_annotation_case(case)
+            self.assertEqual(source, "preannotation")
+            self.assertEqual(image.shape, mask.shape)
+            metrics = save_binary_annotation(mask, case.output_path, expected_shape=image.shape)
+            self.assertTrue(case.output_path.is_file())
+            self.assertGreater(metrics["foreground_fraction"], 0.0)
+            progress = update_annotation_progress(
+                role_root / "annotation_progress.csv",
+                candidate_code="CASE-1",
+                role="adaptation_train",
+                annotator="tester",
+                foreground_fraction=float(metrics["foreground_fraction"]),
+                needs_review=False,
+                note="checked",
+            )
+            self.assertEqual(progress.iloc[0]["status"], "complete")
+
+    def test_locked_test_rejects_preannotations_and_loads_blank(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self._write_role(root, "locked_target_test", with_preannotation=False)
+            worklist, role_root = load_annotation_worklist(root, "locked_target_test")
+            case = resolve_annotation_case(
+                worklist.iloc[0], role_root, role="locked_target_test"
+            )
+            image, mask, source = load_annotation_case(case)
+            self.assertEqual(source, "blank_prediction_blind")
+            self.assertEqual(int(mask.sum()), 0)
+            self.assertEqual(image.shape, mask.shape)
+
+            (role_root / "preannotations").mkdir()
+            Image.fromarray(np.zeros(image.shape, dtype=np.uint8)).save(
+                role_root / "preannotations" / "forbidden.png"
+            )
+            with self.assertRaisesRegex(RuntimeError, "forbidden"):
+                load_annotation_worklist(root, "locked_target_test")
 
 
 class ManifestTests(unittest.TestCase):
