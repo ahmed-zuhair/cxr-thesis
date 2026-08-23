@@ -72,6 +72,12 @@ same-split, same-stratum reserves from
 `scripts/create_projection_replacement_reserves.py`. Each replacement retains
 the rejected case's high-risk or representative selection basis. The locked
 target test is not modified by this prediction-aware reserve procedure.
+If ephemeral compute storage is lost after the private annotation bundle was
+downloaded, `scripts/recover_projection_replacement_reserves.py` matches the
+200 retained images back to the canonical NIH manifest using exact file-size
+and SHA-256 fingerprints. It then excludes all recovered patients and selects
+same-split, same-view/sex/finding reserves by a prediction-blind seeded hash.
+Pre-annotations are generated only after reserve membership is fixed.
 
 ## Setup
 

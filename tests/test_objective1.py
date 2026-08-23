@@ -14,6 +14,8 @@ from PIL import Image
 
 from cxr_thesis.objective1.config import Objective1Config, load_config
 from cxr_thesis.objective1.cohort_selection import (
+    match_cohort_fingerprints_to_manifest,
+    select_blind_projection_recovery_reserves,
     select_projection_replacement_reserves,
     select_roi_annotation_cohort,
 )
@@ -166,6 +168,130 @@ class AnnotationCohortTests(unittest.TestCase):
             select_projection_replacement_reserves(
                 mapping, ranked, roles["master"], forbidden
             )
+
+    def test_fingerprint_recovery_and_blind_same_stratum_reserves(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest_rows = []
+            fingerprint_rows = []
+
+            def add_case(
+                number: int,
+                *,
+                split: str,
+                view: str,
+                sex: str,
+                finding: str,
+                role: str | None = None,
+                decision: str = "eligible_frontal",
+            ) -> None:
+                path = root / f"image-{number:03d}.png"
+                Image.fromarray(
+                    np.full((7, 9), number % 255, dtype=np.uint8)
+                ).save(path)
+                labels = "No Finding" if finding == "no_finding" else "Effusion"
+                manifest_rows.append(
+                    {
+                        "patient_id": f"patient-{number:03d}",
+                        "image_id": f"image-{number:03d}",
+                        "image_path": str(path),
+                        "split": split,
+                        "view": view,
+                        "sex": sex,
+                        "finding_labels": labels,
+                    }
+                )
+                if role is not None:
+                    fingerprint_rows.append(
+                        {
+                            "candidate_code": f"CASE-{number:03d}",
+                            "cohort_role": role,
+                            "view": view,
+                            "sex": sex,
+                            "finding_group": finding,
+                            "selection_basis": "active_qc_high_risk",
+                            "projection_decision": decision,
+                            "image_size_bytes": path.stat().st_size,
+                            "image_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                        }
+                    )
+
+            add_case(
+                1,
+                split="train",
+                view="PA",
+                sex="F",
+                finding="no_finding",
+                role="adaptation_train",
+                decision="ineligible_lateral",
+            )
+            add_case(
+                2,
+                split="val",
+                view="AP",
+                sex="M",
+                finding="abnormal",
+                role="target_validation",
+                decision="ineligible_lateral",
+            )
+            add_case(
+                3,
+                split="val",
+                view="PA",
+                sex="M",
+                finding="no_finding",
+                role="locked_target_test",
+            )
+            for number in range(10, 16):
+                add_case(
+                    number,
+                    split="train",
+                    view="PA",
+                    sex="F",
+                    finding="no_finding",
+                )
+            for number in range(20, 26):
+                add_case(
+                    number,
+                    split="val",
+                    view="AP",
+                    sex="M",
+                    finding="abnormal",
+                )
+
+            manifest = pd.DataFrame(manifest_rows)
+            fingerprints = pd.DataFrame(fingerprint_rows)
+            recovered = match_cohort_fingerprints_to_manifest(
+                manifest, fingerprints
+            )
+            self.assertEqual(len(recovered), 3)
+            self.assertEqual(recovered["patient_id"].nunique(), 3)
+            first = select_blind_projection_recovery_reserves(
+                manifest, recovered, seed=42, reserves_per_slot=5
+            )
+            second = select_blind_projection_recovery_reserves(
+                manifest, recovered, seed=42, reserves_per_slot=5
+            )
+            pd.testing.assert_frame_equal(first, second)
+            self.assertEqual(len(first), 10)
+            self.assertEqual(first["replacement_slot"].nunique(), 2)
+            self.assertEqual(first["patient_id"].nunique(), 10)
+            self.assertFalse((first["split"] == "test").any())
+            self.assertFalse(
+                set(first["patient_id"]).intersection(recovered["patient_id"])
+            )
+            self.assertEqual(
+                set(first["replacement_selection_basis"]),
+                {"projection_blind_hash"},
+            )
+
+            unresolved = recovered.copy()
+            unresolved.loc[
+                unresolved["cohort_role"] == "locked_target_test",
+                "projection_decision",
+            ] = "ineligible_lateral"
+            with self.assertRaisesRegex(ValueError, "Locked target"):
+                select_blind_projection_recovery_reserves(manifest, unresolved)
 
 
 class AnnotationWorkspaceTests(unittest.TestCase):

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from itertools import product
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -17,6 +18,14 @@ COHORT_STRATA = tuple(
         ("no_finding", "abnormal"),
     )
 )
+
+
+def _sha256_file(path: str | Path) -> str:
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
 
 
 def _stable_key(seed: int, purpose: str, patient_id: object, image_id: object) -> str:
@@ -398,3 +407,249 @@ def select_projection_replacement_reserves(
     return result.sort_values(
         ["replacement_slot", "reserve_rank"], kind="stable"
     ).reset_index(drop=True)
+
+
+def match_cohort_fingerprints_to_manifest(
+    manifest: pd.DataFrame,
+    fingerprints: pd.DataFrame,
+) -> pd.DataFrame:
+    """Recover private cohort identities by exact image bytes and file size."""
+    manifest_required = {
+        "patient_id",
+        "image_id",
+        "image_path",
+        "split",
+        "view",
+        "sex",
+        "finding_labels",
+    }
+    missing_manifest = sorted(manifest_required - set(manifest.columns))
+    if missing_manifest:
+        raise ValueError(f"Manifest is missing columns: {missing_manifest}")
+    fingerprint_required = {
+        "candidate_code",
+        "cohort_role",
+        "view",
+        "sex",
+        "finding_group",
+        "selection_basis",
+        "projection_decision",
+        "image_size_bytes",
+        "image_sha256",
+    }
+    missing_fingerprints = sorted(fingerprint_required - set(fingerprints.columns))
+    if missing_fingerprints:
+        raise ValueError(
+            f"Fingerprint table is missing columns: {missing_fingerprints}"
+        )
+    if fingerprints.empty:
+        raise ValueError("Fingerprint table is empty")
+    if fingerprints["candidate_code"].duplicated().any():
+        raise ValueError("Fingerprint table contains duplicate candidate codes")
+    if fingerprints["image_sha256"].duplicated().any():
+        raise ValueError("Fingerprint table contains duplicate image hashes")
+    invalid_decisions = sorted(
+        set(fingerprints["projection_decision"])
+        - {
+            "eligible_frontal",
+            "ineligible_lateral",
+            "ineligible_other",
+            "uncertain",
+        }
+    )
+    if invalid_decisions:
+        raise ValueError(f"Fingerprint table contains invalid decisions: {invalid_decisions}")
+    if set(fingerprints["selection_basis"]).difference(
+        {"active_qc_high_risk", "active_qc_representative", "prediction_blind_hash"}
+    ):
+        raise ValueError("Fingerprint table contains an unsupported selection basis")
+
+    fingerprints = fingerprints.copy()
+    fingerprints["image_size_bytes"] = pd.to_numeric(
+        fingerprints["image_size_bytes"], errors="raise"
+    ).astype(np.int64)
+    fingerprints["image_sha256"] = (
+        fingerprints["image_sha256"].astype(str).str.strip().str.lower()
+    )
+    targets_by_size: dict[int, set[str]] = {}
+    for size, group in fingerprints.groupby("image_size_bytes"):
+        targets_by_size[int(size)] = set(group["image_sha256"])
+
+    manifest_matches: dict[str, list[dict[str, object]]] = {
+        digest: [] for digest in fingerprints["image_sha256"]
+    }
+    for _, row in manifest.iterrows():
+        path = Path(str(row["image_path"]))
+        if not path.is_file():
+            continue
+        size = path.stat().st_size
+        possible = targets_by_size.get(size)
+        if not possible:
+            continue
+        digest = _sha256_file(path)
+        if digest in possible:
+            manifest_matches[digest].append(row.to_dict())
+
+    missing = sorted(
+        digest for digest, rows in manifest_matches.items() if len(rows) == 0
+    )
+    ambiguous = sorted(
+        digest for digest, rows in manifest_matches.items() if len(rows) > 1
+    )
+    if missing:
+        raise ValueError(f"Manifest did not match {len(missing)} cohort fingerprints")
+    if ambiguous:
+        raise ValueError(f"Manifest ambiguously matched {len(ambiguous)} fingerprints")
+
+    recovered_rows: list[dict[str, object]] = []
+    for _, fingerprint in fingerprints.iterrows():
+        digest = str(fingerprint["image_sha256"])
+        combined = fingerprint.to_dict()
+        for key, value in manifest_matches[digest][0].items():
+            if key in combined:
+                combined[f"manifest_{key}"] = value
+            else:
+                combined[key] = value
+        recovered_rows.append(combined)
+    recovered = pd.DataFrame(recovered_rows)
+
+    expected_split = {
+        "adaptation_train": "train",
+        "target_validation": "val",
+        "locked_target_test": "val",
+    }
+    roles = set(recovered["cohort_role"].astype(str))
+    if roles != set(expected_split):
+        raise ValueError(f"Unexpected recovered cohort roles: {sorted(roles)}")
+    for role, split in expected_split.items():
+        observed = set(
+            recovered.loc[recovered["cohort_role"] == role, "split"]
+            .astype(str)
+            .str.lower()
+        )
+        if observed != {split}:
+            raise ValueError(f"Recovered {role} cases do not belong to split {split}")
+
+    recovered_view = recovered["manifest_view"].astype(str).str.upper()
+    fingerprint_view = recovered["view"].astype(str).str.upper()
+    if not recovered_view.equals(fingerprint_view):
+        raise ValueError("Recovered manifest views do not match the worklists")
+    recovered_sex = (
+        recovered["manifest_sex"].astype(str).str.strip().str.upper().str[0]
+    )
+    fingerprint_sex = recovered["sex"].astype(str).str.strip().str.upper().str[0]
+    if not recovered_sex.equals(fingerprint_sex):
+        raise ValueError("Recovered manifest sex values do not match the worklists")
+
+    manifest_finding = np.where(
+        recovered["finding_labels"].astype(str) == "No Finding",
+        "no_finding",
+        "abnormal",
+    )
+    if not np.array_equal(manifest_finding, recovered["finding_group"].astype(str)):
+        raise ValueError("Recovered manifest findings do not match the worklists")
+    if recovered["patient_id"].astype(str).duplicated().any():
+        raise ValueError("Recovered cohort contains duplicate patients")
+    return recovered.reset_index(drop=True)
+
+
+def select_blind_projection_recovery_reserves(
+    manifest: pd.DataFrame,
+    recovered_cohort: pd.DataFrame,
+    *,
+    seed: int = 42,
+    reserves_per_slot: int = 5,
+) -> pd.DataFrame:
+    """Choose same-stratum reserves without consulting predictions or risk scores."""
+    if reserves_per_slot < 1:
+        raise ValueError("reserves_per_slot must be positive")
+    rejected = recovered_cohort[
+        recovered_cohort["projection_decision"] != "eligible_frontal"
+    ].copy()
+    if len(rejected) == 0:
+        raise ValueError("No rejected projection cases were provided")
+    if set(rejected["cohort_role"]).difference(
+        {"adaptation_train", "target_validation"}
+    ):
+        raise ValueError("Locked target-test cases cannot use development recovery")
+    locked = recovered_cohort[
+        recovered_cohort["cohort_role"] == "locked_target_test"
+    ]
+    if (locked["projection_decision"] != "eligible_frontal").any():
+        raise ValueError("Locked target test contains an unresolved projection case")
+
+    pool = manifest.copy()
+    pool["split"] = pool["split"].astype(str).str.lower()
+    pool["view_group"] = pool["view"].astype(str).str.upper()
+    pool["sex_group"] = pool["sex"].astype(str).str.strip().str.upper().str[0]
+    pool["finding_group"] = np.where(
+        pool["finding_labels"].astype(str) == "No Finding",
+        "no_finding",
+        "abnormal",
+    )
+    pool = pool[
+        pool["split"].isin({"train", "val"})
+        & pool["view_group"].isin({"PA", "AP"})
+        & pool["sex_group"].isin({"F", "M"})
+    ].copy()
+    current_patients = set(recovered_cohort["patient_id"].astype(str))
+    pool = pool[~pool["patient_id"].astype(str).isin(current_patients)].copy()
+    pool["_patient_image_key"] = [
+        _stable_key(seed, "projection-recovery-image", patient, image)
+        for patient, image in zip(pool["patient_id"], pool["image_id"])
+    ]
+    pool = pool.sort_values(
+        ["_patient_image_key", "image_id"], kind="stable"
+    ).drop_duplicates("patient_id", keep="first")
+
+    role_split = {"adaptation_train": "train", "target_validation": "val"}
+    selected: list[pd.DataFrame] = []
+    used_patients: set[str] = set()
+    for slot_index, (_, original) in enumerate(
+        rejected.sort_values(["cohort_role", "candidate_code"], kind="stable").iterrows(),
+        start=1,
+    ):
+        role = str(original["cohort_role"])
+        view = str(original["view"]).upper()
+        sex = str(original["sex"]).upper()[0]
+        finding = str(original["finding_group"])
+        group = pool[
+            (pool["split"] == role_split[role])
+            & (pool["view_group"] == view)
+            & (pool["sex_group"] == sex)
+            & (pool["finding_group"] == finding)
+            & (~pool["patient_id"].astype(str).isin(used_patients))
+        ].copy()
+        purpose = f"projection-recovery|{role}|{view}|{sex}|{finding}"
+        group["_reserve_key"] = [
+            _stable_key(seed, purpose, patient, image)
+            for patient, image in zip(group["patient_id"], group["image_id"])
+        ]
+        group = group.sort_values(["_reserve_key", "image_id"], kind="stable")
+        if len(group) < reserves_per_slot:
+            raise ValueError(
+                f"Recovery slot {slot_index} has only {len(group)} same-stratum patients"
+            )
+        chosen = group.head(reserves_per_slot).copy()
+        chosen["replacement_slot"] = f"RPL-{slot_index:02d}"
+        chosen["reserve_rank"] = np.arange(1, reserves_per_slot + 1)
+        chosen["replacement_code"] = [
+            f"NIH-RPL-{slot_index:02d}-{rank:02d}"
+            for rank in range(1, reserves_per_slot + 1)
+        ]
+        chosen["cohort_role"] = role
+        chosen["cohort_stratum"] = f"{view}|{sex}|{finding}"
+        chosen["original_selection_basis"] = str(original["selection_basis"])
+        chosen["replacement_selection_basis"] = "projection_blind_hash"
+        chosen["replaces_candidate_code"] = str(original["candidate_code"])
+        selected.append(chosen)
+        used_patients.update(chosen["patient_id"].astype(str))
+
+    result = pd.concat(selected, ignore_index=True)
+    if result["patient_id"].astype(str).duplicated().any():
+        raise RuntimeError("Recovery reserves contain duplicate patients")
+    if set(result["patient_id"].astype(str)).intersection(current_patients):
+        raise RuntimeError("Recovery reserves overlap current cohort patients")
+    return result.drop(columns=["_patient_image_key", "_reserve_key"]).reset_index(
+        drop=True
+    )
