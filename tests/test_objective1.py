@@ -38,6 +38,7 @@ from cxr_thesis.objective1.segmentation import (
     dice_score,
     hausdorff95,
     iou_score,
+    probability_uncertainty_metrics,
     postprocess_binary_mask,
     remove_small_components,
 )
@@ -180,6 +181,33 @@ class SegmentationTests(unittest.TestCase):
         self.assertEqual(audit["components_after"], 3)
         self.assertEqual(audit["removed_pixels"], 1)
 
+    def test_probability_uncertainty_detects_ambiguous_predictions(self) -> None:
+        confident = np.zeros((32, 32), dtype=np.float32)
+        confident[:, :16] = 0.99
+        confident[:, 16:] = 0.01
+        ambiguous = np.full((32, 32), 0.54, dtype=np.float32)
+        ambiguous[:, :16] = 0.56
+        confident_metrics = probability_uncertainty_metrics(
+            confident,
+            threshold=0.55,
+            margin=0.10,
+        )
+        ambiguous_metrics = probability_uncertainty_metrics(
+            ambiguous,
+            threshold=0.55,
+            margin=0.10,
+        )
+        self.assertLess(
+            confident_metrics["mean_binary_entropy"],
+            ambiguous_metrics["mean_binary_entropy"],
+        )
+        self.assertEqual(confident_metrics["uncertain_fraction"], 0.0)
+        self.assertEqual(ambiguous_metrics["uncertain_fraction"], 1.0)
+        self.assertGreater(
+            ambiguous_metrics["boundary_entropy_mean"],
+            confident_metrics["boundary_entropy_mean"],
+        )
+
     def test_batched_mask_generation_writes_auditable_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -251,6 +279,9 @@ class SegmentationTests(unittest.TestCase):
             self.assertEqual(len(audit), 2)
             self.assertEqual(int(summary["generated_this_run"]), 2)
             self.assertEqual(summary["checkpoint_sha256"], digest)
+            self.assertIn("mean_binary_entropy", audit.columns)
+            self.assertIn("uncertain_fraction", audit.columns)
+            self.assertIn("mean_boundary_entropy", summary.index)
             resumed = subprocess.run(
                 [
                     *result.args,

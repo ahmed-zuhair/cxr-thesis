@@ -130,6 +130,7 @@ python scripts/generate_roi_masks.py \
   --output-manifest artifacts/manifests/nih_with_masks.csv \
   --batch-size 32 \
   --min-component-fraction 0.001 \
+  --uncertainty-margin 0.10 \
   --expected-checkpoint-sha256 CHECKPOINT_SHA256 \
   --resume
 ```
@@ -139,6 +140,9 @@ The generation script stores the SHA-256 checkpoint identity in the manifest,
 writes per-image QC and run-summary artifacts, checkpoints its manifest during
 long runs, and resumes only when the checkpoint and postprocessing signature
 match. It does not force every prediction to contain exactly two components.
+The audit also records entropy, threshold-margin, boundary-entropy, and
+foreground/background confidence proxies. These values are useful for active
+learning and QC ranking, but they are not calibrated uncertainty estimates.
 
 ## Radiomics protocol required next
 

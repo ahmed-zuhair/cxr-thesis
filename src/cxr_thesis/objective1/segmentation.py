@@ -177,6 +177,63 @@ def remove_small_components(
     }
 
 
+def probability_uncertainty_metrics(
+    probability: np.ndarray,
+    *,
+    threshold: float,
+    margin: float = 0.10,
+) -> dict[str, float]:
+    """Summarise deterministic uncertainty proxies for a probability map.
+
+    These values describe model confidence but are not calibrated uncertainty
+    estimates. ``uncertain_fraction`` measures pixels lying within ``margin``
+    of the frozen decision threshold. Entropy is normalised to the [0, 1]
+    interval, and boundary entropy is measured in a three-pixel-wide band
+    around the thresholded prediction.
+    """
+    array = np.asarray(probability, dtype=np.float32)
+    if array.ndim != 2:
+        raise ValueError("A single 2D probability map is required")
+    if not np.isfinite(array).all():
+        raise ValueError("Probability map contains non-finite values")
+    if float(array.min()) < 0.0 or float(array.max()) > 1.0:
+        raise ValueError("Probability values must lie between 0 and 1")
+    if not 0.0 < threshold < 1.0:
+        raise ValueError("threshold must be between 0 and 1")
+    if not 0.0 < margin < 0.5:
+        raise ValueError("margin must be between 0 and 0.5")
+
+    clipped = np.clip(array, 1e-7, 1.0 - 1e-7)
+    entropy = -(
+        clipped * np.log2(clipped)
+        + (1.0 - clipped) * np.log2(1.0 - clipped)
+    )
+    binary = (array >= threshold).astype(np.uint8)
+    kernel = np.ones((3, 3), dtype=np.uint8)
+    boundary_band = cv2.dilate(binary, kernel, iterations=1) != cv2.erode(
+        binary, kernel, iterations=1
+    )
+    foreground = binary > 0
+    background = ~foreground
+    return {
+        "mean_binary_entropy": float(entropy.mean()),
+        "p95_binary_entropy": float(np.percentile(entropy, 95)),
+        "boundary_entropy_mean": (
+            float(entropy[boundary_band].mean()) if boundary_band.any() else 0.0
+        ),
+        "uncertain_fraction": float((np.abs(array - threshold) <= margin).mean()),
+        "mean_threshold_distance": float(np.abs(array - threshold).mean()),
+        "foreground_probability_mean": (
+            float(array[foreground].mean()) if foreground.any() else 0.0
+        ),
+        "background_confidence_mean": (
+            float((1.0 - array[background]).mean()) if background.any() else 0.0
+        ),
+        "probability_minimum": float(array.min()),
+        "probability_maximum": float(array.max()),
+    }
+
+
 def validate_roi_mask(mask: np.ndarray, config: SegmentationConfig) -> dict[str, float | bool]:
     binary = np.asarray(mask) > 0
     if binary.ndim != 2:

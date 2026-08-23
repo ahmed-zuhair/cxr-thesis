@@ -25,6 +25,7 @@ from cxr_thesis.objective1.manifest import validate_manifest, write_manifest
 from cxr_thesis.objective1.preprocessing import load_image, preprocess_cxr, restore_mask
 from cxr_thesis.objective1.segmentation import (
     UNet2D,
+    probability_uncertainty_metrics,
     remove_small_components,
     validate_roi_mask,
 )
@@ -60,6 +61,12 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=0,
         help="Absolute model-space component floor, combined with the relative floor",
+    )
+    parser.add_argument(
+        "--uncertainty-margin",
+        type=float,
+        default=0.10,
+        help="Probability distance around the frozen threshold counted as uncertain",
     )
     parser.add_argument(
         "--expected-checkpoint-sha256",
@@ -202,6 +209,8 @@ def main() -> None:
         raise ValueError("--limit must be positive")
     if args.resume and args.overwrite_existing:
         raise ValueError("--resume and --overwrite-existing cannot be combined")
+    if not 0.0 < args.uncertainty_margin < 0.5:
+        raise ValueError("--uncertainty-margin must be between 0 and 0.5")
 
     config = load_config(args.config)
     root = Path(args.data_root)
@@ -237,7 +246,8 @@ def main() -> None:
     postprocessing_signature = (
         f"relative-area>={args.min_component_fraction:g};"
         f"min-pixels={args.min_component_pixels};"
-        "fixed-component-count=false"
+        "fixed-component-count=false;"
+        f"uncertainty-margin={args.uncertainty_margin:g}"
     )
     device = select_device(args.device)
     model = model.to(device).eval()
@@ -345,6 +355,11 @@ def main() -> None:
             for position, (index, _, geometry, target) in enumerate(loaded):
                 image_id = str(frame.at[index, "image_id"])
                 raw_mask = probabilities[position] >= threshold
+                uncertainty = probability_uncertainty_metrics(
+                    probabilities[position],
+                    threshold=threshold,
+                    margin=args.uncertainty_margin,
+                )
                 cleaned_mask, cleanup = remove_small_components(
                     raw_mask,
                     min_component_fraction=args.min_component_fraction,
@@ -387,6 +402,7 @@ def main() -> None:
                     "components_original_space": output_components,
                     "removed_pixels_model_space": int(cleanup["removed_pixels"]),
                     "removed_fraction_of_prediction": float(cleanup["removed_fraction"]),
+                    **uncertainty,
                     "inference_seconds_share": float(batch_inference_seconds / len(loaded)),
                     "mask_path": str(target),
                     "checkpoint_sha256": digest,
@@ -453,6 +469,7 @@ def main() -> None:
         "checkpoint_epoch": int(checkpoint.get("epoch", -1)),
         "threshold": threshold,
         "postprocessing": postprocessing_signature,
+        "uncertainty_margin": float(args.uncertainty_margin),
         "mean_roi_fraction_model_space": (
             float(complete_audit["roi_fraction_model_space"].mean())
             if not complete_audit.empty
@@ -460,6 +477,21 @@ def main() -> None:
         ),
         "mean_removed_fraction_of_prediction": (
             float(complete_audit["removed_fraction_of_prediction"].mean())
+            if not complete_audit.empty
+            else None
+        ),
+        "mean_uncertain_fraction": (
+            float(complete_audit["uncertain_fraction"].mean())
+            if not complete_audit.empty
+            else None
+        ),
+        "mean_binary_entropy": (
+            float(complete_audit["mean_binary_entropy"].mean())
+            if not complete_audit.empty
+            else None
+        ),
+        "mean_boundary_entropy": (
+            float(complete_audit["boundary_entropy_mean"].mean())
             if not complete_audit.empty
             else None
         ),
