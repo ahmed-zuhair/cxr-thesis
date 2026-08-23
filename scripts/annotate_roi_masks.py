@@ -20,6 +20,7 @@ from cxr_thesis.objective1.annotation_workspace import (
     resolve_annotation_case,
     save_binary_annotation,
     update_annotation_progress,
+    update_focused_qc_review,
 )
 
 
@@ -32,6 +33,14 @@ def parse_args() -> argparse.Namespace:
         "--confirm-locked-test-blind",
         action="store_true",
         help="Required for locked test; confirms predictions will not be consulted",
+    )
+    parser.add_argument(
+        "--qc-audit",
+        help="Private annotation-QC CSV; restricts the viewer to flagged cases",
+    )
+    parser.add_argument(
+        "--qc-review-log",
+        help="Private focused-QC review CSV written when --qc-audit is used",
     )
     return parser.parse_args()
 
@@ -61,6 +70,60 @@ def main() -> None:
     )
 
     worklist, role_root = load_annotation_worklist(args.workspace, args.role)
+    focused_qc = bool(args.qc_audit)
+    if focused_qc != bool(args.qc_review_log):
+        raise ValueError("--qc-audit and --qc-review-log must be provided together")
+    qc_flags_lookup: dict[str, str] = {}
+    previously_resolved: set[str] = set()
+    if focused_qc:
+        import pandas as pd
+
+        qc_path = Path(args.qc_audit).resolve()
+        if not qc_path.is_file():
+            raise FileNotFoundError(qc_path)
+        qc = pd.read_csv(qc_path, keep_default_na=False)
+        required_qc = {"candidate_code", "qc_flags", "requires_review"}
+        missing_qc = sorted(required_qc - set(qc.columns))
+        if missing_qc:
+            raise ValueError(f"QC audit is missing columns: {missing_qc}")
+        if qc["candidate_code"].duplicated().any():
+            raise ValueError("QC audit contains duplicate candidate codes")
+        requires_review = qc["requires_review"].astype(str).str.lower().isin(
+            {"true", "1", "yes"}
+        )
+        flagged = qc[requires_review].copy()
+        if flagged.empty:
+            raise ValueError("QC audit has no flagged cases")
+        unknown = sorted(set(flagged["candidate_code"]) - set(worklist["candidate_code"]))
+        if unknown:
+            raise ValueError("QC audit contains cases outside the role worklist")
+        qc_flags_lookup = dict(zip(flagged["candidate_code"], flagged["qc_flags"]))
+        worklist = worklist[worklist["candidate_code"].isin(qc_flags_lookup)].copy()
+        review_path = Path(args.qc_review_log).resolve()
+        if review_path.is_file():
+            review = pd.read_csv(review_path, keep_default_na=False)
+            required_review = {"candidate_code", "cohort_role", "review_status"}
+            missing_review = sorted(required_review - set(review.columns))
+            if missing_review:
+                raise ValueError(
+                    f"Focused-QC review log is missing columns: {missing_review}"
+                )
+            if review["candidate_code"].duplicated().any():
+                raise ValueError("Focused-QC review log contains duplicate cases")
+            role_review = review[review["cohort_role"].astype(str) == args.role]
+            outside_qc = set(role_review["candidate_code"].astype(str)) - set(
+                qc_flags_lookup
+            )
+            if outside_qc:
+                raise ValueError(
+                    "Focused-QC review log contains cases outside the flagged set"
+                )
+            previously_resolved = set(
+                role_review.loc[
+                    role_review["review_status"].astype(str) == "resolved",
+                    "candidate_code",
+                ].astype(str)
+            )
     cases = [
         resolve_annotation_case(row, role_root, role=args.role)
         for _, row in worklist.iterrows()
@@ -74,12 +137,15 @@ def main() -> None:
             self.index = 0
             self.image_shape: tuple[int, int] = (0, 0)
             self.labels_layer = None
+            self.loaded_mask = None
             self.dirty = False
             self.loading = False
+            self.session_reviewed: set[str] = set(previously_resolved)
 
             self.case_label = QLabel()
             self.source_label = QLabel()
             self.progress_label = QLabel()
+            self.qc_label = QLabel()
             self.note = QLineEdit()
             self.note.setPlaceholderText("Optional QC/adjudication note")
             self.needs_review = QCheckBox("Needs second review")
@@ -101,6 +167,7 @@ def main() -> None:
             layout.addWidget(self.case_label)
             layout.addWidget(self.source_label)
             layout.addWidget(self.progress_label)
+            layout.addWidget(self.qc_label)
             layout.addWidget(self.needs_review)
             layout.addWidget(self.note)
             layout.addLayout(row)
@@ -108,10 +175,16 @@ def main() -> None:
             layout.addWidget(next_button)
             self.setLayout(layout)
 
-            for position, case in enumerate(cases):
-                if not case.output_path.is_file():
-                    self.index = position
-                    break
+            if focused_qc:
+                for position, case in enumerate(cases):
+                    if case.candidate_code not in self.session_reviewed:
+                        self.index = position
+                        break
+            else:
+                for position, case in enumerate(cases):
+                    if not case.output_path.is_file():
+                        self.index = position
+                        break
             self.load_current()
 
         def completed_count(self) -> int:
@@ -130,16 +203,27 @@ def main() -> None:
             )
             if source is not None:
                 self.source_label.setText(f"Mask source: {source}")
-            self.progress_label.setText(
-                f"Saved masks: {self.completed_count()}/{len(cases)} | "
-                f"Role: {args.role} | Annotator: {annotator}"
-            )
+            if focused_qc:
+                self.progress_label.setText(
+                    f"Focused QC reviewed: {len(self.session_reviewed)}/{len(cases)} | "
+                    f"Role: {args.role} | Reviewer: {annotator}"
+                )
+                self.qc_label.setText(
+                    f"Automated QC flags: {qc_flags_lookup[case.candidate_code]}"
+                )
+            else:
+                self.progress_label.setText(
+                    f"Saved masks: {self.completed_count()}/{len(cases)} | "
+                    f"Role: {args.role} | Annotator: {annotator}"
+                )
+                self.qc_label.setText("")
 
         def load_current(self) -> None:
             self.loading = True
             case = cases[self.index]
             image, mask, source = load_annotation_case(case)
             self.image_shape = tuple(image.shape)
+            self.loaded_mask = mask.astype(np.uint8).copy()
             self.viewer.layers.clear()
             self.viewer.add_image(
                 image,
@@ -196,6 +280,22 @@ def main() -> None:
                 needs_review=self.needs_review.isChecked(),
                 note=self.note.text(),
             )
+            if focused_qc:
+                changed = not np.array_equal(
+                    np.asarray(self.labels_layer.data, dtype=np.uint8),
+                    self.loaded_mask,
+                )
+                update_focused_qc_review(
+                    args.qc_review_log,
+                    candidate_code=case.candidate_code,
+                    role=args.role,
+                    reviewer=annotator,
+                    qc_flags=qc_flags_lookup[case.candidate_code],
+                    action="corrected" if changed else "approved_as_is",
+                    needs_review=self.needs_review.isChecked(),
+                    note=self.note.text(),
+                )
+                self.session_reviewed.add(case.candidate_code)
             self.dirty = False
             self.refresh_status("saved_annotation")
 
@@ -213,11 +313,24 @@ def main() -> None:
                 return
             for offset in range(1, len(cases) + 1):
                 position = (self.index + offset) % len(cases)
-                if not cases[position].output_path.is_file():
+                unfinished = (
+                    cases[position].candidate_code not in self.session_reviewed
+                    if focused_qc
+                    else not cases[position].output_path.is_file()
+                )
+                if unfinished:
                     self.index = position
                     self.load_current()
                     return
-            QMessageBox.information(self, "Role complete", "Every case has a saved mask.")
+            QMessageBox.information(
+                self,
+                "Role complete",
+                (
+                    "Every QC-flagged case was reviewed in this session."
+                    if focused_qc
+                    else "Every case has a saved mask."
+                ),
+            )
 
         def save_and_next(self) -> None:
             self.save()
@@ -245,7 +358,8 @@ def main() -> None:
 
     print(
         f"Loaded {len(cases)} private {args.role} cases; "
-        f"preannotations_allowed={ROLE_POLICIES[args.role]}"
+        f"preannotations_allowed={ROLE_POLICIES[args.role]}; "
+        f"focused_qc={focused_qc}; cases_loaded={len(cases)}"
     )
     napari.run()
 

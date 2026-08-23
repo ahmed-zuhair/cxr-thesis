@@ -351,3 +351,57 @@ def update_annotation_progress(
     frame.to_csv(temporary, index=False)
     temporary.replace(path)
     return frame.reset_index(drop=True)
+
+
+def update_focused_qc_review(
+    review_path: str | Path,
+    *,
+    candidate_code: str,
+    role: str,
+    reviewer: str,
+    qc_flags: str,
+    action: str,
+    needs_review: bool,
+    note: str,
+) -> pd.DataFrame:
+    """Atomically record approval or correction of one QC-flagged mask."""
+
+    allowed_actions = {"approved_as_is", "corrected"}
+    if action not in allowed_actions:
+        raise ValueError(f"Unsupported focused-QC action: {action!r}")
+    path = Path(review_path)
+    columns = [
+        "candidate_code",
+        "cohort_role",
+        "reviewer",
+        "qc_flags",
+        "review_action",
+        "review_status",
+        "updated_utc",
+        "note",
+    ]
+    if path.is_file():
+        frame = pd.read_csv(path, keep_default_na=False).reindex(columns=columns)
+        frame = frame[frame["candidate_code"].astype(str) != str(candidate_code)]
+    else:
+        frame = pd.DataFrame(columns=columns)
+    row = pd.DataFrame(
+        [
+            {
+                "candidate_code": str(candidate_code),
+                "cohort_role": role,
+                "reviewer": reviewer,
+                "qc_flags": str(qc_flags),
+                "review_action": action,
+                "review_status": "needs_review" if needs_review else "resolved",
+                "updated_utc": datetime.now(timezone.utc).isoformat(),
+                "note": str(note).strip(),
+            }
+        ]
+    )
+    frame = pd.concat([frame, row], ignore_index=True).sort_values("candidate_code")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f"{path.name}.tmp")
+    frame.to_csv(temporary, index=False)
+    temporary.replace(path)
+    return frame.reset_index(drop=True)

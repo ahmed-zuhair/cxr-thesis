@@ -87,6 +87,9 @@ Completed annotations are checked with `scripts/audit_roi_annotations.py` for
 shape, binary values, foreground-area extremes, excessive connected regions,
 border contact, and unusually large changes from the frozen pre-annotation.
 Flags trigger focused radiologist re-review and never alter a mask automatically.
+Passing the private QC table to `scripts/annotate_roi_masks.py --qc-audit`
+loads only flagged cases, displays each flag, and records whether the reviewer
+approved the saved mask unchanged or corrected it in a separate private log.
 
 ## Setup
 

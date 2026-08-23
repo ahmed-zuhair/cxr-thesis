@@ -30,6 +30,7 @@ from cxr_thesis.objective1.annotation_workspace import (
     select_flagged_projection_cases,
     save_binary_annotation,
     update_annotation_progress,
+    update_focused_qc_review,
     update_projection_audit,
 )
 from cxr_thesis.objective1.annotation_qc import audit_completed_annotations
@@ -665,6 +666,45 @@ class AnnotationWorkspaceTests(unittest.TestCase):
             flagged = audit[audit["requires_review"]].iloc[0]
             self.assertIn("foreground_below_threshold", flagged["qc_flags"])
             self.assertTrue((root / "qc" / "adaptation_train_annotation_qc_private.csv").is_file())
+
+    def test_focused_qc_review_records_approval_and_correction(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "focused_qc_review.csv"
+            first = update_focused_qc_review(
+                path,
+                candidate_code="CASE-1",
+                role="adaptation_train",
+                reviewer="RAD-01",
+                qc_flags="foreground_below_threshold",
+                action="approved_as_is",
+                needs_review=False,
+                note="anatomically appropriate",
+            )
+            self.assertEqual(first.iloc[0]["review_status"], "resolved")
+            second = update_focused_qc_review(
+                path,
+                candidate_code="CASE-1",
+                role="adaptation_train",
+                reviewer="RAD-01",
+                qc_flags="foreground_below_threshold",
+                action="corrected",
+                needs_review=True,
+                note="requires adjudication",
+            )
+            self.assertEqual(len(second), 1)
+            self.assertEqual(second.iloc[0]["review_action"], "corrected")
+            self.assertEqual(second.iloc[0]["review_status"], "needs_review")
+            with self.assertRaisesRegex(ValueError, "Unsupported focused-QC action"):
+                update_focused_qc_review(
+                    path,
+                    candidate_code="CASE-2",
+                    role="adaptation_train",
+                    reviewer="RAD-01",
+                    qc_flags="",
+                    action="skipped",
+                    needs_review=False,
+                    note="",
+                )
 
 
 class ManifestTests(unittest.TestCase):
