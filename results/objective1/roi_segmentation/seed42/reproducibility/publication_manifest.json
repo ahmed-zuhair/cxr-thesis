@@ -1,0 +1,128 @@
+{
+  "title": "Objective 1 ROI lung segmentation",
+  "version": "v1.0.0",
+  "created_utc": "2026-08-23T00:45:57.991905+00:00",
+  "hugging_face_repository": "ahmed-zuhair/cxr-thesis-checkpoints",
+  "github_repository": "ahmed-zuhair/cxr-thesis",
+  "github_release_tag": "objective1-roi-segmentation-v1.0.0",
+  "checkpoint_sha256": "94a20eee892f9240df4a4534ced85e55f3677975c627ee336db7eb51a98e5642",
+  "locked_test_cases": 106,
+  "test_dice": 0.9622948273182155,
+  "test_iou": 0.9286691789077731,
+  "test_hd95_pixels_at_224": 4.768728994227785,
+  "excluded_sensitive_or_licensed_material": [
+    "original images",
+    "original masks",
+    "clinical remarks",
+    "original patient-level manifest",
+    "patient/study/image identifiers",
+    "target-mask and probability arrays"
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "size_bytes": 3746,
+      "sha256": "8fe8d29e4646db0339e590aa664dbed9c38ff2715b312493294360d8b0974369"
+    },
+    {
+      "path": "checkpoint/best.pt",
+      "size_bytes": 7743273,
+      "sha256": "94a20eee892f9240df4a4534ced85e55f3677975c627ee336db7eb51a98e5642"
+    },
+    {
+      "path": "checkpoint/best.sha256",
+      "size_bytes": 74,
+      "sha256": "642fbf54f566673920d16867272b4277ba6839f2bca140933d644c485748e998"
+    },
+    {
+      "path": "configuration/default.yaml",
+      "size_bytes": 617,
+      "sha256": "6615d7d86e84634bf34ad0b9a88c3ba22ec4876c85937599049ec7c0f615dbc0"
+    },
+    {
+      "path": "configuration/radiomics.yaml",
+      "size_bytes": 279,
+      "sha256": "481eaafafc07e75154f212c648acad658ed952fa7de7e64b8bb21a3dedf8041e"
+    },
+    {
+      "path": "figures/locked_test_seeded_random_cases.png",
+      "size_bytes": 1704039,
+      "sha256": "de8c91a1f4102877612fc98f97e75316f99719ae1fbe6d3b628180dd1f73ed8f"
+    },
+    {
+      "path": "figures/locked_test_worst_cases.png",
+      "size_bytes": 1780897,
+      "sha256": "b2f65767bbe4bf686cfb3249b5017854b8279b9f3bf1b4454b0b7c47bff8fc69"
+    },
+    {
+      "path": "figures/training_history.png",
+      "size_bytes": 191204,
+      "sha256": "3e634fb488bb1fb89671de42778db89b3af4a06ba357466a6674f2dfff2a2469"
+    },
+    {
+      "path": "metrics/locked_test_per_case_anonymized.csv",
+      "size_bytes": 20735,
+      "sha256": "5a6803d34a69b6ecec1aec39fd4db1df00991db06419061c5ec69963813dbdaf"
+    },
+    {
+      "path": "metrics/locked_test_subgroup_metrics.csv",
+      "size_bytes": 1025,
+      "sha256": "e9f0521544a37c000a81b706e929fde7c63f1abb122a875c42985c008932b51d"
+    },
+    {
+      "path": "metrics/locked_test_summary.json",
+      "size_bytes": 2938,
+      "sha256": "a8b6abf38401b56a83c88e3f2275044172cac0a0a905bdc6f7bf27654637a17b"
+    },
+    {
+      "path": "metrics/training_history.csv",
+      "size_bytes": 5751,
+      "sha256": "09aab50695939cfde84bc992dabafaa722ccdfdfa4a1a0ce14f15d38f86eda20"
+    },
+    {
+      "path": "reproducibility/final_environment.txt",
+      "size_bytes": 19134,
+      "sha256": "3960f54ac464f7f4fd0961a40d083346a59c469eaff52f378b50296d6ba116de"
+    },
+    {
+      "path": "reproducibility/run_metadata_after_test.json",
+      "size_bytes": 4995,
+      "sha256": "c63beed48aecfe750183975c5d37f2b2c8ad02e4da120df156ebf84450475dc9"
+    },
+    {
+      "path": "reproducibility/run_metadata_before_test.json",
+      "size_bytes": 928,
+      "sha256": "52f633cd65ff539e8e71e07c9ce4d9dfed7a0450e9b9bd216ee3e1421faa9442"
+    },
+    {
+      "path": "source/config.py",
+      "size_bytes": 3290,
+      "sha256": "6b03e031884e1ff9ad9ec1e8595f141c028c1038b8228723d9c54b78aff21a7a"
+    },
+    {
+      "path": "source/generate_roi_masks.py",
+      "size_bytes": 3684,
+      "sha256": "414364a8534b10f2c252d6fc9e61cb7a9805c556ea617e433a6a600c77de2cb5"
+    },
+    {
+      "path": "source/preprocessing.py",
+      "size_bytes": 8097,
+      "sha256": "f4a09a3b78406307a917b1430405396bd2216df561afd7d22363cb138d459d12"
+    },
+    {
+      "path": "source/segmentation.py",
+      "size_bytes": 8173,
+      "sha256": "db1968b1d1251e5b8ecb1775e535051c2c493bd1315443d0a9b4975f87f151a8"
+    },
+    {
+      "path": "source/segmentation_data.py",
+      "size_bytes": 2440,
+      "sha256": "f5ce42ffad38a437dfade85f9f37857afea0b3eb4e2a6bddffc6aaf67df5b5e3"
+    },
+    {
+      "path": "source/train_roi_segmentation.py",
+      "size_bytes": 6412,
+      "sha256": "92c4fe91cc55b145a6eaf5dd38976f094ef00259253f824fd7771ac3da6d748a"
+    }
+  ]
+}

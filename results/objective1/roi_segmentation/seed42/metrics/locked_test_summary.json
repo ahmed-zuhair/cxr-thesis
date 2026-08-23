@@ -1,0 +1,92 @@
+{
+  "objective": "Objective 1 ROI lung segmentation",
+  "evaluation_type": "single locked held-out test evaluation",
+  "evaluation_timestamp_utc": "2026-08-23T00:23:31.633865+00:00",
+  "dataset": "Montgomery-Shenzhen-LungMasks",
+  "checkpoint": "/kaggle/working/outputs/lung_segmentation_seed42/best.pt",
+  "checkpoint_sha256": "94a20eee892f9240df4a4534ced85e55f3677975c627ee336db7eb51a98e5642",
+  "best_epoch": 48,
+  "training_seed": 42,
+  "split_seed": 42,
+  "test_cases": 106,
+  "image_resolution": "224x224",
+  "threshold_source": "selected exclusively on the validation split",
+  "frozen_threshold": 0.5499999999999999,
+  "test_threshold_tuning_performed": false,
+  "connected_component_postprocessing_used": false,
+  "prediction_rule": "sigmoid(logit) >= frozen validation threshold",
+  "dice": {
+    "mean": 0.9622948273182155,
+    "standard_deviation": 0.028465141062369387,
+    "median": 0.9723962176530458,
+    "minimum": 0.8014453928105405,
+    "maximum": 0.9877657779277811,
+    "mean_95_ci": {
+      "lower_95": 0.9565915493527375,
+      "upper_95": 0.9671999568466279,
+      "repetitions": 10000,
+      "seed": 42,
+      "method": "patient-level nonparametric bootstrap"
+    }
+  },
+  "iou": {
+    "mean": 0.9286691789077731,
+    "standard_deviation": 0.04936267300490067,
+    "median": 0.9462754564737585,
+    "minimum": 0.6686765776071643,
+    "maximum": 0.9758272901558924,
+    "mean_95_ci": {
+      "lower_95": 0.9188373417839568,
+      "upper_95": 0.9372618469459776,
+      "repetitions": 10000,
+      "seed": 42,
+      "method": "patient-level nonparametric bootstrap"
+    }
+  },
+  "hd95_pixels_at_224": {
+    "mean": 4.768728994227785,
+    "standard_deviation": 5.599563489757611,
+    "median": 2.8284271247461903,
+    "minimum": 1.0,
+    "maximum": 25.04194972059834,
+    "finite_cases": 106,
+    "nonfinite_cases": 0,
+    "mean_95_ci": {
+      "lower_95": 3.7902077507884173,
+      "upper_95": 5.885507150572608,
+      "repetitions": 10000,
+      "seed": 42,
+      "method": "patient-level nonparametric bootstrap over finite HD95 cases"
+    }
+  },
+  "precision": {
+    "mean": 0.9695214229733385,
+    "standard_deviation": 0.02043670733126073,
+    "median": 0.9759242428735575,
+    "minimum": 0.8795311845960653,
+    "maximum": 0.9945601970645592,
+    "mean_95_ci": {
+      "lower_95": 0.9655821033014759,
+      "upper_95": 0.9731850360310911,
+      "repetitions": 10000,
+      "seed": 42,
+      "method": "patient-level nonparametric bootstrap"
+    }
+  },
+  "recall": {
+    "mean": 0.9568181104897103,
+    "standard_deviation": 0.04927067567073246,
+    "median": 0.9733541107197821,
+    "minimum": 0.6744259201006606,
+    "maximum": 0.9951506245407788,
+    "mean_95_ci": {
+      "lower_95": 0.9468848148825361,
+      "upper_95": 0.9654494824059403,
+      "repetitions": 10000,
+      "seed": 42,
+      "method": "patient-level nonparametric bootstrap"
+    }
+  },
+  "empty_failures": 0,
+  "empty_failure_rate": 0.0
+}
