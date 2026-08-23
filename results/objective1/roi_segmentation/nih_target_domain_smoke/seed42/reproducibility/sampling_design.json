@@ -1,0 +1,208 @@
+{
+  "purpose": "NIH target-domain ROI segmentation smoke audit",
+  "seed": 42,
+  "cases": 32,
+  "unique_patients": 32,
+  "source_splits": [
+    "train",
+    "val"
+  ],
+  "official_nih_test_used": false,
+  "views": [
+    "PA",
+    "AP"
+  ],
+  "sex_groups": [
+    "F",
+    "M"
+  ],
+  "finding_groups": [
+    "no_finding",
+    "abnormal"
+  ],
+  "cases_per_stratum": 2,
+  "strata": [
+    {
+      "split": "train",
+      "view": "AP",
+      "sex": "F",
+      "finding_group": "abnormal",
+      "cases": 2
+    },
+    {
+      "split": "train",
+      "view": "AP",
+      "sex": "F",
+      "finding_group": "no_finding",
+      "cases": 2
+    },
+    {
+      "split": "train",
+      "view": "AP",
+      "sex": "M",
+      "finding_group": "abnormal",
+      "cases": 2
+    },
+    {
+      "split": "train",
+      "view": "AP",
+      "sex": "M",
+      "finding_group": "no_finding",
+      "cases": 2
+    },
+    {
+      "split": "train",
+      "view": "PA",
+      "sex": "F",
+      "finding_group": "abnormal",
+      "cases": 2
+    },
+    {
+      "split": "train",
+      "view": "PA",
+      "sex": "F",
+      "finding_group": "no_finding",
+      "cases": 2
+    },
+    {
+      "split": "train",
+      "view": "PA",
+      "sex": "M",
+      "finding_group": "abnormal",
+      "cases": 2
+    },
+    {
+      "split": "train",
+      "view": "PA",
+      "sex": "M",
+      "finding_group": "no_finding",
+      "cases": 2
+    },
+    {
+      "split": "val",
+      "view": "AP",
+      "sex": "F",
+      "finding_group": "abnormal",
+      "cases": 2
+    },
+    {
+      "split": "val",
+      "view": "AP",
+      "sex": "F",
+      "finding_group": "no_finding",
+      "cases": 2
+    },
+    {
+      "split": "val",
+      "view": "AP",
+      "sex": "M",
+      "finding_group": "abnormal",
+      "cases": 2
+    },
+    {
+      "split": "val",
+      "view": "AP",
+      "sex": "M",
+      "finding_group": "no_finding",
+      "cases": 2
+    },
+    {
+      "split": "val",
+      "view": "PA",
+      "sex": "F",
+      "finding_group": "abnormal",
+      "cases": 2
+    },
+    {
+      "split": "val",
+      "view": "PA",
+      "sex": "F",
+      "finding_group": "no_finding",
+      "cases": 2
+    },
+    {
+      "split": "val",
+      "view": "PA",
+      "sex": "M",
+      "finding_group": "abnormal",
+      "cases": 2
+    },
+    {
+      "split": "val",
+      "view": "PA",
+      "sex": "M",
+      "finding_group": "no_finding",
+      "cases": 2
+    }
+  ],
+  "stratum_availability": {
+    "train|PA|F|no_finding": {
+      "candidate_images": 14179,
+      "candidate_patients": 8391
+    },
+    "train|PA|F|abnormal": {
+      "candidate_images": 8690,
+      "candidate_patients": 4722
+    },
+    "train|PA|M|no_finding": {
+      "candidate_images": 16991,
+      "candidate_patients": 9781
+    },
+    "train|PA|M|abnormal": {
+      "candidate_images": 10810,
+      "candidate_patients": 5607
+    },
+    "train|AP|F|no_finding": {
+      "candidate_images": 5931,
+      "candidate_patients": 2366
+    },
+    "train|AP|F|abnormal": {
+      "candidate_images": 5416,
+      "candidate_patients": 1720
+    },
+    "train|AP|M|no_finding": {
+      "candidate_images": 8416,
+      "candidate_patients": 3120
+    },
+    "train|AP|M|abnormal": {
+      "candidate_images": 7286,
+      "candidate_patients": 2325
+    },
+    "val|PA|F|no_finding": {
+      "candidate_images": 1462,
+      "candidate_patients": 911
+    },
+    "val|PA|F|abnormal": {
+      "candidate_images": 962,
+      "candidate_patients": 544
+    },
+    "val|PA|M|no_finding": {
+      "candidate_images": 1865,
+      "candidate_patients": 1071
+    },
+    "val|PA|M|abnormal": {
+      "candidate_images": 1255,
+      "candidate_patients": 629
+    },
+    "val|AP|F|no_finding": {
+      "candidate_images": 716,
+      "candidate_patients": 264
+    },
+    "val|AP|F|abnormal": {
+      "candidate_images": 710,
+      "candidate_patients": 188
+    },
+    "val|AP|M|no_finding": {
+      "candidate_images": 940,
+      "candidate_patients": 359
+    },
+    "val|AP|M|abnormal": {
+      "candidate_images": 895,
+      "candidate_patients": 272
+    }
+  },
+  "private_sample_manifest_sha256": "cef28590e4a089134f4bb8b459e9a3d9dd09d9e47c9b1d772d6cde7575975fb4",
+  "full_manifest_sha256": "c7457b90eb48472995ac9f7b8a00590f4beb2176db3d02aa1d72198260aba8e9",
+  "checkpoint_sha256": "94a20eee892f9240df4a4534ced85e55f3677975c627ee336db7eb51a98e5642",
+  "publication_policy": "Patient/image identifiers remain private. Only aggregate QC and anonymized figures may be published."
+}

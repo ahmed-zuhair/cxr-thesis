@@ -1,0 +1,42 @@
+{
+  "artifact": "NIH target-domain ROI segmentation smoke failure analysis",
+  "version": "v1.0.0",
+  "full_nih_inference_approved": false,
+  "checkpoint_sha256": "94a20eee892f9240df4a4534ced85e55f3677975c627ee336db7eb51a98e5642",
+  "full_manifest_sha256": "c7457b90eb48472995ac9f7b8a00590f4beb2176db3d02aa1d72198260aba8e9",
+  "private_sample_manifest_sha256": "cef28590e4a089134f4bb8b459e9a3d9dd09d9e47c9b1d772d6cde7575975fb4",
+  "patient_level_data_published": false,
+  "generated_masks_published": false,
+  "files": [
+    {
+      "path": "README.md",
+      "size_bytes": 2458,
+      "sha256": "4a402f09a671d3c8d5af7b4476827d80ce9c4e7e7f2508c8ab487535c54e7c3a"
+    },
+    {
+      "path": "figures/visual_audit_cases_01_16.png",
+      "size_bytes": 3530209,
+      "sha256": "78ccd379650dc3cac54fa6af684a027f4d469e55bdbea5430890733e472294bc"
+    },
+    {
+      "path": "figures/visual_audit_cases_17_32.png",
+      "size_bytes": 3680900,
+      "sha256": "589ff5bf43bb4d6efb67e0e52e5a7624a6cee9141738a5dbfbb9689682a947aa"
+    },
+    {
+      "path": "metrics/nih_roi_smoke_anonymized_per_case_qc.csv",
+      "size_bytes": 5142,
+      "sha256": "802e6d8269c03799330c6c7b932e5b9c2c4fc5f881cbbcffbd698fe31587c079"
+    },
+    {
+      "path": "metrics/nih_roi_smoke_reviewed_summary.json",
+      "size_bytes": 2550,
+      "sha256": "59da3d088e28d4137a256e2eb2b197ecacbf919c04f371f30d3bf698109e744a"
+    },
+    {
+      "path": "reproducibility/sampling_design.json",
+      "size_bytes": 4472,
+      "sha256": "0b71d724a6029c082de8d3404e15a3febefd8d6ec60386038b95a356847fbce5"
+    }
+  ]
+}

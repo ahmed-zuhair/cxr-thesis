@@ -1,0 +1,80 @@
+{
+  "purpose": "NIH target-domain ROI mask smoke audit",
+  "ground_truth_masks_available": false,
+  "dice_iou_hd95_computed": false,
+  "cases": 32,
+  "unique_patients": 32,
+  "official_nih_test_used": false,
+  "stratification": {
+    "splits": [
+      "train",
+      "val"
+    ],
+    "views": [
+      "PA",
+      "AP"
+    ],
+    "sex_groups": [
+      "F",
+      "M"
+    ],
+    "finding_groups": [
+      "no_finding",
+      "abnormal"
+    ],
+    "cases_per_combination": 2
+  },
+  "checkpoint_sha256": "94a20eee892f9240df4a4534ced85e55f3677975c627ee336db7eb51a98e5642",
+  "full_manifest_sha256": "c7457b90eb48472995ac9f7b8a00590f4beb2176db3d02aa1d72198260aba8e9",
+  "private_sample_manifest_sha256": "cef28590e4a089134f4bb8b459e9a3d9dd09d9e47c9b1d772d6cde7575975fb4",
+  "threshold": 0.5499999999999999,
+  "postprocessing": "relative-area>=0.001;min-pixels=0;fixed-component-count=false",
+  "generated_masks": 32,
+  "failed_cases": 0,
+  "nonempty_masks": 32,
+  "plausible_masks": 32,
+  "touching_border": 0,
+  "outside_training_mask_range": 1,
+  "more_than_three_components": 1,
+  "more_than_one_percent_removed": 0,
+  "cases_with_any_qc_flag": 1,
+  "roi_fraction_quantiles": {
+    "0.0": 0.0709701849489796,
+    "0.05": 0.1240084901147959,
+    "0.25": 0.2003447863520408,
+    "0.5": 0.26593391262755106,
+    "0.75": 0.3142338966836734,
+    "0.95": 0.35149473852040813,
+    "1.0": 0.3665098852040816
+  },
+  "wall_seconds": 6.101454951998676,
+  "publication_status": "Published failure analysis",
+  "review_timestamp_utc": "2026-08-23T01:24:05.503601+00:00",
+  "review_type": "AI-assisted technical visual review; not a radiologist assessment",
+  "clear_major_failure_case_indices": [
+    12,
+    32
+  ],
+  "probable_undersegmentation_case_indices": [
+    10,
+    16,
+    26
+  ],
+  "focused_review_case_indices": [
+    1,
+    10,
+    12,
+    16,
+    21,
+    26,
+    27,
+    32
+  ],
+  "automatic_qc_flagged_cases": 1,
+  "visual_review_conclusion": "Standard PA cases generally transfer well, but portable/AP, rotated, severely abnormal, low-volume, and obscured cases show material under-segmentation or fragmentation.",
+  "automatic_qc_conclusion": "Simple nonempty, ROI-fraction, border, and component-count checks did not detect every visually important failure.",
+  "full_nih_inference_approved": false,
+  "full_inference_block_reason": "Material target-domain failures require focused review, stronger QC, and target-domain adaptation/validation before full inference.",
+  "patient_level_data_published": false,
+  "generated_masks_published": false
+}
