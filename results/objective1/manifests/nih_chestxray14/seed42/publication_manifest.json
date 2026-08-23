@@ -1,0 +1,27 @@
+{
+  "artifact": "NIH ChestXray14 canonical manifest aggregate summary",
+  "version": "v1.0.0",
+  "created_utc": "2026-08-23T01:14:14.678346+00:00",
+  "source_code_commit": "78efed71d40c182d3a222ab164ce89408bb5847d",
+  "private_manifest_sha256": "c7457b90eb48472995ac9f7b8a00590f4beb2176db3d02aa1d72198260aba8e9",
+  "private_manifest_uploaded": false,
+  "patient_level_data_uploaded": false,
+  "medical_images_uploaded": false,
+  "files": [
+    {
+      "path": "README.md",
+      "size_bytes": 2602,
+      "sha256": "da2f8c31e8642907e6b63a89990d5dec2df6f34a56ba30df53ddec821f7ac243"
+    },
+    {
+      "path": "nih_chestxray14.sha256",
+      "size_bytes": 86,
+      "sha256": "693254a4045dee668963cf7fca5973046a400ed4bdb53c2076cfbfe765b7d615"
+    },
+    {
+      "path": "nih_chestxray14_summary.json",
+      "size_bytes": 3005,
+      "sha256": "9a1a4ccd9978a79dedeba395d3fe585254b26db3ec4f4b7a3253831c1ce3273c"
+    }
+  ]
+}
