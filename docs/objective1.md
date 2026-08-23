@@ -67,6 +67,11 @@ risk metrics, and records frontal, lateral, other-ineligible, or uncertain
 decisions for deterministic same-stratum replacement before masks are edited.
 After the first pass, `--review-flagged` restricts the viewer to existing
 non-eligible or uncertain decisions for a focused, still image-only second pass.
+Confirmed non-frontal development cases are replaced using deterministic
+same-split, same-stratum reserves from
+`scripts/create_projection_replacement_reserves.py`. Each replacement retains
+the rejected case's high-risk or representative selection basis. The locked
+target test is not modified by this prediction-aware reserve procedure.
 
 ## Setup
 

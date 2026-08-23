@@ -13,7 +13,10 @@ import torch
 from PIL import Image
 
 from cxr_thesis.objective1.config import Objective1Config, load_config
-from cxr_thesis.objective1.cohort_selection import select_roi_annotation_cohort
+from cxr_thesis.objective1.cohort_selection import (
+    select_projection_replacement_reserves,
+    select_roi_annotation_cohort,
+)
 from cxr_thesis.objective1.annotation_workspace import (
     load_annotation_case,
     load_annotation_worklist,
@@ -118,6 +121,51 @@ class AnnotationCohortTests(unittest.TestCase):
             set(first["locked_target_test"]["image_id"]),
             set(second["locked_target_test"]["image_id"]),
         )
+
+    def test_projection_replacements_preserve_role_stratum_and_basis(self) -> None:
+        mapping, ranked = self._candidate_frames()
+        roles = select_roi_annotation_cohort(mapping, ranked, seed=42)
+        rejected_rows = []
+        for role in ("adaptation_train", "target_validation"):
+            original = roles[role].iloc[0]
+            rejected_rows.append(
+                {
+                    "candidate_code": original["candidate_code"],
+                    "cohort_role": role,
+                    "projection_decision": "ineligible_lateral",
+                }
+            )
+        rejected = pd.DataFrame(rejected_rows)
+        first = select_projection_replacement_reserves(
+            mapping, ranked, roles["master"], rejected, reserves_per_slot=5
+        )
+        second = select_projection_replacement_reserves(
+            mapping, ranked, roles["master"], rejected, reserves_per_slot=5
+        )
+        self.assertEqual(len(first), 10)
+        self.assertEqual(first["replacement_slot"].nunique(), 2)
+        self.assertTrue((first.groupby("replacement_slot").size() == 5).all())
+        pd.testing.assert_frame_equal(first, second)
+        self.assertFalse(
+            set(first["patient_id"]).intersection(roles["master"]["patient_id"])
+        )
+        self.assertFalse(
+            set(first["image_id"]).intersection(roles["master"]["image_id"])
+        )
+        for row in rejected_rows:
+            original = roles[row["cohort_role"]].loc[
+                roles[row["cohort_role"]]["candidate_code"] == row["candidate_code"]
+            ].iloc[0]
+            reserve = first[first["cohort_role"] == row["cohort_role"]]
+            self.assertEqual(set(reserve["cohort_stratum"]), {original["cohort_stratum"]})
+            self.assertEqual(set(reserve["selection_basis"]), {original["selection_basis"]})
+
+        forbidden = rejected.copy()
+        forbidden.loc[0, "cohort_role"] = "locked_target_test"
+        with self.assertRaisesRegex(ValueError, "Only adaptation or validation"):
+            select_projection_replacement_reserves(
+                mapping, ranked, roles["master"], forbidden
+            )
 
 
 class AnnotationWorkspaceTests(unittest.TestCase):
