@@ -13,6 +13,7 @@ import torch
 from PIL import Image
 
 from cxr_thesis.objective1.config import Objective1Config, load_config
+from cxr_thesis.objective1.cohort_selection import select_roi_annotation_cohort
 from cxr_thesis.objective1.features import (
     encode_clinical_features,
     extract_handcrafted_2d,
@@ -42,6 +43,69 @@ from cxr_thesis.objective1.segmentation import (
     postprocess_binary_mask,
     remove_small_components,
 )
+
+
+class AnnotationCohortTests(unittest.TestCase):
+    @staticmethod
+    def _candidate_frames() -> tuple[pd.DataFrame, pd.DataFrame]:
+        mapping_rows = []
+        ranked_rows = []
+        number = 0
+        for split, count in (("train", 20), ("val", 15)):
+            for view in ("PA", "AP"):
+                for sex in ("F", "M"):
+                    for finding in ("no_finding", "abnormal"):
+                        for case in range(count):
+                            number += 1
+                            image_id = f"image-{number:04d}"
+                            mapping_rows.append(
+                                {
+                                    "candidate_code": f"CASE-{number:04d}",
+                                    "patient_id": f"patient-{number:04d}",
+                                    "study_id": f"study-{number:04d}",
+                                    "image_id": image_id,
+                                    "image_path": f"/private/{image_id}.png",
+                                    "split": split,
+                                    "view_group": view,
+                                    "sex_group": sex,
+                                    "finding_group": finding,
+                                }
+                            )
+                            risk = number / 1000.0
+                            ranked_rows.append(
+                                {
+                                    "image_id": image_id,
+                                    "active_qc_priority_score": risk,
+                                    "active_qc_risk_score": risk,
+                                    "mask_path": f"/private/{image_id}-mask.png",
+                                }
+                            )
+        return pd.DataFrame(mapping_rows), pd.DataFrame(ranked_rows)
+
+    def test_balanced_disjoint_and_prediction_blind_selection(self) -> None:
+        mapping, ranked = self._candidate_frames()
+        first = select_roi_annotation_cohort(mapping, ranked, seed=42)
+
+        self.assertEqual(len(first["adaptation_train"]), 120)
+        self.assertEqual(len(first["target_validation"]), 40)
+        self.assertEqual(len(first["locked_target_test"]), 40)
+        self.assertEqual(len(first["master"]), 200)
+        self.assertEqual(first["master"]["patient_id"].nunique(), 200)
+        self.assertEqual(first["master"]["image_id"].nunique(), 200)
+        self.assertTrue((first["adaptation_train"].groupby("cohort_stratum").size() == 15).all())
+        self.assertTrue((first["target_validation"].groupby("cohort_stratum").size() == 5).all())
+        self.assertTrue((first["locked_target_test"].groupby("cohort_stratum").size() == 5).all())
+        self.assertNotIn("mask_path", first["locked_target_test"].columns)
+        self.assertNotIn("active_qc_risk_score", first["locked_target_test"].columns)
+
+        reversed_risk = ranked.copy()
+        reversed_risk["active_qc_priority_score"] *= -1
+        reversed_risk["active_qc_risk_score"] *= -1
+        second = select_roi_annotation_cohort(mapping, reversed_risk, seed=42)
+        self.assertEqual(
+            set(first["locked_target_test"]["image_id"]),
+            set(second["locked_target_test"]["image_id"]),
+        )
 
 
 class ManifestTests(unittest.TestCase):

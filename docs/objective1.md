@@ -45,6 +45,16 @@ Optional columns include `mask_path`, `age`, `sex`, `indication`, and
 `label_<name>`. Findings/Impression text that is a report-generation target
 must not be included as a model input.
 
+## Target-domain ROI annotation cohort
+
+`scripts/select_roi_annotation_cohort.py` locks a private, patient-disjoint
+200-case NIH development cohort: 120 adaptation-training, 40 target-validation,
+and 40 locked target-test cases. The locked test is selected by deterministic
+identifier hashing before active-QC scores are joined, and its manifest excludes
+prediction columns. Adaptation and validation cases mix high-risk predictions
+with representatives spanning the remaining risk distribution. The official NIH
+test split is never used.
+
 ## Setup
 
 Create a Python 3.10–3.12 environment for the full medical stack. PyRadiomics
