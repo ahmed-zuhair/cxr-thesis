@@ -134,7 +134,10 @@ def finalize_reviewed_annotation_set(
     provenance_file = Path(provenance_path).resolve()
     if not provenance_file.is_file():
         raise FileNotFoundError(provenance_file)
-    provenance = json.loads(provenance_file.read_text(encoding="utf-8"))
+    # PowerShell commonly writes JSON with a UTF-8 byte-order mark on Windows.
+    # ``utf-8-sig`` accepts that representation while remaining compatible with
+    # ordinary UTF-8 files that do not contain a BOM.
+    provenance = json.loads(provenance_file.read_text(encoding="utf-8-sig"))
     if provenance.get("cohort_role") != role:
         raise ValueError("Annotation provenance role mismatch")
     if int(provenance.get("cases_reviewed_by_radiologist", 0)) != expected_cases:

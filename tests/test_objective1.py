@@ -764,7 +764,7 @@ class AnnotationWorkspaceTests(unittest.TestCase):
                         "anonymous_description_permitted": True,
                     }
                 ),
-                encoding="utf-8",
+                encoding="utf-8-sig",
             )
             output = root / "lock"
             result = finalize_reviewed_annotation_set(
