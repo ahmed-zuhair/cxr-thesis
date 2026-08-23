@@ -1,0 +1,27 @@
+{
+  "artifact": "Objective 1 NIH ROI annotation cohort public design summary",
+  "contains_completed_annotations": false,
+  "contains_image_identifiers": false,
+  "contains_patient_identifiers": false,
+  "contains_predicted_masks": false,
+  "contains_private_annotation_bundle": false,
+  "contains_private_manifests": false,
+  "contains_source_images": false,
+  "files": {
+    "README.md": {
+      "sha256": "4291441558f017ec1cbaec0f02d93ec04de0a7fc84c9ef6c58fbad42143302c6",
+      "size_bytes": 1611
+    },
+    "annotation_cohort_public_strata.csv": {
+      "sha256": "8ac68183be4f32074427fcc84576d43981c3ebfcf5ba3ee1c845b1be7bd24bcc",
+      "size_bytes": 2337
+    },
+    "annotation_cohort_public_summary.json": {
+      "sha256": "44b0d0753e4c99449ede10f3222e93950480d8ace48aa4f50e287ff0ae909cb7",
+      "size_bytes": 2328
+    }
+  },
+  "official_nih_test_used": false,
+  "total_cases": 200,
+  "version": "v1.0.0"
+}

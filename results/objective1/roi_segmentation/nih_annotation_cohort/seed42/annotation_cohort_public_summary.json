@@ -1,0 +1,47 @@
+{
+  "adaptation_high_risk_per_stratum": 7,
+  "annotation_policy": {
+    "adaptation_train": "predictions may be used only as pre-annotations requiring manual correction",
+    "locked_target_test": "annotate from scratch without displaying model predictions",
+    "target_validation": "predictions may be used only as pre-annotations requiring manual correction"
+  },
+  "candidate_manifest_sha256": "83440f4389562ceea9277a71a2917d1371252ece317ac9984087ecbdf518801e",
+  "cases_per_view_sex_finding_stratum": {
+    "adaptation_train": 15,
+    "locked_target_test": 5,
+    "target_validation": 5
+  },
+  "checkpoint_sha256": "94a20eee892f9240df4a4534ced85e55f3677975c627ee336db7eb51a98e5642",
+  "image_overlap_between_roles": 0,
+  "locked_test_contains_prediction_columns": false,
+  "locked_test_selected_before_ranked_audit_join": true,
+  "locked_test_selection": "deterministic SHA-256 ordering from identifiers only",
+  "locked_test_selection_uses_prediction_metrics": false,
+  "objective": "Objective 1 NIH ROI target-domain manual annotation cohort",
+  "official_nih_test_used": false,
+  "patient_overlap_between_roles": 0,
+  "privacy": {
+    "image_identifiers_intended_for_publication": false,
+    "patient_identifiers_intended_for_publication": false,
+    "predicted_masks_intended_for_publication": false,
+    "source_images_intended_for_publication": false
+  },
+  "private_cohort_file_sha256": {
+    "adaptation_train_120_private.csv": "33a3f0a737de8da237d1a356aa964be923189b0c0f549e9d5de8711f16cf8400",
+    "annotation_cohort_200_private.csv": "9a23f70b2d1d244121e7cdcaca51f4a8c96ee368de185f3ab8fda57ccf837962",
+    "locked_target_test_40_private.csv": "f912fc32221c3146359a2182a6272d83acc986a79704cc83d60a3f4a2c0e78af",
+    "target_validation_40_private.csv": "a6d92352e7fa81eb3aa33e3a56af0a1164496a83c6388756766b5752f8d36ec3"
+  },
+  "private_mapping_sha256": "2b2a8cd81f2ba184663a57f7bd1c6f7fef513362f8f300aef08859e70aca7ca1",
+  "private_ranked_audit_sha256": "3f3055f6d30d49fe6c487c6087e703ccec89b47115b171ef0e47149bd9db3fb9",
+  "repository_commit": "3ef2677af785da1cf76221f111ae77a58bc91581",
+  "role_counts": {
+    "adaptation_train": 120,
+    "locked_target_test": 40,
+    "target_validation": 40
+  },
+  "selection_seed": 42,
+  "total_cases": 200,
+  "unique_patients": 200,
+  "validation_high_risk_per_stratum": 2
+}
