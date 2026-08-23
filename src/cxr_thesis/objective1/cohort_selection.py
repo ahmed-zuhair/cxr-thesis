@@ -412,6 +412,8 @@ def select_projection_replacement_reserves(
 def match_cohort_fingerprints_to_manifest(
     manifest: pd.DataFrame,
     fingerprints: pd.DataFrame,
+    *,
+    progress_every: int = 0,
 ) -> pd.DataFrame:
     """Recover private cohort identities by exact image bytes and file size."""
     manifest_required = {
@@ -478,17 +480,36 @@ def match_cohort_fingerprints_to_manifest(
     manifest_matches: dict[str, list[dict[str, object]]] = {
         digest: [] for digest in fingerprints["image_sha256"]
     }
-    for _, row in manifest.iterrows():
+    hashed_candidates = 0
+    for position, (_, row) in enumerate(manifest.iterrows(), start=1):
         path = Path(str(row["image_path"]))
         if not path.is_file():
             continue
         size = path.stat().st_size
         possible = targets_by_size.get(size)
         if not possible:
+            if progress_every and position % progress_every == 0:
+                print(
+                    f"Fingerprint scan: {position:,}/{len(manifest):,} paths; "
+                    f"size-matched files hashed={hashed_candidates:,}"
+                )
             continue
+        hashed_candidates += 1
         digest = _sha256_file(path)
         if digest in possible:
             manifest_matches[digest].append(row.to_dict())
+        if progress_every and position % progress_every == 0:
+            print(
+                f"Fingerprint scan: {position:,}/{len(manifest):,} paths; "
+                f"size-matched files hashed={hashed_candidates:,}"
+            )
+    if progress_every:
+        matched_count = sum(1 for rows in manifest_matches.values() if len(rows) == 1)
+        print(
+            f"Fingerprint scan complete: {len(manifest):,} paths; "
+            f"size-matched files hashed={hashed_candidates:,}; "
+            f"cohort matches={matched_count:,}/{len(fingerprints):,}"
+        )
 
     missing = sorted(
         digest for digest, rows in manifest_matches.items() if len(rows) == 0

@@ -107,7 +107,9 @@ def main() -> None:
     }
     if rejected_counts != {"adaptation_train": 1, "target_validation": 1}:
         raise ValueError(f"Fingerprint replacement counts are unexpected: {rejected_counts}")
-    recovered = match_cohort_fingerprints_to_manifest(manifest, fingerprints)
+    recovered = match_cohort_fingerprints_to_manifest(
+        manifest, fingerprints, progress_every=20_000
+    )
     recovered_path = output / "recovered_cohort_identity_private.csv"
     recovered.to_csv(recovered_path, index=False)
     reserves = select_blind_projection_recovery_reserves(
