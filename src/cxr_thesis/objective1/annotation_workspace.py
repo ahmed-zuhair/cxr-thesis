@@ -304,6 +304,29 @@ def save_binary_annotation(
     }
 
 
+def validate_lung_roi_fraction(
+    labels: np.ndarray,
+    *,
+    minimum_fraction: float = 0.01,
+    maximum_fraction: float = 0.80,
+) -> float:
+    """Reject clearly unfinished lung masks before they can be saved."""
+
+    array = np.asarray(labels)
+    if array.ndim != 2:
+        raise ValueError("Lung ROI annotation must be two-dimensional")
+    foreground_fraction = float(np.mean(array > 0))
+    if foreground_fraction < minimum_fraction:
+        raise ValueError(
+            "Lung ROI is empty or too small to save; draw both visible lung fields"
+        )
+    if foreground_fraction > maximum_fraction:
+        raise ValueError(
+            "Lung ROI covers nearly the entire image; correct the mask before saving"
+        )
+    return foreground_fraction
+
+
 def update_annotation_progress(
     progress_path: str | Path,
     *,

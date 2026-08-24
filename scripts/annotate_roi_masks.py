@@ -21,6 +21,7 @@ from cxr_thesis.objective1.annotation_workspace import (
     save_binary_annotation,
     update_annotation_progress,
     update_focused_qc_review,
+    validate_lung_roi_fraction,
 )
 
 
@@ -258,14 +259,18 @@ def main() -> None:
                 QMessageBox.StandardButton.Save,
             )
             if answer == QMessageBox.StandardButton.Save:
-                self.save()
-                return True
+                return self.save()
             if answer == QMessageBox.StandardButton.Discard:
                 return True
             return False
 
-        def save(self) -> None:
+        def save(self) -> bool:
             case = cases[self.index]
+            try:
+                validate_lung_roi_fraction(self.labels_layer.data)
+            except ValueError as error:
+                QMessageBox.warning(self, "Incomplete lung ROI", str(error))
+                return False
             metrics = save_binary_annotation(
                 np.asarray(self.labels_layer.data),
                 case.output_path,
@@ -298,6 +303,7 @@ def main() -> None:
                 self.session_reviewed.add(case.candidate_code)
             self.dirty = False
             self.refresh_status("saved_annotation")
+            return True
 
         def move_to(self, index: int) -> None:
             if index == self.index or not self.confirm_navigation():
@@ -333,8 +339,8 @@ def main() -> None:
             )
 
         def save_and_next(self) -> None:
-            self.save()
-            self.next_unfinished()
+            if self.save():
+                self.next_unfinished()
 
     viewer = napari.Viewer(title=f"CXR Lung ROI Annotation — {args.role}")
     controller = AnnotationController(viewer)

@@ -32,6 +32,7 @@ from cxr_thesis.objective1.annotation_workspace import (
     update_annotation_progress,
     update_focused_qc_review,
     update_projection_audit,
+    validate_lung_roi_fraction,
 )
 from cxr_thesis.objective1.annotation_qc import audit_completed_annotations
 from cxr_thesis.objective1.annotation_finalization import (
@@ -537,6 +538,20 @@ class AnnotationWorkspaceTests(unittest.TestCase):
                 note="checked",
             )
             self.assertEqual(progress.iloc[0]["status"], "complete")
+
+    def test_lung_roi_guard_rejects_unfinished_masks(self) -> None:
+        empty = np.zeros((20, 20), dtype=np.uint8)
+        almost_full = np.ones((20, 20), dtype=np.uint8)
+        plausible = np.zeros((20, 20), dtype=np.uint8)
+        plausible[4:16, 3:17] = 1
+        with self.assertRaisesRegex(ValueError, "empty or too small"):
+            validate_lung_roi_fraction(empty)
+        with self.assertRaisesRegex(ValueError, "nearly the entire image"):
+            validate_lung_roi_fraction(almost_full)
+        self.assertAlmostEqual(
+            validate_lung_roi_fraction(plausible),
+            float(plausible.mean()),
+        )
 
     def test_locked_test_rejects_preannotations_and_loads_blank(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

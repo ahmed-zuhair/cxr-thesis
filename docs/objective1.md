@@ -60,6 +60,8 @@ pre-annotations only for adaptation-training and target-validation roles,
 writes same-size binary PNG masks atomically, and keeps a resumable private
 progress log. The locked-test role refuses pre-annotation files and requires an
 explicit prediction-blind confirmation flag.
+The interface blocks empty, near-empty, and nearly full masks so an untouched
+blank locked-test label cannot be saved accidentally.
 
 Before annotation, `scripts/audit_roi_projection.py` performs a resumable,
 image-only eligibility audit. It never resolves pre-annotation paths or loads
