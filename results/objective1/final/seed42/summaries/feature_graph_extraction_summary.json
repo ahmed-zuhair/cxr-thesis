@@ -1,0 +1,66 @@
+{
+  "annotation_masks_included": false,
+  "artifact": "Objective 1 NIH ROI feature and graph extraction aggregate v1.0.1",
+  "automatic_mask_modification": false,
+  "cases": 200,
+  "clinical_feature_columns": 9,
+  "constant_feature_columns_before_filtering": 5,
+  "expert_reviewed_small_roi_retained": true,
+  "extraction_config_sha256": "87e489aa7d85a03593fa097ab7a062d001a61af147fc7ba25506e50077f4a0bf",
+  "failed_v1.0_output_excluded": true,
+  "feature_table_sha256": "d2f6178806e66238305d76da777bd348ff2ee17113c48535bb6d1425c3108d06",
+  "graph_edge_count_quantiles": {
+    "0.0": 32.0,
+    "0.25": 176.75,
+    "0.5": 219.5,
+    "0.75": 259.75,
+    "1.0": 413.0
+  },
+  "graph_edge_index_dimensions_example": [
+    2,
+    226
+  ],
+  "graph_node_count_quantiles": {
+    "0.0": 6.0,
+    "0.25": 21.75,
+    "0.5": 26.0,
+    "0.75": 30.0,
+    "1.0": 43.0
+  },
+  "graph_node_feature_dimensions_example": [
+    26,
+    7
+  ],
+  "graph_patch_grid": [
+    7,
+    7
+  ],
+  "graph_schema_keys": [
+    "edge_attr",
+    "edge_index",
+    "metadata_json",
+    "node_position",
+    "node_type",
+    "x"
+  ],
+  "graph_type": "ROI-aware 2D patch graph",
+  "graphs": 200,
+  "handcrafted_feature_columns": 62,
+  "medical_images_included": false,
+  "overall_missing_feature_fraction": 0.0,
+  "patient_or_image_identifiers_included": false,
+  "preprocessing_image_size": 224,
+  "private_feature_rows_published": false,
+  "private_graph_files_published": false,
+  "radiomics_feature_columns": 279,
+  "radiomics_parameter_sha256": "c9700860b38c401c9e0c7a483e47b3277e89e27a3758e7311c69941fe44e6b03",
+  "review_aware_maximum_roi_fraction": 0.55,
+  "review_aware_minimum_roi_fraction": 0.03,
+  "roi_source": "radiologist-reviewed manual masks",
+  "split_counts": {
+    "test": 40,
+    "train": 120,
+    "val": 40
+  },
+  "total_model_feature_columns": 350
+}

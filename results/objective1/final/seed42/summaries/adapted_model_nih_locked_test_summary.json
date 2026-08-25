@@ -1,0 +1,83 @@
+{
+  "all_locked_cases_primary": {
+    "cases": 40,
+    "dice_bootstrap_95ci": [
+      0.867324264942737,
+      0.905643546604956
+    ],
+    "dice_mean": 0.8877281758144282,
+    "empty_failure_rate": 0.0,
+    "hd95_pixels_224_bootstrap_95ci": [
+      15.700349929334774,
+      22.79808113492552
+    ],
+    "hd95_pixels_224_mean": 19.05169532337146,
+    "iou_bootstrap_95ci": [
+      0.7721405861418034,
+      0.82960363580995
+    ],
+    "iou_mean": 0.8032104195178033,
+    "precision_mean": 0.9327174471168966,
+    "recall_mean": 0.8561651333734812
+  },
+  "annotation_limitation_declared": true,
+  "annotation_masks_included": false,
+  "annotation_progress_needs_second_review_cases": 15,
+  "annotation_qc_flagged_cases": 16,
+  "artifact": "Frozen prediction-blind ROI segmentation evaluation",
+  "bootstrap_samples": 2000,
+  "checkpoint_epoch": 29,
+  "checkpoint_sha256": "6ee1b4d351fdcfaaeec5e0487198128a5540d6dfe69a79a3158318aa22d9984c",
+  "frozen_validation_threshold": 0.3,
+  "medical_images_included": false,
+  "parent_checkpoint_sha256": "94a20eee892f9240df4a4534ced85e55f3677975c627ee336db7eb51a98e5642",
+  "patient_or_image_identifiers_included": false,
+  "private_per_case_metrics_published": false,
+  "progress_complete_sensitivity": {
+    "cases": 25,
+    "dice_bootstrap_95ci": [
+      0.8638888228065089,
+      0.8958595014070738
+    ],
+    "dice_mean": 0.8806235246583354,
+    "empty_failure_rate": 0.0,
+    "hd95_pixels_224_bootstrap_95ci": [
+      17.222217168999595,
+      21.438410163314295
+    ],
+    "hd95_pixels_224_mean": 19.456419884744804,
+    "iou_bootstrap_95ci": [
+      0.7641980155165234,
+      0.8141055394896096
+    ],
+    "iou_mean": 0.7891198507057298,
+    "precision_mean": 0.9442875588361614,
+    "recall_mean": 0.8290039492837685
+  },
+  "qc_clean_sensitivity": {
+    "cases": 24,
+    "dice_bootstrap_95ci": [
+      0.8688504684149949,
+      0.8992183906996499
+    ],
+    "dice_mean": 0.8843069547529939,
+    "empty_failure_rate": 0.0,
+    "hd95_pixels_224_bootstrap_95ci": [
+      16.97194959665666,
+      21.246120911671078
+    ],
+    "hd95_pixels_224_mean": 19.168422264505825,
+    "iou_bootstrap_95ci": [
+      0.76962170014032,
+      0.8174254759324087
+    ],
+    "iou_mean": 0.7946693293019417,
+    "precision_mean": 0.9436178065646731,
+    "recall_mean": 0.8354547501062167
+  },
+  "seed": 42,
+  "split": "test",
+  "test_threshold_tuning": false,
+  "test_used_for_model_selection": false,
+  "training_role": "target_domain_adaptation"
+}

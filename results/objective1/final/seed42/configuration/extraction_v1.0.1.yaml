@@ -1,0 +1,33 @@
+seed: 42
+
+preprocessing:
+  image_size: 224
+  apply_clahe: false
+  clahe_clip_limit: 2.0
+  clahe_grid_size: 8
+  lower_percentile: 0.5
+  upper_percentile: 99.5
+  pad_value: 0
+  ct_window_low: -1000.0
+  ct_window_high: 400.0
+  ct_target_spacing: [1.0, 1.0, 1.0]
+
+segmentation:
+  threshold: 0.5
+  min_roi_fraction: 0.03
+  max_roi_fraction: 0.55
+  keep_largest_components: 2
+
+features:
+  histogram_bins: 16
+  hog_bins: 9
+  enable_radiomics: true
+  radiomics_parameter_file: "/kaggle/working/configs/objective1_nih/radiomics_2d.yaml"
+
+graph:
+  patch_grid_2d: [7, 7]
+  patch_grid_3d: [4, 4, 4]
+  connectivity_2d: 8
+  connectivity_3d: 6
+  knn_k: 3
+  include_empty_nodes: false

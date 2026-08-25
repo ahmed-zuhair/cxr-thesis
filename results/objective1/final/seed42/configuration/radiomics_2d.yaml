@@ -1,0 +1,16 @@
+imageType:
+  Original: {}
+  Wavelet: {}
+
+featureClass:
+  firstorder: []
+  glcm: []
+  glrlm: []
+  glszm: []
+  gldm: []
+  ngtdm: []
+
+setting:
+  binWidth: 25
+  normalize: false
+  correctMask: true

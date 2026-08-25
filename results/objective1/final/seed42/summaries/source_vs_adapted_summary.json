@@ -1,0 +1,103 @@
+{
+  "adapted_best_epoch": 29,
+  "adapted_checkpoint_sha256": "6ee1b4d351fdcfaaeec5e0487198128a5540d6dfe69a79a3158318aa22d9984c",
+  "adapted_frozen_validation_threshold": 0.3,
+  "adapted_parent_checkpoint_sha256": "94a20eee892f9240df4a4534ced85e55f3677975c627ee336db7eb51a98e5642",
+  "annotation_limitation_declared": true,
+  "annotation_masks_included": false,
+  "annotation_progress_needs_second_review_cases": 15,
+  "annotation_qc_flagged_cases": 16,
+  "artifact": "Objective 1 paired source-versus-adapted NIH ROI locked-test comparison",
+  "hyperparameter_runs": 1,
+  "medical_images_included": false,
+  "patient_or_image_identifiers_included": false,
+  "primary_all_locked_cases": {
+    "adapted_dice_mean": 0.8877281758144282,
+    "adapted_hd95_pixels_224_mean": 19.051695323371458,
+    "adapted_iou_mean": 0.8032104195178033,
+    "cases": 40,
+    "dice_improved_case_fraction": 0.8,
+    "paired_dice_improvement_bootstrap_95ci": [
+      0.02457111626319947,
+      0.10908853542743827
+    ],
+    "paired_dice_improvement_mean": 0.05993254445731986,
+    "paired_dice_wilcoxon_p_value": 1.8586324586067349e-06,
+    "paired_hd95_reduction_bootstrap_95ci": [
+      -0.8745693242284805,
+      13.213231196605166
+    ],
+    "paired_hd95_reduction_mean": 5.466800021235942,
+    "paired_hd95_wilcoxon_p_value": 0.26104426545782256,
+    "paired_iou_improvement_bootstrap_95ci": [
+      0.0330689076120705,
+      0.11725542144485562
+    ],
+    "paired_iou_improvement_mean": 0.06970072968390445,
+    "paired_iou_wilcoxon_p_value": 2.2321128199109808e-06,
+    "source_dice_mean": 0.8277956313571085,
+    "source_hd95_pixels_224_mean": 24.518495344607402,
+    "source_iou_mean": 0.7335096898338987
+  },
+  "private_per_case_metrics_published": false,
+  "progress_complete_sensitivity": {
+    "adapted_dice_mean": 0.8806235246583354,
+    "adapted_hd95_pixels_224_mean": 19.456419884744804,
+    "adapted_iou_mean": 0.7891198507057298,
+    "cases": 25,
+    "dice_improved_case_fraction": 0.84,
+    "paired_dice_improvement_bootstrap_95ci": [
+      0.013107068040725306,
+      0.12291415829836218
+    ],
+    "paired_dice_improvement_mean": 0.05553989031051753,
+    "paired_dice_wilcoxon_p_value": 8.803606033325195e-05,
+    "paired_hd95_reduction_bootstrap_95ci": [
+      -1.004039661925363,
+      13.101303803915958
+    ],
+    "paired_hd95_reduction_mean": 4.106603085678666,
+    "paired_hd95_wilcoxon_p_value": 0.8531995415687561,
+    "paired_iou_improvement_bootstrap_95ci": [
+      0.01840103909466546,
+      0.12399538635374699
+    ],
+    "paired_iou_improvement_mean": 0.06088832006323619,
+    "paired_iou_wilcoxon_p_value": 8.803606033325195e-05,
+    "source_dice_mean": 0.825083634347818,
+    "source_hd95_pixels_224_mean": 23.56302297042347,
+    "source_iou_mean": 0.7282315306424937
+  },
+  "protocol_before_test_sha256": "f185aa98b98e11089b3297d9891ef6d6540253578bbf23e97ebc69e15fa332c1",
+  "qc_clean_sensitivity": {
+    "adapted_dice_mean": 0.8843069547529939,
+    "adapted_hd95_pixels_224_mean": 19.168422264505825,
+    "adapted_iou_mean": 0.7946693293019417,
+    "cases": 24,
+    "dice_improved_case_fraction": 0.8333333333333334,
+    "paired_dice_improvement_bootstrap_95ci": [
+      0.009855052728399618,
+      0.12209133426572061
+    ],
+    "paired_dice_improvement_mean": 0.05262975836806255,
+    "paired_dice_wilcoxon_p_value": 0.00017547607421875,
+    "paired_hd95_reduction_bootstrap_95ci": [
+      -1.507047562960937,
+      12.314039949880657
+    ],
+    "paired_hd95_reduction_mean": 3.768173359301311,
+    "paired_hd95_wilcoxon_p_value": 0.9218088388442993,
+    "paired_iou_improvement_bootstrap_95ci": [
+      0.013984902942521532,
+      0.118368726605279
+    ],
+    "paired_iou_improvement_mean": 0.05693619065155747,
+    "paired_iou_wilcoxon_p_value": 0.00017547607421875,
+    "source_dice_mean": 0.8316771963849314,
+    "source_hd95_pixels_224_mean": 22.936595623807136,
+    "source_iou_mean": 0.7377331386503844
+  },
+  "source_checkpoint_sha256": "94a20eee892f9240df4a4534ced85e55f3677975c627ee336db7eb51a98e5642",
+  "test_threshold_tuning": false,
+  "test_used_for_model_selection": false
+}

@@ -1,0 +1,58 @@
+{
+  "annotation_masks_included": false,
+  "artifact": "Objective 1 NIH validation-only feature and graph stability audit v1.0.0",
+  "cases": 40,
+  "cohort_role": "target_validation",
+  "constant_validation_baseline_features": 0,
+  "feature_family_summary": [
+    {
+      "audited": 61,
+      "constant": 0,
+      "feature_family": "handcrafted",
+      "median_icc": 0.909068893721434,
+      "median_minimum_spearman": 0.929455909943715,
+      "stable": 44,
+      "stable_fraction": 0.7213114754098361
+    },
+    {
+      "audited": 279,
+      "constant": 0,
+      "feature_family": "radiomics",
+      "median_icc": 0.7980233730207482,
+      "median_minimum_spearman": 0.9367729831144467,
+      "stable": 115,
+      "stable_fraction": 0.4121863799283154
+    }
+  ],
+  "graph_structural_stability": {
+    "exact_node_and_edge_count_match_fraction": 0.1375,
+    "maximum_relative_edge_count_change": 0.3,
+    "maximum_relative_node_count_change": 0.1875,
+    "median_relative_edge_count_change": 0.015506464365851052,
+    "median_relative_node_count_change": 0.0
+  },
+  "image_derived_features_audited": 340,
+  "locked_test_cases_used": 0,
+  "medical_images_included": false,
+  "patient_or_image_identifiers_included": false,
+  "perturbations": [
+    "baseline",
+    "mask_erode_3x3",
+    "mask_dilate_3x3",
+    "gamma_0.90",
+    "resolution_80_percent"
+  ],
+  "perturbed_masks_persisted": false,
+  "private_feature_values_published": false,
+  "radiomics_parameter_sha256": "c9700860b38c401c9e0c7a483e47b3277e89e27a3758e7311c69941fe44e6b03",
+  "selection_thresholds": {
+    "absolute_agreement_icc": 0.75,
+    "maximum_normalized_median_absolute_error": 0.5,
+    "minimum_spearman": 0.8
+  },
+  "source_extraction_config_sha256": "87e489aa7d85a03593fa097ab7a062d001a61af147fc7ba25506e50077f4a0bf",
+  "source_feature_table_sha256": "d2f6178806e66238305d76da777bd348ff2ee17113c48535bb6d1425c3108d06",
+  "source_masks_overwritten": false,
+  "stable_image_derived_features": 159,
+  "training_cases_used": 0
+}

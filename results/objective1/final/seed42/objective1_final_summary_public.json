@@ -1,0 +1,127 @@
+{
+  "adapted_model_locked_target_test": {
+    "cases": 40,
+    "dice": 0.8877282,
+    "hd95_pixels_at_224": 19.0517,
+    "iou": 0.8032104,
+    "test_threshold_tuning": false,
+    "test_used_for_model_selection": false,
+    "threshold": 0.3,
+    "threshold_selected_using": "target_validation_only"
+  },
+  "annotation_provenance": {
+    "personal_name_published": false,
+    "review_coverage": "case-by-case",
+    "reviewer_code": "RAD-01",
+    "reviewer_count": 1,
+    "reviewer_role": "Senior Specialist Radiologist"
+  },
+  "artifact": "Objective 1 complete sanitized research package v1.0.0",
+  "checkpoint": {
+    "filename": "adapted_roi_segmentation_best.pt",
+    "sha256": "6ee1b4d351fdcfaaeec5e0487198128a5540d6dfe69a79a3158318aa22d9984c"
+  },
+  "checkpoint_repository": "https://huggingface.co/ahmed-zuhair/cxr-thesis-checkpoints",
+  "cohort": {
+    "adaptation_train": 120,
+    "cases": 200,
+    "locked_target_test": 40,
+    "patient_leakage": 0,
+    "target_validation": 40,
+    "unique_patients": 200
+  },
+  "empirical_modality": "2D chest radiography",
+  "feature_extraction": {
+    "cases": 200,
+    "clinical_features": 9,
+    "handcrafted_features": 62,
+    "missing_feature_fraction": 0.0,
+    "radiomics_features": 279,
+    "total_model_features_before_stability_filtering": 350
+  },
+  "feature_stability": {
+    "locked_test_used": false,
+    "selection_cases": 40,
+    "selection_role": "target_validation",
+    "stable_handcrafted_features": 44,
+    "stable_radiomics_features": 115,
+    "total_stable_image_features": 159
+  },
+  "limitations": [
+    "The empirical cohort is 2D chest radiography. The repository contains unit-tested 3D preprocessing and 3D patch-graph construction, but no full empirical 3D cohort was evaluated in Objective 1.",
+    "The adapted validation threshold was selected at the lower boundary of the predefined search grid, indicating a calibration limitation.",
+    "The annotation study used one specialist radiologist; inter-reader agreement was therefore not measured.",
+    "HD95 improvement was numerical but not statistically significant."
+  ],
+  "multimodal_graphs": {
+    "cases": 200,
+    "edges_per_graph": 7,
+    "graph_type": "heterogeneous study graph",
+    "inter_patient_edges": false,
+    "locked_test_used_for_normalization": false,
+    "node_types": [
+      "roi",
+      "radiomics",
+      "clinical"
+    ],
+    "nodes_per_graph": 3,
+    "normalization_fit_cases": 120,
+    "normalization_fit_split": "train",
+    "roi_embedding_dimension": 65,
+    "stable_radiomics_dimension": 115,
+    "train_variable_clinical_dimension": 4
+  },
+  "objective": "End-to-end preprocessing, ROI segmentation, radiomic/handcrafted/clinical feature extraction and graph construction from medical images",
+  "paired_source_vs_adapted": {
+    "cases_improved_fraction": 0.8,
+    "dice_bootstrap_95_ci": [
+      0.0245711,
+      0.1090885
+    ],
+    "dice_improvement": 0.0599325,
+    "dice_wilcoxon_p": 1.8586e-06,
+    "hd95_bootstrap_95_ci": [
+      -0.8746,
+      13.2132
+    ],
+    "hd95_reduction_pixels": 5.4668,
+    "hd95_wilcoxon_p": 0.261,
+    "interpretation": "Dice and IoU improved significantly. HD95 improved numerically but was not statistically significant.",
+    "iou_bootstrap_95_ci": [
+      0.0330689,
+      0.1172554
+    ],
+    "iou_improvement": 0.0697007,
+    "iou_wilcoxon_p": 2.2321e-06
+  },
+  "privacy": {
+    "annotation_masks_included": false,
+    "image_identifiers_included": false,
+    "medical_images_included": false,
+    "patient_identifiers_included": false,
+    "per_case_metrics_included": false,
+    "private_feature_rows_included": false,
+    "private_graph_files_included": false,
+    "private_manifests_included": false,
+    "reviewer_personal_name_included": false
+  },
+  "roi_patch_graphs": {
+    "cases": 200,
+    "graph_type": "ROI-aware 2D patch graph",
+    "median_edge_change_under_perturbation": 0.015506464365851052,
+    "median_node_change_under_perturbation": 0.0,
+    "patch_grid": [
+      7,
+      7
+    ]
+  },
+  "seed": 42,
+  "source_code": "https://github.com/ahmed-zuhair/cxr-thesis",
+  "source_model_locked_target_test": {
+    "cases": 40,
+    "dice": 0.8277956,
+    "hd95_pixels_at_224": 24.5185,
+    "iou": 0.7335097
+  },
+  "status": "complete"
+}

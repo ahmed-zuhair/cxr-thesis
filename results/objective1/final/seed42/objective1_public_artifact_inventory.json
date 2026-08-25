@@ -1,0 +1,77 @@
+{
+  "artifact": "Objective 1 public artifact inventory",
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "d9a133f3c2e35a0f6a38ab45c352464f09a7b48eb8b87221ca592666ba776403",
+      "size_bytes": 1716
+    },
+    {
+      "path": "checkpoint/adapted_roi_segmentation_best.pt",
+      "sha256": "6ee1b4d351fdcfaaeec5e0487198128a5540d6dfe69a79a3158318aa22d9984c",
+      "size_bytes": 7743401
+    },
+    {
+      "path": "checkpoint/adapted_roi_segmentation_best.sha256",
+      "sha256": "c9d1b549bfd0c4bf4501d73a572a248a183cb1ff052e0c2b9dff09c2ce937926",
+      "size_bytes": 99
+    },
+    {
+      "path": "configuration/extraction_v1.0.1.yaml",
+      "sha256": "87e489aa7d85a03593fa097ab7a062d001a61af147fc7ba25506e50077f4a0bf",
+      "size_bytes": 669
+    },
+    {
+      "path": "configuration/radiomics_2d.yaml",
+      "sha256": "c9700860b38c401c9e0c7a483e47b3277e89e27a3758e7311c69941fe44e6b03",
+      "size_bytes": 194
+    },
+    {
+      "path": "figures/multimodal_graph_schema.png",
+      "sha256": "bc54b850464ea12bcd9ef6358beed524079eeac398a311a0622f7cf460605a09",
+      "size_bytes": 212804
+    },
+    {
+      "path": "figures/source_vs_adapted_metrics.png",
+      "sha256": "568cd29fff47eb4258d40d6ac2b115307210bee600d424f36402a10574ed456b",
+      "size_bytes": 97226
+    },
+    {
+      "path": "objective1_final_summary_public.json",
+      "sha256": "b39afc962880f01013595ed46082b23aa1d7758d92dc4edb79eeee551036caf8",
+      "size_bytes": 4252
+    },
+    {
+      "path": "summaries/adapted_model_nih_locked_test_summary.json",
+      "sha256": "08ac6cca8a22bf38557a5c297bc8abf1d4063ae4b2a214c34eca754c18bd6a4e",
+      "size_bytes": 2478
+    },
+    {
+      "path": "summaries/feature_graph_extraction_summary.json",
+      "sha256": "4eb408fa967ba9fee15a19a470964ded7b579acff2d399d082e6e9c4904f7802",
+      "size_bytes": 1834
+    },
+    {
+      "path": "summaries/feature_graph_stability_summary.json",
+      "sha256": "fa9973fae66a1a629b433d99bd28b5f6e074ff8035e382a0024b3c1e31a742e7",
+      "size_bytes": 1998
+    },
+    {
+      "path": "summaries/multimodal_graph_summary.json",
+      "sha256": "c58ea5f1dcb154391280e219cd295da14b8d966d9628e151d2d8f7786db70a01",
+      "size_bytes": 1556
+    },
+    {
+      "path": "summaries/source_model_nih_locked_test_summary.json",
+      "sha256": "f6b281a452f07b914608478b116c0af886d9a11a0aa0f20f4b216dc28a9c053c",
+      "size_bytes": 2414
+    },
+    {
+      "path": "summaries/source_vs_adapted_summary.json",
+      "sha256": "5d2f9458c9398c5a743139a9d2f319817d930c49185934bc6ee1b0c8bbb81610",
+      "size_bytes": 4108
+    }
+  ],
+  "privacy_scan_passed": true,
+  "version": "v1.0.0"
+}

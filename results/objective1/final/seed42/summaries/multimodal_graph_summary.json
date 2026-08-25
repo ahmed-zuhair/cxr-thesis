@@ -1,0 +1,41 @@
+{
+  "annotation_masks_included": false,
+  "artifact": "Objective 1 NIH multimodal study-graph construction aggregate v1.0.0",
+  "cases": 200,
+  "edges_per_graph": 7,
+  "feature_stability_selection_role": "target_validation",
+  "inter_patient_edges": false,
+  "locked_test_used_for_normalization": false,
+  "medical_images_included": false,
+  "multimodal_graph_type": "heterogeneous study graph",
+  "node_types": [
+    "roi",
+    "radiomics",
+    "clinical"
+  ],
+  "nodes_per_graph": 3,
+  "normalization_fit_cases": 120,
+  "normalization_fit_role": "train",
+  "padded_graph_node_feature_dimension": 115,
+  "patient_or_image_identifiers_included": false,
+  "patients": 200,
+  "private_feature_values_published": false,
+  "private_graph_files_published": false,
+  "roi_node_components": {
+    "stable_handcrafted_features": 44,
+    "total_roi_embedding_dimension": 65,
+    "train_variable_pooled_patch_features": 21
+  },
+  "source_feature_table_sha256": "d2f6178806e66238305d76da777bd348ff2ee17113c48535bb6d1425c3108d06",
+  "source_graph_type": "ROI-aware 2D patch graph",
+  "source_stability_summary_sha256": "fa9973fae66a1a629b433d99bd28b5f6e074ff8035e382a0024b3c1e31a742e7",
+  "split_counts": {
+    "test": 40,
+    "train": 120,
+    "val": 40
+  },
+  "stable_radiomics_features": 115,
+  "three_dimensional_support_scope": "3D preprocessing and patch-graph construction are unit-tested implementation capabilities; the present empirical cohort is 2D chest radiography.",
+  "train_variable_clinical_features": 4,
+  "validation_used_for_normalization": false
+}
