@@ -1,0 +1,28 @@
+seed: 42
+task: multilabel_classification
+labels:
+  - Infiltration
+  - Effusion
+  - Atelectasis
+  - Nodule
+  - Mass
+  - Consolidation
+  - Pneumothorax
+  - Pleural_Thickening
+  - Cardiomegaly
+  - Emphysema
+  - Edema
+  - Fibrosis
+cohort:
+  train_images: 30000
+  validation_images: 5000
+  locked_test_images: 5000
+models:
+  - cnn
+  - attention_cnn
+  - vit
+  - gcn
+  - gat
+selection_metric: validation_macro_auroc
+threshold_selection: validation_per_label_f1
+locked_test_evaluations: 1
