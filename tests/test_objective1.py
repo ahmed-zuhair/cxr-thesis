@@ -819,6 +819,64 @@ class AnnotationWorkspaceTests(unittest.TestCase):
                     expected_cases=1,
                 )
 
+    def test_single_review_lock_preserves_unresolved_flags(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            role_root = self._write_role(
+                root, "locked_target_test", with_preannotation=False
+            )
+            image = np.asarray(Image.open(role_root / "images" / "CASE-1.png"))
+            mask = np.zeros_like(image, dtype=np.uint8)
+            mask[3:12, 4:13] = 255
+            Image.fromarray(mask).save(role_root / "annotations" / "CASE-1.png")
+            pd.DataFrame(
+                [
+                    {
+                        "candidate_code": "CASE-1",
+                        "cohort_role": "locked_target_test",
+                        "status": "needs_review",
+                    }
+                ]
+            ).to_csv(role_root / "annotation_progress.csv", index=False)
+            qc_dir = root / "qc"
+            audit_completed_annotations(root, "locked_target_test", qc_dir)
+            qc_path = qc_dir / "locked_target_test_annotation_qc_private.csv"
+            provenance_path = root / "provenance.json"
+            provenance_path.write_text(
+                json.dumps(
+                    {
+                        "cohort_role": "locked_target_test",
+                        "reviewer_code": "RAD-01",
+                        "reviewer_professional_qualification": "Radiologist",
+                        "reviewer_years_experience": 9,
+                        "review_mode": "live_case_by_case",
+                        "cases_reviewed_by_radiologist": 1,
+                        "review_coverage_fraction": 1.0,
+                        "anonymous_description_permitted": True,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            output = root / "lock"
+            result = finalize_reviewed_annotation_set(
+                root,
+                "locked_target_test",
+                qc_audit_path=qc_path,
+                focused_review_path=None,
+                provenance_path=provenance_path,
+                output_dir=output,
+                expected_cases=1,
+                allow_single_review_flags=True,
+            )
+            summary = result["summary"]
+            self.assertEqual(summary["progress_needs_second_review_cases"], 1)
+            self.assertEqual(summary["qc_flags_without_resolved_review"], 1)
+            self.assertTrue(summary["annotation_limitations_declared"])
+            self.assertTrue(summary["single_review_lock"])
+            self.assertEqual(summary["final_masks_drawn_from_blank"], 1)
+            self.assertIsNone(summary["final_masks_changed_from_preannotation"])
+            self.assertFalse(summary["preannotations_used"])
+
 
 class ManifestTests(unittest.TestCase):
     def test_patient_leakage_is_rejected(self) -> None:

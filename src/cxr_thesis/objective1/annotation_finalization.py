@@ -63,12 +63,18 @@ def finalize_reviewed_annotation_set(
     role: str,
     *,
     qc_audit_path: str | Path,
-    focused_review_path: str | Path,
+    focused_review_path: str | Path | None,
     provenance_path: str | Path,
     output_dir: str | Path,
     expected_cases: int,
+    allow_single_review_flags: bool = False,
 ) -> dict[str, object]:
     """Validate, hash, and freeze a reviewed annotation set without copying masks."""
+
+    if allow_single_review_flags and role != "locked_target_test":
+        raise ValueError(
+            "Single-review flags may be preserved only for locked_target_test"
+        )
 
     output = Path(output_dir).resolve()
     if output.exists():
@@ -90,7 +96,16 @@ def finalize_reviewed_annotation_set(
     progress = progress[progress["cohort_role"].astype(str) == role].copy()
     if set(progress["candidate_code"].astype(str)) != codes:
         raise ValueError("Annotation progress does not match the role worklist")
-    if set(progress["status"].astype(str)) != {"complete"}:
+    progress_status = progress["status"].astype(str)
+    allowed_progress = (
+        {"complete", "needs_review"}
+        if allow_single_review_flags
+        else {"complete"}
+    )
+    if not set(progress_status).issubset(allowed_progress):
+        raise ValueError("Annotation progress contains invalid statuses")
+    single_review_cases = int((progress_status == "needs_review").sum())
+    if single_review_cases and not allow_single_review_flags:
         raise ValueError("Annotation progress contains unresolved cases")
 
     qc_path = Path(qc_audit_path).resolve()
@@ -109,33 +124,59 @@ def finalize_reviewed_annotation_set(
     qc["candidate_code"] = qc["candidate_code"].astype(str)
     if set(qc["candidate_code"]) != codes:
         raise ValueError("Annotation QC audit does not match the role worklist")
+    structural_flags = set(STRUCTURAL_QC_FLAGS)
+    if allow_single_review_flags:
+        structural_flags.remove("progress_needs_review")
     structural_violations = 0
     for value in qc["qc_flags"].astype(str):
         structural_violations += int(
-            bool({flag for flag in value.split(";") if flag} & STRUCTURAL_QC_FLAGS)
+            bool({flag for flag in value.split(";") if flag} & structural_flags)
         )
     if structural_violations:
         raise ValueError("Annotation QC contains structural integrity violations")
 
-    review_path = Path(focused_review_path).resolve()
-    review = _read_unique(
-        review_path,
-        required={
-            "candidate_code",
-            "cohort_role",
-            "review_action",
-            "review_status",
-        },
-        label="Focused-QC review log",
+    qc_progress_flags = int(
+        qc["qc_flags"].astype(str).str.split(";").apply(
+            lambda values: "progress_needs_review" in values
+        ).sum()
     )
-    review = review[review["cohort_role"].astype(str) == role].copy()
-    review["candidate_code"] = review["candidate_code"].astype(str)
-    if not set(review["candidate_code"]).issubset(codes):
-        raise ValueError("Focused-QC review log contains cases outside the worklist")
-    if set(review["review_status"].astype(str)) != {"resolved"}:
-        raise ValueError("Focused-QC review log contains unresolved cases")
+    if qc_progress_flags != single_review_cases:
+        raise ValueError("Annotation progress and QC review flags disagree")
+
     flagged_codes = set(qc.loc[_truthy(qc["requires_review"]), "candidate_code"])
-    if not flagged_codes.issubset(set(review["candidate_code"])):
+    if focused_review_path is None:
+        if not allow_single_review_flags:
+            raise ValueError("A focused-QC review log is required")
+        review_path = None
+        review = pd.DataFrame(
+            columns=[
+                "candidate_code",
+                "cohort_role",
+                "review_action",
+                "review_status",
+            ]
+        )
+    else:
+        review_path = Path(focused_review_path).resolve()
+        review = _read_unique(
+            review_path,
+            required={
+                "candidate_code",
+                "cohort_role",
+                "review_action",
+                "review_status",
+            },
+            label="Focused-QC review log",
+        )
+        review = review[review["cohort_role"].astype(str) == role].copy()
+        review["candidate_code"] = review["candidate_code"].astype(str)
+        if not set(review["candidate_code"]).issubset(codes):
+            raise ValueError("Focused-QC review log contains cases outside the worklist")
+        if not review.empty and set(review["review_status"].astype(str)) != {"resolved"}:
+            raise ValueError("Focused-QC review log contains unresolved cases")
+    resolved_review_codes = set(review["candidate_code"].astype(str))
+    unresolved_flagged_codes = flagged_codes - resolved_review_codes
+    if unresolved_flagged_codes and not allow_single_review_flags:
         raise ValueError("A QC-flagged case lacks a resolved focused review")
 
     provenance_file = Path(provenance_path).resolve()
@@ -204,9 +245,17 @@ def finalize_reviewed_annotation_set(
         pd.DataFrame(manifest_rows).to_csv(manifest_path, index=False)
         manifest_hash = _sha256(manifest_path)
         mask_set_hash = combined_digest.hexdigest()
-        identical_mask = _truthy(qc["identical_to_preannotation"])
-        changed = int((~identical_mask).sum())
-        identical = int(identical_mask.sum())
+        preannotations_available = bool(
+            "preannotation_filename" in worklist.columns
+            and worklist["preannotation_filename"].astype(str).str.strip().ne("").any()
+        )
+        if preannotations_available:
+            identical_mask = _truthy(qc["identical_to_preannotation"])
+            changed: int | None = int((~identical_mask).sum())
+            identical: int | None = int(identical_mask.sum())
+        else:
+            changed = None
+            identical = None
         corrected = int((review["review_action"] == "corrected").sum())
         approved = int((review["review_action"] == "approved_as_is").sum())
         common = {
@@ -222,20 +271,34 @@ def finalize_reviewed_annotation_set(
             ),
             "review_mode": str(provenance.get("review_mode", "")),
             "radiologist_review_coverage_fraction": 1.0,
+            "preannotations_available": preannotations_available,
+            "preannotations_used": preannotations_available,
+            "final_masks_drawn_from_blank": (
+                0 if preannotations_available else expected_cases
+            ),
             "final_masks_changed_from_preannotation": changed,
             "final_masks_identical_to_preannotation": identical,
+            "progress_complete_cases": int((progress_status == "complete").sum()),
+            "progress_needs_second_review_cases": single_review_cases,
             "focused_review_cases": int(len(review)),
             "focused_review_corrected": corrected,
             "focused_review_approved_unchanged": approved,
             "remaining_conservative_qc_flags": int(len(flagged_codes)),
-            "qc_flags_without_resolved_review": 0,
+            "qc_flags_without_resolved_review": int(len(unresolved_flagged_codes)),
             "structural_integrity_violations": 0,
+            "single_review_lock": bool(allow_single_review_flags),
+            "second_review_performed": bool(len(review)),
+            "annotation_limitations_declared": bool(unresolved_flagged_codes),
             "final_mask_manifest_sha256": manifest_hash,
             "final_mask_set_sha256": mask_set_hash,
             "qc_audit_sha256": _sha256(qc_path),
-            "focused_review_log_sha256": _sha256(review_path),
+            "focused_review_log_sha256": (
+                _sha256(review_path) if review_path is not None else None
+            ),
             "provenance_record_sha256": _sha256(provenance_file),
             "locked_target_test_used": False,
+            "locked_target_test_role": role == "locked_target_test",
+            "locked_target_test_used_for_model_selection": False,
         }
         private_record = {
             **common,

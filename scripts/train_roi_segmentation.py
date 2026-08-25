@@ -38,6 +38,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--workers", type=int, default=0)
     parser.add_argument("--patience", type=int, default=8)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--initial-checkpoint",
+        help="Optional frozen UNet2D checkpoint used to initialise domain adaptation",
+    )
+    parser.add_argument(
+        "--expected-initial-checkpoint-sha256",
+        help="Abort unless the initial checkpoint has this SHA-256 digest",
+    )
     return parser.parse_args()
 
 
@@ -91,6 +99,36 @@ def main() -> None:
     val_loader = DataLoader(val_data, batch_size=args.batch_size, shuffle=False, num_workers=args.workers)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = UNet2D().to(device)
+    initial_checkpoint_sha256: str | None = None
+    if args.initial_checkpoint:
+        initial_path = Path(args.initial_checkpoint).resolve()
+        initial_checkpoint_sha256 = hashlib.sha256(initial_path.read_bytes()).hexdigest()
+        if (
+            args.expected_initial_checkpoint_sha256
+            and initial_checkpoint_sha256.lower()
+            != args.expected_initial_checkpoint_sha256.lower()
+        ):
+            raise ValueError(
+                "Initial checkpoint SHA-256 mismatch: expected "
+                f"{args.expected_initial_checkpoint_sha256}, received "
+                f"{initial_checkpoint_sha256}"
+            )
+        initial = torch.load(initial_path, map_location="cpu", weights_only=False)
+        if initial.get("architecture") != "UNet2D":
+            raise ValueError(
+                f"Unsupported initial architecture: {initial.get('architecture')!r}"
+            )
+        model.load_state_dict(initial["model_state"])
+        print(
+            json.dumps(
+                {
+                    "domain_adaptation_initial_checkpoint": str(initial_path),
+                    "domain_adaptation_initial_checkpoint_sha256": (
+                        initial_checkpoint_sha256
+                    ),
+                }
+            )
+        )
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
     scaler = torch.amp.GradScaler("cuda", enabled=device.type == "cuda")
     output_dir = Path(args.output_dir)
@@ -126,6 +164,12 @@ def main() -> None:
                     "validation_metrics": metrics,
                     "objective1_config": str(Path(args.config).resolve()),
                     "seed": args.seed,
+                    "parent_checkpoint_sha256": initial_checkpoint_sha256,
+                    "training_role": (
+                        "target_domain_adaptation"
+                        if initial_checkpoint_sha256
+                        else "source_training"
+                    ),
                 },
                 output_dir / "best.pt",
             )
@@ -143,4 +187,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

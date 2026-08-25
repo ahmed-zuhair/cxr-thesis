@@ -22,7 +22,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--workspace", required=True)
     parser.add_argument("--role", required=True)
     parser.add_argument("--qc-audit", required=True)
-    parser.add_argument("--focused-review-log", required=True)
+    parser.add_argument("--focused-review-log")
+    parser.add_argument(
+        "--allow-single-review-flags",
+        action="store_true",
+        help=(
+            "Freeze masks while preserving unresolved review/QC flags. "
+            "Intended for a transparently limited locked test, not training data."
+        ),
+    )
     parser.add_argument("--provenance", required=True)
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--expected-cases", required=True, type=int)
@@ -39,6 +47,7 @@ def main() -> None:
         provenance_path=args.provenance,
         output_dir=args.output_dir,
         expected_cases=args.expected_cases,
+        allow_single_review_flags=args.allow_single_review_flags,
     )
     print("--- FINAL REVIEWED ANNOTATION-SET SUMMARY ---")
     print(json.dumps(result["summary"], indent=2, sort_keys=True))

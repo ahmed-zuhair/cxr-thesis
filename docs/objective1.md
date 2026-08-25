@@ -97,6 +97,21 @@ worklist, progress, QC, focused-review coverage, provenance, binary masks, and
 source-image alignment; it then hashes the final mask set without copying it.
 The output separates a private identifier-bearing manifest from a sanitized
 aggregate summary suitable for later publication.
+For a prediction-blind locked test where additional paid adjudication is not
+available, `--allow-single-review-flags` freezes every structurally valid mask
+without changing pixels or hiding limitations. The resulting aggregate reports
+complete, second-review-flagged, and QC-flagged counts separately. This mode is
+not permitted for adaptation-training or threshold-selection claims.
+
+`scripts/build_private_roi_adaptation_bundle.py` removes the original candidate
+codes and packages the 120/40/40 adaptation, validation, and locked-test images
+and masks for a **private** Kaggle dataset. The bundle still contains medical
+images and masks and must never be published. Domain adaptation is initialized
+with `train_roi_segmentation.py --initial-checkpoint`; the parent checkpoint
+hash is stored in the adapted checkpoint. `scripts/evaluate_roi_segmentation.py`
+uses only the checkpoint's frozen validation threshold and emits primary results
+for all locked cases plus sensitivity results for review-complete and QC-clean
+subsets. It never tunes on the locked test.
 
 ## Setup
 
