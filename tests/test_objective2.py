@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 import tempfile
 import unittest
 from pathlib import Path
@@ -12,6 +13,10 @@ from cxr_thesis.objective1.graphs import GraphSample
 from cxr_thesis.objective2.data import GraphClassificationDataset, collate_graph_samples
 from cxr_thesis.objective2.metrics import multilabel_metrics, select_f1_thresholds
 from cxr_thesis.objective2.models import build_classifier
+from cxr_thesis.objective2.training import (
+    restore_rng_state,
+    save_training_state,
+)
 
 
 class Objective2ModelTests(unittest.TestCase):
@@ -70,6 +75,46 @@ class Objective2MetricTests(unittest.TestCase):
         self.assertAlmostEqual(metrics["macro"]["auroc"], 1.0)
         self.assertAlmostEqual(metrics["macro"]["auprc"], 1.0)
         self.assertAlmostEqual(metrics["macro"]["f1"], 1.0)
+
+
+class Objective2RecoveryTests(unittest.TestCase):
+    def test_epoch_recovery_is_complete_and_atomic(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "last.pt"
+            model = torch.nn.Linear(3, 2)
+            optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
+            generator = torch.Generator().manual_seed(42)
+            generator_state = generator.get_state().clone()
+            save_training_state(
+                target,
+                model=model,
+                optimizer=optimizer,
+                scheduler=scheduler,
+                data_loader_generator=generator,
+                epoch_completed=3,
+                best_auroc=0.75,
+                stale_epochs=1,
+                history=[{"epoch": 3, "validation_macro_auroc": 0.75}],
+                signature={"model": "attention_cnn", "test_cases_accessed": 0},
+                best_checkpoint_sha256="abc",
+                resume_count=0,
+            )
+            self.assertTrue(target.is_file())
+            self.assertFalse((target.parent / ".last.pt.tmp").exists())
+            state = torch.load(target, map_location="cpu", weights_only=False)
+            self.assertEqual(state["epoch_completed"], 3)
+            self.assertFalse(state["test_evaluated"])
+            self.assertTrue(
+                torch.equal(state["data_loader_generator_state"], generator_state)
+            )
+            random_before = random.random()
+            restore_rng_state(state["rng_state"])
+            random_after_first_restore = random.random()
+            restore_rng_state(state["rng_state"])
+            random_after_second_restore = random.random()
+            self.assertEqual(random_before, random_after_first_restore)
+            self.assertEqual(random_after_first_restore, random_after_second_restore)
 
 
 if __name__ == "__main__":

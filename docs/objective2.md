@@ -21,3 +21,11 @@ training and validation manifests. The script deliberately accepts no test
 manifest, selects checkpoints by validation macro AUROC, freezes per-label
 validation F1 thresholds, and writes `test_evaluated: false` into every
 checkpoint.
+
+Long training runs write an atomic `last.pt`, `last.sha256`, and
+`history_progress.csv` after every completed epoch. If a Kaggle session is
+interrupted but the output directory survives, repeat the identical command
+with `--resume`. Resume is rejected when the model settings or the SHA-256 of
+either training/validation manifest differs from the saved run. Optimizer,
+scheduler, data-loader generator, and Python/NumPy/PyTorch RNG states are all
+restored; the test cohort remains inaccessible.

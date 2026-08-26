@@ -26,7 +26,15 @@ from cxr_thesis.objective2.data import (
 )
 from cxr_thesis.objective2.metrics import multilabel_metrics, select_f1_thresholds
 from cxr_thesis.objective2.models import build_classifier
-from cxr_thesis.objective2.training import predict, save_checkpoint, seed_everything, train_epoch
+from cxr_thesis.objective2.training import (
+    optimizer_state_to_device,
+    predict,
+    restore_rng_state,
+    save_checkpoint,
+    save_training_state,
+    seed_everything,
+    train_epoch,
+)
 
 
 PRIMARY_LABELS = [
@@ -86,13 +94,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--limit-train", type=int)
     parser.add_argument("--limit-val", type=int)
     parser.add_argument("--no-amp", action="store_true")
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume from output-dir/last.pt after a completed epoch.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    if args.output_dir.exists():
+    if args.output_dir.exists() and not args.resume:
         raise FileExistsError(f"Output directory already exists: {args.output_dir}")
+    if args.resume and not args.output_dir.is_dir():
+        raise FileNotFoundError(f"Resume output directory does not exist: {args.output_dir}")
+    if args.resume and (args.output_dir / "validation_summary.json").is_file():
+        raise RuntimeError("Training is already complete; refusing to resume it")
     if args.epochs <= 0 or args.patience <= 0 or args.batch_size <= 0:
         raise ValueError("epochs, patience, and batch-size must be positive")
     graph_model = args.model in {"gcn", "gat"}
@@ -182,11 +199,76 @@ def main() -> None:
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode="max", factor=0.5, patience=2
     )
-    args.output_dir.mkdir(parents=True, exist_ok=False)
+    if not args.resume:
+        args.output_dir.mkdir(parents=True, exist_ok=False)
     checkpoint_path = args.output_dir / "best.pt"
+    recovery_path = args.output_dir / "last.pt"
+    recovery_hash_path = args.output_dir / "last.sha256"
+    progress_path = args.output_dir / "history_progress.csv"
     history = []
     best_auroc = -np.inf
     stale_epochs = 0
+    start_epoch = 1
+    resume_count = 0
+    signature = {
+        "model": args.model,
+        "labels": PRIMARY_LABELS,
+        "train_manifest_sha256": sha256_file(args.train_manifest),
+        "val_manifest_sha256": sha256_file(args.val_manifest),
+        "train_cases": len(train_dataset),
+        "validation_cases": len(validation_dataset),
+        "batch_size": args.batch_size,
+        "learning_rate": args.learning_rate,
+        "weight_decay": args.weight_decay,
+        "image_size": args.image_size,
+        "seed": args.seed,
+        "limit_train": args.limit_train,
+        "limit_val": args.limit_val,
+        "amp": not args.no_amp,
+    }
+    if args.resume:
+        if not recovery_path.is_file():
+            raise FileNotFoundError(
+                f"No epoch recovery checkpoint exists: {recovery_path}"
+            )
+        recovery = torch.load(recovery_path, map_location="cpu", weights_only=False)
+        if recovery.get("format_version") != 1:
+            raise RuntimeError("Unsupported recovery checkpoint format")
+        if recovery.get("test_evaluated") is not False:
+            raise RuntimeError("Recovery checkpoint is not test-blind")
+        if recovery.get("signature") != signature:
+            raise RuntimeError(
+                "Resume configuration or cohort hashes do not match the saved run"
+            )
+        expected_best_hash = recovery.get("best_checkpoint_sha256")
+        if expected_best_hash is not None:
+            if not checkpoint_path.is_file():
+                raise FileNotFoundError("The saved best.pt required for resume is missing")
+            if sha256_file(checkpoint_path) != expected_best_hash:
+                raise RuntimeError("best.pt changed after the last completed epoch")
+        model.load_state_dict(recovery["model_state"])
+        optimizer.load_state_dict(recovery["optimizer_state"])
+        optimizer_state_to_device(optimizer, device)
+        scheduler.load_state_dict(recovery["scheduler_state"])
+        generator.set_state(recovery["data_loader_generator_state"].cpu())
+        restore_rng_state(recovery["rng_state"])
+        history = list(recovery["history"])
+        best_auroc = float(recovery["best_auroc"])
+        stale_epochs = int(recovery["stale_epochs"])
+        start_epoch = int(recovery["epoch_completed"]) + 1
+        resume_count = int(recovery.get("resume_count", 0)) + 1
+        print(
+            json.dumps(
+                {
+                    "resume": True,
+                    "completed_epochs": start_epoch - 1,
+                    "next_epoch": start_epoch,
+                    "resume_count": resume_count,
+                    "test_cases_accessed": 0,
+                },
+                indent=2,
+            )
+        )
     parameters = sum(parameter.numel() for parameter in model.parameters())
     print(
         json.dumps(
@@ -202,7 +284,7 @@ def main() -> None:
             indent=2,
         )
     )
-    for epoch in range(1, args.epochs + 1):
+    for epoch in range(start_epoch, args.epochs + 1):
         train_loss = train_epoch(
             model,
             train_loader,
@@ -242,6 +324,37 @@ def main() -> None:
             )
         else:
             stale_epochs += 1
+        pd.DataFrame(history).to_csv(progress_path, index=False)
+        best_checkpoint_hash = (
+            sha256_file(checkpoint_path) if checkpoint_path.is_file() else None
+        )
+        save_training_state(
+            recovery_path,
+            model=model,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            data_loader_generator=generator,
+            epoch_completed=epoch,
+            best_auroc=best_auroc,
+            stale_epochs=stale_epochs,
+            history=history,
+            signature=signature,
+            best_checkpoint_sha256=best_checkpoint_hash,
+            resume_count=resume_count,
+        )
+        recovery_hash = sha256_file(recovery_path)
+        recovery_hash_path.write_text(
+            f"{recovery_hash}  last.pt\n", encoding="utf-8"
+        )
+        print(
+            json.dumps(
+                {
+                    "epoch_recovery_saved": epoch,
+                    "recovery_checkpoint": str(recovery_path),
+                    "recovery_sha256": recovery_hash,
+                }
+            )
+        )
         if stale_epochs >= args.patience:
             break
     if not checkpoint_path.is_file():
@@ -274,6 +387,8 @@ def main() -> None:
         "validation_thresholds": thresholds.tolist(),
         "validation_metrics": _json_safe(final_validation_metrics),
         "seed": args.seed,
+        "resume_count": resume_count,
+        "epoch_recovery_enabled": True,
         "python": sys.version,
         "platform": platform.platform(),
         "torch": torch.__version__,
@@ -294,6 +409,7 @@ def main() -> None:
                 "checkpoint": str(checkpoint_path),
                 "checkpoint_sha256": checkpoint_hash,
                 "test_evaluated": False,
+                "resume_count": resume_count,
             },
             indent=2,
         )

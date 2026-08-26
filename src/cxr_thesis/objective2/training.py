@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import os
 import random
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import torch
@@ -91,6 +93,7 @@ def save_checkpoint(
 ) -> Path:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_name(f".{target.name}.tmp")
     torch.save(
         {
             "model_name": model_name,
@@ -101,6 +104,92 @@ def save_checkpoint(
             "seed": int(seed),
             "test_evaluated": False,
         },
-        target,
+        temporary,
     )
+    os.replace(temporary, target)
+    return target
+
+
+def capture_rng_state() -> dict[str, Any]:
+    """Capture every RNG used by Objective 2 training."""
+
+    return {
+        "python": random.getstate(),
+        "numpy": np.random.get_state(),
+        "torch_cpu": torch.get_rng_state(),
+        "torch_cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else [],
+    }
+
+
+def restore_rng_state(state: dict[str, Any]) -> None:
+    """Restore RNG state after model and loader construction during resume."""
+
+    random.setstate(state["python"])
+    np.random.set_state(state["numpy"])
+    torch.set_rng_state(state["torch_cpu"].cpu())
+    if torch.cuda.is_available() and state.get("torch_cuda"):
+        torch.cuda.set_rng_state_all([item.cpu() for item in state["torch_cuda"]])
+
+
+def optimizer_state_to_device(
+    optimizer: torch.optim.Optimizer, device: torch.device
+) -> None:
+    """Move optimizer tensors loaded from a CPU checkpoint to the active device."""
+
+    def move(value):
+        if torch.is_tensor(value):
+            return value.to(device)
+        if isinstance(value, dict):
+            return {key: move(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [move(item) for item in value]
+        if isinstance(value, tuple):
+            return tuple(move(item) for item in value)
+        return value
+
+    for parameter_state in optimizer.state.values():
+        for key, value in list(parameter_state.items()):
+            parameter_state[key] = move(value)
+
+
+def save_training_state(
+    path: str | Path,
+    *,
+    model: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    scheduler,
+    data_loader_generator: torch.Generator,
+    epoch_completed: int,
+    best_auroc: float,
+    stale_epochs: int,
+    history: list[dict[str, Any]],
+    signature: dict[str, Any],
+    best_checkpoint_sha256: str | None,
+    resume_count: int,
+) -> Path:
+    """Atomically save a complete, test-blind epoch-boundary recovery state."""
+
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_name(f".{target.name}.tmp")
+    torch.save(
+        {
+            "format_version": 1,
+            "model_state": model.state_dict(),
+            "optimizer_state": optimizer.state_dict(),
+            "scheduler_state": scheduler.state_dict(),
+            "data_loader_generator_state": data_loader_generator.get_state(),
+            "rng_state": capture_rng_state(),
+            "epoch_completed": int(epoch_completed),
+            "best_auroc": float(best_auroc),
+            "stale_epochs": int(stale_epochs),
+            "history": history,
+            "signature": signature,
+            "best_checkpoint_sha256": best_checkpoint_sha256,
+            "resume_count": int(resume_count),
+            "test_evaluated": False,
+        },
+        temporary,
+    )
+    os.replace(temporary, target)
     return target
