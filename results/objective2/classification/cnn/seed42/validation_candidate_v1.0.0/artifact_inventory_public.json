@@ -1,0 +1,33 @@
+{
+  "artifact": "Objective 2 CNN public artifact inventory",
+  "checkpoint": {
+    "filename": "best.pt",
+    "sha256": "3f5e37ad4995f0af8381396dc6b01947c2cceb858d49879f4c67d39d0f9da3b0",
+    "size_bytes": 4732045,
+    "stored_as_release_asset": true,
+    "stored_in_github_tree": false,
+    "stored_on_hugging_face": true
+  },
+  "files": {
+    "README.md": {
+      "sha256": "eee1b9fe62d74150d866c7852d3aec44e4157f749e474a3a59ceadc927cc0297",
+      "size_bytes": 879
+    },
+    "best.sha256": {
+      "sha256": "7832c727d43c7246b1dfd08e1224900bcf70574606fba6d2fe4eb35d48721d8f",
+      "size_bytes": 74
+    },
+    "history.csv": {
+      "sha256": "2174f517e41c8f4380d641b1574ff65a1a7c5bf5268eb85d5d71de2f2716cd3f",
+      "size_bytes": 1357
+    },
+    "training_history.png": {
+      "sha256": "e70fb7892c9074cc74d405c71fafde6b6eccca28235fb906b9d4b0dc4f68c4b3",
+      "size_bytes": 177292
+    },
+    "validation_summary_public.json": {
+      "sha256": "8897cad0104bd65b3be2d2c7d3b3c38cef04e5f9c5c36d2782b06e9c986e963d",
+      "size_bytes": 5260
+    }
+  }
+}
