@@ -1,0 +1,174 @@
+{
+  "architecture": "CBAM attention convolutional neural network",
+  "artifact": "Objective 2 Attention-CNN validation-selected candidate",
+  "best_epoch": 6,
+  "checkpoint_sha256": "cf3a57d48e032e306d2416794850b9dae412b0a94deb8b9837a9fc34e2336a68",
+  "epochs_completed": 11,
+  "image_identifiers_included": false,
+  "labels": [
+    "Infiltration",
+    "Effusion",
+    "Atelectasis",
+    "Nodule",
+    "Mass",
+    "Consolidation",
+    "Pneumothorax",
+    "Pleural_Thickening",
+    "Cardiomegaly",
+    "Emphysema",
+    "Edema",
+    "Fibrosis"
+  ],
+  "locked_test_evaluated": false,
+  "locked_test_labels_accessed": false,
+  "locked_test_manifest_read": false,
+  "medical_images_included": false,
+  "model": "attention_cnn",
+  "parameters": 1199188,
+  "patient_identifiers_included": false,
+  "private_manifests_included": false,
+  "research_scope": "Attention-CNN candidate for comparison with CNN, ViT, GCN and GAT",
+  "seed": 42,
+  "selection_criterion": "validation macro AUROC",
+  "source_code_commit": "2bef7f11dfeb14baf0a129c7ee4bbe1b9c11d5b7",
+  "status": "validation-selected candidate; final model comparison incomplete",
+  "test_used_for_model_selection": false,
+  "training_cases": 30000,
+  "training_figure_sha256": "48673a9418b606fb5f57fa2afd7fe5487d81c81eea2a91524e591ce07e2ada91",
+  "validation_cases": 5000,
+  "validation_metrics": {
+    "macro": {
+      "auprc": 0.11994952776001026,
+      "auroc": 0.7270675707784012,
+      "f1": 0.18278578745976629,
+      "sensitivity": 0.4352544178872501,
+      "specificity": 0.8250695312871844
+    },
+    "micro_auprc": 0.1293158780524317,
+    "micro_auroc": 0.7324687455799846,
+    "per_label": [
+      {
+        "auprc": 0.27083614249101945,
+        "auroc": 0.6630504680809833,
+        "f1": 0.3558631921824104,
+        "label": "Infiltration",
+        "sensitivity": 0.5252403846153846,
+        "specificity": 0.7152111324376199,
+        "threshold": 0.55
+      },
+      {
+        "auprc": 0.3472389220332037,
+        "auroc": 0.8279571499750872,
+        "f1": 0.4301412872841444,
+        "label": "Effusion",
+        "sensitivity": 0.5074074074074074,
+        "specificity": 0.8968609865470852,
+        "threshold": 0.8
+      },
+      {
+        "auprc": 0.21355228553114045,
+        "auroc": 0.711176846137476,
+        "f1": 0.29668411867364747,
+        "label": "Atelectasis",
+        "sensitivity": 0.6126126126126126,
+        "specificity": 0.6857142857142857,
+        "threshold": 0.6000000000000001
+      },
+      {
+        "auprc": 0.08155860421351196,
+        "auroc": 0.6250493106537757,
+        "f1": 0.1273996509598604,
+        "label": "Nodule",
+        "sensitivity": 0.5793650793650794,
+        "specificity": 0.6010951979780961,
+        "threshold": 0.5
+      },
+      {
+        "auprc": 0.07888388685755467,
+        "auroc": 0.6603924585698874,
+        "f1": 0.13915857605177995,
+        "label": "Mass",
+        "sensitivity": 0.22872340425531915,
+        "specificity": 0.919576059850374,
+        "threshold": 0.7000000000000001
+      },
+      {
+        "auprc": 0.11480707083275318,
+        "auroc": 0.7661355757956805,
+        "f1": 0.20023837902264602,
+        "label": "Consolidation",
+        "sensitivity": 0.42857142857142855,
+        "specificity": 0.8836386344712739,
+        "threshold": 0.7500000000000001
+      },
+      {
+        "auprc": 0.05027918502018437,
+        "auroc": 0.6954855782109552,
+        "f1": 0.09701071630005641,
+        "label": "Pneumothorax",
+        "sensitivity": 0.6187050359712231,
+        "specificity": 0.6815470067887266,
+        "threshold": 0.5
+      },
+      {
+        "auprc": 0.06215431220099058,
+        "auroc": 0.7153744913337757,
+        "f1": 0.12811387900355872,
+        "label": "Pleural_Thickening",
+        "sensitivity": 0.4186046511627907,
+        "specificity": 0.8645042085814001,
+        "threshold": 0.7000000000000001
+      },
+      {
+        "auprc": 0.059149280309327736,
+        "auroc": 0.763022522197936,
+        "f1": 0.10289389067524116,
+        "label": "Cardiomegaly",
+        "sensitivity": 0.47058823529411764,
+        "specificity": 0.8401388321763985,
+        "threshold": 0.7000000000000001
+      },
+      {
+        "auprc": 0.028400733418805203,
+        "auroc": 0.6724363102905395,
+        "f1": 0.0759493670886076,
+        "label": "Emphysema",
+        "sensitivity": 0.1323529411764706,
+        "specificity": 0.967558799675588,
+        "threshold": 0.8
+      },
+      {
+        "auprc": 0.08613401224050002,
+        "auroc": 0.8706172124022022,
+        "f1": 0.15047021943573669,
+        "label": "Edema",
+        "sensitivity": 0.34285714285714286,
+        "specificity": 0.9543610547667343,
+        "threshold": 0.9000000000000001
+      },
+      {
+        "auprc": 0.046399897971131754,
+        "auroc": 0.7541129256925151,
+        "f1": 0.08950617283950617,
+        "label": "Fibrosis",
+        "sensitivity": 0.35802469135802467,
+        "specificity": 0.8906281764586298,
+        "threshold": 0.6500000000000001
+      }
+    ]
+  },
+  "validation_thresholds": [
+    0.55,
+    0.8,
+    0.6000000000000001,
+    0.5,
+    0.7000000000000001,
+    0.7500000000000001,
+    0.5,
+    0.7000000000000001,
+    0.7000000000000001,
+    0.8,
+    0.9000000000000001,
+    0.6500000000000001
+  ]
+}

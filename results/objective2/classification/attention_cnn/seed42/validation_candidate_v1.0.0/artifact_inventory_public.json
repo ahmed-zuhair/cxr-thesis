@@ -1,0 +1,33 @@
+{
+  "artifact": "Objective 2 Attention-CNN public artifact inventory",
+  "checkpoint": {
+    "filename": "best.pt",
+    "sha256": "cf3a57d48e032e306d2416794850b9dae412b0a94deb8b9837a9fc34e2336a68",
+    "size_bytes": 4830205,
+    "stored_as_release_asset": true,
+    "stored_in_github_tree": false,
+    "stored_on_hugging_face": true
+  },
+  "files": {
+    "README.md": {
+      "sha256": "c130908adabc6a44c018a1ba1c89cacfac9dcae0b4b46294695d2d4cb0831d24",
+      "size_bytes": 1058
+    },
+    "best.sha256": {
+      "sha256": "b102867000948f38ad8b9a962d95d586e058568519acb55c17c8864f0231d0a6",
+      "size_bytes": 74
+    },
+    "history.csv": {
+      "sha256": "0c1755ccad9e6c850767cc20918ea0835f6530633c26c7333ea2cabdefa51d76",
+      "size_bytes": 813
+    },
+    "training_history.png": {
+      "sha256": "48673a9418b606fb5f57fa2afd7fe5487d81c81eea2a91524e591ce07e2ada91",
+      "size_bytes": 150678
+    },
+    "validation_summary_public.json": {
+      "sha256": "2ab757505680d46b7efc0b3e82ceda9a59d9e2ffb75b70bde556b2d0927a517b",
+      "size_bytes": 5241
+    }
+  }
+}
