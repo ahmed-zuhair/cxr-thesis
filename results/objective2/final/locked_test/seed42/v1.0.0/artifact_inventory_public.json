@@ -1,0 +1,23 @@
+{
+  "artifact": "Objective 2 locked-test public artifact inventory",
+  "case_level_predictions_included": false,
+  "files": {
+    "README.md": {
+      "bytes": 447,
+      "sha256": "e9abdef1ce01bb9985f9b58033df66675efd6eed4fc3a0ae3646240c536071d2"
+    },
+    "locked_test_evaluation_lock_public.json": {
+      "bytes": 991,
+      "sha256": "daff767d0b4f03fd1d1f47abb4e452a49d325df9938e53c525c05a400eced33c"
+    },
+    "objective2_locked_test_model_comparison.png": {
+      "bytes": 85961,
+      "sha256": "dc080ab77b7ff4b401a10b9f7667989c13afe2def09203dd3ee84b069c4c9c98"
+    },
+    "objective2_locked_test_summary_public.json": {
+      "bytes": 30311,
+      "sha256": "979614fda13a044e9a99ce88bffa97161ce3ccdb978cc378c917e801771822d0"
+    }
+  },
+  "private_data_included": false
+}

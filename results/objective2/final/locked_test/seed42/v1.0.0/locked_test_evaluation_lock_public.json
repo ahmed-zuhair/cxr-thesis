@@ -1,0 +1,23 @@
+{
+  "artifact": "Objective 2 immutable locked-test evaluation record",
+  "checkpoint_sha256": {
+    "attention_cnn": "cf3a57d48e032e306d2416794850b9dae412b0a94deb8b9837a9fc34e2336a68",
+    "cnn": "3f5e37ad4995f0af8381396dc6b01947c2cceb858d49879f4c67d39d0f9da3b0",
+    "gat": "f34c3db2038c136077011659daee2a1a7d799cc6f87652ddd94d8b5fced7c70d",
+    "gcn": "a6e88ebe8e709ffaef72eb7eac3536a3edc97bb143a8a5c41020d46c461bc4f5",
+    "vit": "2e61945141995763a963da099962e25f5d8362e85ff880e07fa03d3539bbe8fb"
+  },
+  "completed_models": [
+    "cnn",
+    "attention_cnn",
+    "vit",
+    "gcn",
+    "gat"
+  ],
+  "figure_sha256": "dc080ab77b7ff4b401a10b9f7667989c13afe2def09203dd3ee84b069c4c9c98",
+  "summary_sha256": "979614fda13a044e9a99ce88bffa97161ce3ccdb978cc378c917e801771822d0",
+  "test_evaluated": true,
+  "test_manifest_sha256": "38c0b015e7f9626be4d55eb46cfad3f18b08f0cb3f9d7a4f36ee827167fc580b",
+  "test_used_for_model_selection": false,
+  "validation_thresholds_reused_without_change": true
+}

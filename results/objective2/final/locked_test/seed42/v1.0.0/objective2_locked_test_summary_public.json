@@ -1,0 +1,972 @@
+{
+  "aggregate_positive_counts": {
+    "Atelectasis": 619,
+    "Cardiomegaly": 217,
+    "Consolidation": 329,
+    "Edema": 177,
+    "Effusion": 849,
+    "Emphysema": 246,
+    "Fibrosis": 71,
+    "Infiltration": 1229,
+    "Mass": 340,
+    "Nodule": 318,
+    "Pleural_Thickening": 247,
+    "Pneumothorax": 562
+  },
+  "artifact": "Objective 2 single locked-test comparison",
+  "bootstrap": {
+    "method": "paired case bootstrap",
+    "model_metric_95_ci": {
+      "attention_cnn": {
+        "auprc": [
+          0.13958768422594942,
+          0.1524210312086936
+        ],
+        "auroc": [
+          0.6675111864426683,
+          0.6867256511184482
+        ],
+        "f1": [
+          0.19734959116299503,
+          0.2118610603590979
+        ]
+      },
+      "cnn": {
+        "auprc": [
+          0.15209440182808368,
+          0.16687347686825055
+        ],
+        "auroc": [
+          0.6771801544571899,
+          0.6986153736802848
+        ],
+        "f1": [
+          0.20547542257730855,
+          0.22283440660734996
+        ]
+      },
+      "gat": {
+        "auprc": [
+          0.12010153078629443,
+          0.13226391965396742
+        ],
+        "auroc": [
+          0.6143678192714147,
+          0.6333664810313513
+        ],
+        "f1": [
+          0.1687637171907521,
+          0.18304690842254398
+        ]
+      },
+      "gcn": {
+        "auprc": [
+          0.12040561967653876,
+          0.13221583796000225
+        ],
+        "auroc": [
+          0.6166023762353136,
+          0.6357145126924896
+        ],
+        "f1": [
+          0.16822440498853122,
+          0.18483916701103284
+        ]
+      },
+      "vit": {
+        "auprc": [
+          0.11275851402782235,
+          0.1227942022381611
+        ],
+        "auroc": [
+          0.5963523931728526,
+          0.6165759633221618
+        ],
+        "f1": [
+          0.16756257941441824,
+          0.18028803562057957
+        ]
+      }
+    },
+    "paired_model_minus_reference": {
+      "attention_cnn": {
+        "auprc": {
+          "bootstrap_95_ci": [
+            -0.019431024802904276,
+            -0.007531313851549448
+          ],
+          "model_minus_reference_mean": -0.013587155049084107,
+          "two_sided_bootstrap_p": 0.0
+        },
+        "auroc": {
+          "bootstrap_95_ci": [
+            -0.016484935761835493,
+            -0.0015002263867648221
+          ],
+          "model_minus_reference_mean": -0.009391089316287196,
+          "two_sided_bootstrap_p": 0.028
+        },
+        "f1": {
+          "bootstrap_95_ci": [
+            -0.01755693768267456,
+            -0.0020678772672498716
+          ],
+          "model_minus_reference_mean": -0.009532712001477017,
+          "two_sided_bootstrap_p": 0.032
+        }
+      },
+      "gat": {
+        "auprc": {
+          "bootstrap_95_ci": [
+            -0.04100347499890331,
+            -0.02648949734080248
+          ],
+          "model_minus_reference_mean": -0.03354555214023158,
+          "two_sided_bootstrap_p": 0.0
+        },
+        "auroc": {
+          "bootstrap_95_ci": [
+            -0.07417382028194883,
+            -0.05389176750089413
+          ],
+          "model_minus_reference_mean": -0.06350912351351515,
+          "two_sided_bootstrap_p": 0.0
+        },
+        "f1": {
+          "bootstrap_95_ci": [
+            -0.048297041888278255,
+            -0.029568936204022834
+          ],
+          "model_minus_reference_mean": -0.0382138093552548,
+          "two_sided_bootstrap_p": 0.0
+        }
+      },
+      "gcn": {
+        "auprc": {
+          "bootstrap_95_ci": [
+            -0.04107698492456397,
+            -0.02586907610278767
+          ],
+          "model_minus_reference_mean": -0.03337521958594742,
+          "two_sided_bootstrap_p": 0.0
+        },
+        "auroc": {
+          "bootstrap_95_ci": [
+            -0.07132752325678765,
+            -0.05125194958935804
+          ],
+          "model_minus_reference_mean": -0.06079300407873993,
+          "two_sided_bootstrap_p": 0.0
+        },
+        "f1": {
+          "bootstrap_95_ci": [
+            -0.048441821476561474,
+            -0.028189620363977336
+          ],
+          "model_minus_reference_mean": -0.037810012254783344,
+          "two_sided_bootstrap_p": 0.0
+        }
+      },
+      "vit": {
+        "auprc": {
+          "bootstrap_95_ci": [
+            -0.04923669453887809,
+            -0.03586103545762037
+          ],
+          "model_minus_reference_mean": -0.042321978961399095,
+          "two_sided_bootstrap_p": 0.0
+        },
+        "auroc": {
+          "bootstrap_95_ci": [
+            -0.09078507507514808,
+            -0.07039331228937355
+          ],
+          "model_minus_reference_mean": -0.08100047485043962,
+          "two_sided_bootstrap_p": 0.0
+        },
+        "f1": {
+          "bootstrap_95_ci": [
+            -0.04787379917266898,
+            -0.031746709410192
+          ],
+          "model_minus_reference_mean": -0.04000231522034463,
+          "two_sided_bootstrap_p": 0.0
+        }
+      }
+    },
+    "reference_model": "cnn",
+    "replicates": 500,
+    "seed": 42
+  },
+  "case_level_predictions_publication_allowed": false,
+  "cuda": "12.8",
+  "gpu": "Tesla T4",
+  "image_identifiers_included": false,
+  "labels": [
+    "Infiltration",
+    "Effusion",
+    "Atelectasis",
+    "Nodule",
+    "Mass",
+    "Consolidation",
+    "Pneumothorax",
+    "Pleural_Thickening",
+    "Cardiomegaly",
+    "Emphysema",
+    "Edema",
+    "Fibrosis"
+  ],
+  "medical_images_included": false,
+  "model_order_frozen_before_test": [
+    "cnn",
+    "attention_cnn",
+    "vit",
+    "gcn",
+    "gat"
+  ],
+  "models": {
+    "attention_cnn": {
+      "best_validation_epoch": 6,
+      "checkpoint_sha256": "cf3a57d48e032e306d2416794850b9dae412b0a94deb8b9837a9fc34e2336a68",
+      "inference": {
+        "cases_per_second": 52.24478659953617,
+        "peak_gpu_memory_bytes": 465550848,
+        "seconds": 95.70332899100003
+      },
+      "test_metrics": {
+        "macro": {
+          "auprc": 0.1450763927024195,
+          "auroc": 0.6775297517367779,
+          "f1": 0.20469625872313077,
+          "sensitivity": 0.5037815858616931,
+          "specificity": 0.6934736202595899
+        },
+        "micro_auprc": 0.15731676291868685,
+        "micro_auroc": 0.6869860785857168,
+        "per_label": [
+          {
+            "auprc": 0.3448564025409619,
+            "auroc": 0.6489231229983262,
+            "f1": 0.44618674269422665,
+            "label": "Infiltration",
+            "sensitivity": 0.7640358014646054,
+            "specificity": 0.45876425351365685,
+            "threshold": 0.55
+          },
+          {
+            "auprc": 0.33294242552750575,
+            "auroc": 0.7353503590461266,
+            "f1": 0.4054613156805958,
+            "label": "Effusion",
+            "sensitivity": 0.5771495877502945,
+            "specificity": 0.7403035413153457,
+            "threshold": 0.8
+          },
+          {
+            "auprc": 0.17342738682033446,
+            "auroc": 0.6275739452083992,
+            "f1": 0.2647482014388489,
+            "label": "Atelectasis",
+            "sensitivity": 0.7431340872374798,
+            "specificity": 0.45309290116411777,
+            "threshold": 0.6000000000000001
+          },
+          {
+            "auprc": 0.08342261352412292,
+            "auroc": 0.6025746939301863,
+            "f1": 0.13651668197122743,
+            "label": "Nodule",
+            "sensitivity": 0.7012578616352201,
+            "specificity": 0.4177701836821871,
+            "threshold": 0.5
+          },
+          {
+            "auprc": 0.11227518926410626,
+            "auroc": 0.6301590507447614,
+            "f1": 0.16872727272727273,
+            "label": "Mass",
+            "sensitivity": 0.3411764705882353,
+            "specificity": 0.8027896995708155,
+            "threshold": 0.7000000000000001
+          },
+          {
+            "auprc": 0.09535155175666,
+            "auroc": 0.6534687612045871,
+            "f1": 0.16564758198999444,
+            "label": "Consolidation",
+            "sensitivity": 0.45288753799392095,
+            "specificity": 0.7171911796189253,
+            "threshold": 0.7500000000000001
+          },
+          {
+            "auprc": 0.20135659317187235,
+            "auroc": 0.680082560994581,
+            "f1": 0.26895187870797627,
+            "label": "Pneumothorax",
+            "sensitivity": 0.7259786476868327,
+            "specificity": 0.5349256421811627,
+            "threshold": 0.5
+          },
+          {
+            "auprc": 0.08630150265974597,
+            "auroc": 0.6682206252007042,
+            "f1": 0.14832826747720365,
+            "label": "Pleural_Thickening",
+            "sensitivity": 0.4939271255060729,
+            "specificity": 0.7315379760151484,
+            "threshold": 0.7000000000000001
+          },
+          {
+            "auprc": 0.09786148078894763,
+            "auroc": 0.6737311773360144,
+            "f1": 0.1437456807187284,
+            "label": "Cardiomegaly",
+            "sensitivity": 0.4792626728110599,
+            "specificity": 0.7645828977629103,
+            "threshold": 0.7000000000000001
+          },
+          {
+            "auprc": 0.07393950381124048,
+            "auroc": 0.6514351628581494,
+            "f1": 0.0928,
+            "label": "Emphysema",
+            "sensitivity": 0.11788617886178862,
+            "specificity": 0.9263777871266302,
+            "threshold": 0.8
+          },
+          {
+            "auprc": 0.10227627784055045,
+            "auroc": 0.8038576922491217,
+            "f1": 0.1443001443001443,
+            "label": "Edema",
+            "sensitivity": 0.2824858757062147,
+            "specificity": 0.9033796392286958,
+            "threshold": 0.9000000000000001
+          },
+          {
+            "auprc": 0.03690578472298583,
+            "auroc": 0.7549798690703768,
+            "f1": 0.07094133697135062,
+            "label": "Fibrosis",
+            "sensitivity": 0.36619718309859156,
+            "specificity": 0.8709677419354839,
+            "threshold": 0.6500000000000001
+          }
+        ]
+      },
+      "validation_macro_auroc": 0.7270675707784012,
+      "validation_thresholds": [
+        0.55,
+        0.8,
+        0.6000000000000001,
+        0.5,
+        0.7000000000000001,
+        0.7500000000000001,
+        0.5,
+        0.7000000000000001,
+        0.7000000000000001,
+        0.8,
+        0.9000000000000001,
+        0.6500000000000001
+      ]
+    },
+    "cnn": {
+      "best_validation_epoch": 14,
+      "checkpoint_sha256": "3f5e37ad4995f0af8381396dc6b01947c2cceb858d49879f4c67d39d0f9da3b0",
+      "inference": {
+        "cases_per_second": 51.17977415365208,
+        "peak_gpu_memory_bytes": 465455104,
+        "seconds": 97.69484298600037
+      },
+      "test_metrics": {
+        "macro": {
+          "auprc": 0.15887827962203363,
+          "auroc": 0.6870224138081493,
+          "f1": 0.21439350981996239,
+          "sensitivity": 0.4804827889295305,
+          "specificity": 0.7190722400914065
+        },
+        "micro_auprc": 0.12102831064765544,
+        "micro_auroc": 0.6347961524427772,
+        "per_label": [
+          {
+            "auprc": 0.33790284095908263,
+            "auroc": 0.6350553526236261,
+            "f1": 0.4252306372023171,
+            "label": "Infiltration",
+            "sensitivity": 0.806346623270952,
+            "specificity": 0.35269159374171305,
+            "threshold": 0.45
+          },
+          {
+            "auprc": 0.33837152061984116,
+            "auroc": 0.7258642318438885,
+            "f1": 0.38139971817754814,
+            "label": "Effusion",
+            "sensitivity": 0.47820965842167257,
+            "specificity": 0.7894483257046495,
+            "threshold": 0.55
+          },
+          {
+            "auprc": 0.19096215238348674,
+            "auroc": 0.6437022994359178,
+            "f1": 0.2680237489397795,
+            "label": "Atelectasis",
+            "sensitivity": 0.7657512116316639,
+            "specificity": 0.4421364985163205,
+            "threshold": 0.35000000000000003
+          },
+          {
+            "auprc": 0.0928716577601387,
+            "auroc": 0.5978859219975338,
+            "f1": 0.14990630855715179,
+            "label": "Nodule",
+            "sensitivity": 0.37735849056603776,
+            "specificity": 0.7516018795386586,
+            "threshold": 0.6500000000000001
+          },
+          {
+            "auprc": 0.10095316477458766,
+            "auroc": 0.6368502272153497,
+            "f1": 0.17199302730970367,
+            "label": "Mass",
+            "sensitivity": 0.43529411764705883,
+            "specificity": 0.7354077253218884,
+            "threshold": 0.8
+          },
+          {
+            "auprc": 0.0931026562106012,
+            "auroc": 0.6282390407344287,
+            "f1": 0.152,
+            "label": "Consolidation",
+            "sensitivity": 0.46200607902735563,
+            "specificity": 0.6748019695996574,
+            "threshold": 0.7500000000000001
+          },
+          {
+            "auprc": 0.2575969177168153,
+            "auroc": 0.7378588187747679,
+            "f1": 0.32077125328659073,
+            "label": "Pneumothorax",
+            "sensitivity": 0.6512455516014235,
+            "specificity": 0.6949076160432627,
+            "threshold": 0.8500000000000001
+          },
+          {
+            "auprc": 0.0864538352832482,
+            "auroc": 0.6832113704449182,
+            "f1": 0.14440773949976404,
+            "label": "Pleural_Thickening",
+            "sensitivity": 0.6194331983805668,
+            "specificity": 0.6383336839890595,
+            "threshold": 0.6000000000000001
+          },
+          {
+            "auprc": 0.1740381176901781,
+            "auroc": 0.7665878866299711,
+            "f1": 0.1461794019933555,
+            "label": "Cardiomegaly",
+            "sensitivity": 0.10138248847926268,
+            "specificity": 0.9870374242107464,
+            "threshold": 0.9000000000000001
+          },
+          {
+            "auprc": 0.09080988395727639,
+            "auroc": 0.6760631184351389,
+            "f1": 0.14911781445645989,
+            "label": "Emphysema",
+            "sensitivity": 0.532520325203252,
+            "specificity": 0.7097181320992848,
+            "threshold": 0.9500000000000001
+          },
+          {
+            "auprc": 0.11179451918363334,
+            "auroc": 0.80127590137184,
+            "f1": 0.2047244094488189,
+            "label": "Edema",
+            "sensitivity": 0.3672316384180791,
+            "specificity": 0.9185154468173337,
+            "threshold": 0.9000000000000001
+          },
+          {
+            "auprc": 0.03168208892551407,
+            "auroc": 0.7116747961904109,
+            "f1": 0.05896805896805897,
+            "label": "Fibrosis",
+            "sensitivity": 0.16901408450704225,
+            "specificity": 0.9342665855143031,
+            "threshold": 0.8
+          }
+        ]
+      },
+      "validation_macro_auroc": 0.7338993089834452,
+      "validation_thresholds": [
+        0.45,
+        0.55,
+        0.35000000000000003,
+        0.6500000000000001,
+        0.8,
+        0.7500000000000001,
+        0.8500000000000001,
+        0.6000000000000001,
+        0.9000000000000001,
+        0.9500000000000001,
+        0.9000000000000001,
+        0.8
+      ]
+    },
+    "gat": {
+      "best_validation_epoch": 20,
+      "checkpoint_sha256": "f34c3db2038c136077011659daee2a1a7d799cc6f87652ddd94d8b5fced7c70d",
+      "inference": {
+        "cases_per_second": 1370.887959396043,
+        "peak_gpu_memory_bytes": 68041728,
+        "seconds": 3.6472710739999457
+      },
+      "test_metrics": {
+        "macro": {
+          "auprc": 0.12527356372458498,
+          "auroc": 0.623299845179771,
+          "f1": 0.17574034241378986,
+          "sensitivity": 0.38326939411299416,
+          "specificity": 0.7386082845901968
+        },
+        "micro_auprc": 0.12145964821501601,
+        "micro_auroc": 0.6311645460860796,
+        "per_label": [
+          {
+            "auprc": 0.33789365435169283,
+            "auroc": 0.6350273024898377,
+            "f1": 0.44271466796399905,
+            "label": "Infiltration",
+            "sensitivity": 0.7404393816110659,
+            "specificity": 0.47706178732431714,
+            "threshold": 0.5
+          },
+          {
+            "auprc": 0.21225449283340184,
+            "auroc": 0.5877676033617852,
+            "f1": 0.30466970387243736,
+            "label": "Effusion",
+            "sensitivity": 0.6301531213191991,
+            "specificity": 0.4873524451939292,
+            "threshold": 0.45
+          },
+          {
+            "auprc": 0.15299568769517333,
+            "auroc": 0.5608231167115747,
+            "f1": 0.229404309252218,
+            "label": "Atelectasis",
+            "sensitivity": 0.5848142164781907,
+            "specificity": 0.5035380050216846,
+            "threshold": 0.5
+          },
+          {
+            "auprc": 0.08585027697653644,
+            "auroc": 0.5615316520650477,
+            "f1": 0.12024756852343059,
+            "label": "Nodule",
+            "sensitivity": 0.2138364779874214,
+            "specificity": 0.8408799658265699,
+            "threshold": 0.55
+          },
+          {
+            "auprc": 0.09677251554462352,
+            "auroc": 0.6141877051249685,
+            "f1": 0.15140186915887852,
+            "label": "Mass",
+            "sensitivity": 0.23823529411764705,
+            "specificity": 0.8607296137339056,
+            "threshold": 0.55
+          },
+          {
+            "auprc": 0.10934464131550696,
+            "auroc": 0.6518282957835289,
+            "f1": 0.16778523489932887,
+            "label": "Consolidation",
+            "sensitivity": 0.3799392097264438,
+            "specificity": 0.7782059516163562,
+            "threshold": 0.6000000000000001
+          },
+          {
+            "auprc": 0.15064864939940917,
+            "auroc": 0.5868498201395582,
+            "f1": 0.2236524537409493,
+            "label": "Pneumothorax",
+            "sensitivity": 0.49466192170818507,
+            "specificity": 0.6291122127084272,
+            "threshold": 0.45
+          },
+          {
+            "auprc": 0.0799204074296964,
+            "auroc": 0.6272322360222523,
+            "f1": 0.1,
+            "label": "Pleural_Thickening",
+            "sensitivity": 0.11336032388663968,
+            "specificity": 0.9400378708184305,
+            "threshold": 0.6000000000000001
+          },
+          {
+            "auprc": 0.04712521839526711,
+            "auroc": 0.5234938255784938,
+            "f1": 0.080773606370876,
+            "label": "Cardiomegaly",
+            "sensitivity": 0.3271889400921659,
+            "specificity": 0.692661509512858,
+            "threshold": 0.55
+          },
+          {
+            "auprc": 0.06499120975908158,
+            "auroc": 0.5905112853189954,
+            "f1": 0.06423982869379015,
+            "label": "Emphysema",
+            "sensitivity": 0.06097560975609756,
+            "specificity": 0.9566680689945309,
+            "threshold": 0.6500000000000001
+          },
+          {
+            "auprc": 0.12927206732103455,
+            "auroc": 0.784196722156428,
+            "f1": 0.16884247171453437,
+            "label": "Edema",
+            "sensitivity": 0.5480225988700564,
+            "specificity": 0.818577648766328,
+            "threshold": 0.7000000000000001
+          },
+          {
+            "auprc": 0.03621394367359588,
+            "auroc": 0.7561485774047817,
+            "f1": 0.055152394775036286,
+            "label": "Fibrosis",
+            "sensitivity": 0.2676056338028169,
+            "specificity": 0.8784743355650233,
+            "threshold": 0.6000000000000001
+          }
+        ]
+      },
+      "validation_macro_auroc": 0.657985586848029,
+      "validation_thresholds": [
+        0.5,
+        0.45,
+        0.5,
+        0.55,
+        0.55,
+        0.6000000000000001,
+        0.45,
+        0.6000000000000001,
+        0.55,
+        0.6500000000000001,
+        0.7000000000000001,
+        0.6000000000000001
+      ]
+    },
+    "gcn": {
+      "best_validation_epoch": 20,
+      "checkpoint_sha256": "a6e88ebe8e709ffaef72eb7eac3536a3edc97bb143a8a5c41020d46c461bc4f5",
+      "inference": {
+        "cases_per_second": 1300.9498066194528,
+        "peak_gpu_memory_bytes": 30842368,
+        "seconds": 3.8433458190002057
+      },
+      "test_metrics": {
+        "macro": {
+          "auprc": 0.12541298339175846,
+          "auroc": 0.6259297147607714,
+          "f1": 0.17619221313520095,
+          "sensitivity": 0.35544695262716913,
+          "specificity": 0.7515229679068843
+        },
+        "micro_auprc": 0.12188939604188645,
+        "micro_auroc": 0.6330048672179318,
+        "per_label": [
+          {
+            "auprc": 0.3235785452182989,
+            "auroc": 0.6326974152233255,
+            "f1": 0.43739703459637563,
+            "label": "Infiltration",
+            "sensitivity": 0.8641171684296176,
+            "specificity": 0.3198090692124105,
+            "threshold": 0.45
+          },
+          {
+            "auprc": 0.2149055552588645,
+            "auroc": 0.6019757964859532,
+            "f1": 0.3062798384135145,
+            "label": "Effusion",
+            "sensitivity": 0.4911660777385159,
+            "specificity": 0.6490002409058059,
+            "threshold": 0.5
+          },
+          {
+            "auprc": 0.1438057894628435,
+            "auroc": 0.5512947118173314,
+            "f1": 0.22504159733777038,
+            "label": "Atelectasis",
+            "sensitivity": 0.8739903069466882,
+            "specificity": 0.1673133987674047,
+            "threshold": 0.35000000000000003
+          },
+          {
+            "auprc": 0.09554992806749847,
+            "auroc": 0.5950730618265053,
+            "f1": 0.14542107685227795,
+            "label": "Nodule",
+            "sensitivity": 0.4968553459119497,
+            "specificity": 0.6375480563861597,
+            "threshold": 0.5
+          },
+          {
+            "auprc": 0.09690458458046564,
+            "auroc": 0.6085060590759909,
+            "f1": 0.13948256467941508,
+            "label": "Mass",
+            "sensitivity": 0.18235294117647058,
+            "specificity": 0.8954935622317597,
+            "threshold": 0.55
+          },
+          {
+            "auprc": 0.10559293605237224,
+            "auroc": 0.6440098935486956,
+            "f1": 0.15301530153015303,
+            "label": "Consolidation",
+            "sensitivity": 0.25835866261398177,
+            "specificity": 0.8507814172554057,
+            "threshold": 0.6000000000000001
+          },
+          {
+            "auprc": 0.1687642381427255,
+            "auroc": 0.609427197015744,
+            "f1": 0.20643939393939395,
+            "label": "Pneumothorax",
+            "sensitivity": 0.19395017793594305,
+            "specificity": 0.9132492113564669,
+            "threshold": 0.6000000000000001
+          },
+          {
+            "auprc": 0.08074387712368584,
+            "auroc": 0.6206018615134188,
+            "f1": 0.12634408602150538,
+            "label": "Pleural_Thickening",
+            "sensitivity": 0.1902834008097166,
+            "specificity": 0.9053229539238375,
+            "threshold": 0.55
+          },
+          {
+            "auprc": 0.04944659561701943,
+            "auroc": 0.5319993718151171,
+            "f1": 0.08076009501187649,
+            "label": "Cardiomegaly",
+            "sensitivity": 0.15668202764976957,
+            "specificity": 0.8764373823959858,
+            "threshold": 0.6000000000000001
+          },
+          {
+            "auprc": 0.06576718582259161,
+            "auroc": 0.5906741776715201,
+            "f1": 0.06854838709677419,
+            "label": "Emphysema",
+            "sensitivity": 0.06910569105691057,
+            "specificity": 0.9509886411442995,
+            "threshold": 0.6000000000000001
+          },
+          {
+            "auprc": 0.12605648970683273,
+            "auroc": 0.7770522836080879,
+            "f1": 0.17703349282296652,
+            "label": "Edema",
+            "sensitivity": 0.4180790960451977,
+            "specificity": 0.8787061994609164,
+            "threshold": 0.7000000000000001
+          },
+          {
+            "auprc": 0.033840075647903124,
+            "auroc": 0.7478447475275675,
+            "f1": 0.04854368932038835,
+            "label": "Fibrosis",
+            "sensitivity": 0.07042253521126761,
+            "specificity": 0.9736254818421587,
+            "threshold": 0.7000000000000001
+          }
+        ]
+      },
+      "validation_macro_auroc": 0.6520468622842385,
+      "validation_thresholds": [
+        0.45,
+        0.5,
+        0.35000000000000003,
+        0.5,
+        0.55,
+        0.6000000000000001,
+        0.6000000000000001,
+        0.55,
+        0.6000000000000001,
+        0.6000000000000001,
+        0.7000000000000001,
+        0.7000000000000001
+      ]
+    },
+    "vit": {
+      "best_validation_epoch": 11,
+      "checkpoint_sha256": "2e61945141995763a963da099962e25f5d8362e85ff880e07fa03d3539bbe8fb",
+      "inference": {
+        "cases_per_second": 52.372594312945154,
+        "peak_gpu_memory_bytes": 146417152,
+        "seconds": 95.46977891000006
+      },
+      "test_metrics": {
+        "macro": {
+          "auprc": 0.11675790424648341,
+          "auroc": 0.6060409227369349,
+          "f1": 0.17417301745567573,
+          "sensitivity": 0.5055618606594846,
+          "specificity": 0.6071775304200594
+        },
+        "micro_auprc": 0.1126483267233703,
+        "micro_auroc": 0.6053265893104515,
+        "per_label": [
+          {
+            "auprc": 0.34092604176705255,
+            "auroc": 0.6380119446100481,
+            "f1": 0.43484486873508355,
+            "label": "Infiltration",
+            "sensitivity": 0.741253051261188,
+            "specificity": 0.4563776186687881,
+            "threshold": 0.5
+          },
+          {
+            "auprc": 0.23358785576929963,
+            "auroc": 0.6278564292198029,
+            "f1": 0.32370344587539157,
+            "label": "Effusion",
+            "sensitivity": 0.5477031802120141,
+            "specificity": 0.624427848711154,
+            "threshold": 0.6000000000000001
+          },
+          {
+            "auprc": 0.1417241052125035,
+            "auroc": 0.5509773994695113,
+            "f1": 0.22663802363050484,
+            "label": "Atelectasis",
+            "sensitivity": 0.6817447495961227,
+            "specificity": 0.38758274366582973,
+            "threshold": 0.5
+          },
+          {
+            "auprc": 0.07553671057198459,
+            "auroc": 0.5545612932171652,
+            "f1": 0.1201780415430267,
+            "label": "Nodule",
+            "sensitivity": 0.25471698113207547,
+            "specificity": 0.7973088423750534,
+            "threshold": 0.55
+          },
+          {
+            "auprc": 0.08248708167312424,
+            "auroc": 0.5517044306993184,
+            "f1": 0.13237280504277352,
+            "label": "Mass",
+            "sensitivity": 0.8647058823529412,
+            "specificity": 0.18283261802575107,
+            "threshold": 0.5
+          },
+          {
+            "auprc": 0.08356054028920286,
+            "auroc": 0.6095067606566807,
+            "f1": 0.13871374527112232,
+            "label": "Consolidation",
+            "sensitivity": 0.3343465045592705,
+            "specificity": 0.7544423035752515,
+            "threshold": 0.6500000000000001
+          },
+          {
+            "auprc": 0.125274993212537,
+            "auroc": 0.5215313316408436,
+            "f1": 0.1994191674733785,
+            "label": "Pneumothorax",
+            "sensitivity": 0.7330960854092526,
+            "specificity": 0.28841820639927895,
+            "threshold": 0.4
+          },
+          {
+            "auprc": 0.07289072941407575,
+            "auroc": 0.5973751076456293,
+            "f1": 0.11789038262668046,
+            "label": "Pleural_Thickening",
+            "sensitivity": 0.23076923076923078,
+            "specificity": 0.860509152114454,
+            "threshold": 0.6000000000000001
+          },
+          {
+            "auprc": 0.06200881012548726,
+            "auroc": 0.5916191272662107,
+            "f1": 0.10470347648261759,
+            "label": "Cardiomegaly",
+            "sensitivity": 0.5898617511520737,
+            "specificity": 0.5609450135897972,
+            "threshold": 0.6000000000000001
+          },
+          {
+            "auprc": 0.04866246676367213,
+            "auroc": 0.500482263972829,
+            "f1": 0.08577633007600434,
+            "label": "Emphysema",
+            "sensitivity": 0.32113821138211385,
+            "specificity": 0.6809002944888515,
+            "threshold": 0.5
+          },
+          {
+            "auprc": 0.09629606991701754,
+            "auroc": 0.7833205063777497,
+            "f1": 0.14657666345226616,
+            "label": "Edema",
+            "sensitivity": 0.4293785310734463,
+            "specificity": 0.8374455732946299,
+            "threshold": 0.8500000000000001
+          },
+          {
+            "auprc": 0.03813944624184396,
+            "auroc": 0.7455444780674307,
+            "f1": 0.05925925925925926,
+            "label": "Fibrosis",
+            "sensitivity": 0.3380281690140845,
+            "specificity": 0.8549401501318726,
+            "threshold": 0.6000000000000001
+          }
+        ]
+      },
+      "validation_macro_auroc": 0.6472075750002856,
+      "validation_thresholds": [
+        0.5,
+        0.6000000000000001,
+        0.5,
+        0.55,
+        0.5,
+        0.6500000000000001,
+        0.4,
+        0.6000000000000001,
+        0.6000000000000001,
+        0.5,
+        0.8500000000000001,
+        0.6000000000000001
+      ]
+    }
+  },
+  "patient_identifiers_included": false,
+  "platform": "Linux-6.12.90+-x86_64-with-glibc2.35",
+  "private_hf_recovery_enabled": true,
+  "private_manifests_included": false,
+  "python": "3.12.12 (main, Oct 10 2025, 08:52:57) [GCC 11.4.0]",
+  "reference_model_frozen_before_test": "cnn",
+  "reference_selection_basis": "highest validation macro AUROC",
+  "seed": 42,
+  "test_cases": 5000,
+  "test_evaluated": true,
+  "test_evaluation_count_per_model": 1,
+  "test_manifest_sha256": "38c0b015e7f9626be4d55eb46cfad3f18b08f0cb3f9d7a4f36ee827167fc580b",
+  "test_patients": 541,
+  "test_threshold_tuning": false,
+  "test_used_for_model_selection": false,
+  "torch": "2.10.0+cu128",
+  "training_repeated": false,
+  "validation_thresholds_reused_without_change": true
+}
