@@ -79,6 +79,11 @@ private labels, reuses validation thresholds without tuning, saves resumable
 per-model predictions only to private recovery, and writes an immutable final
 lock that prevents a second evaluation.
 
+`scripts/publish_objective2_confirmation_evaluation.py` verifies that immutable
+lock and publishes only the aggregate confirmation summary, comparison figure,
+sanitized lock, inventory, and reproducible release archive. Private manifests,
+case predictions, identifiers, images, and checkpoints remain excluded.
+
 `scripts/evaluate_objective2_locked_test.py` is the only program allowed to
 load test label values. Before doing so it verifies all five checkpoint hashes,
 model identities, label order and validation-selected thresholds. It evaluates

@@ -198,6 +198,25 @@ class Objective2CohortRecoveryTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("--expected-protocol-sha256", result.stdout)
 
+    def test_confirmation_evaluation_publication_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(
+                    repository
+                    / "scripts"
+                    / "publish_objective2_confirmation_evaluation.py"
+                ),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--expected-final-lock-sha256", result.stdout)
+
 
 class Objective2LockedTestGuardTests(unittest.TestCase):
     def test_remote_final_lock_requires_exact_frozen_signature(self) -> None:
