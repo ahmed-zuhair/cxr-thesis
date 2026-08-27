@@ -39,6 +39,14 @@ The 5,000-case test cohort is label-blind during selection and must be evaluated
 exactly once after all five checkpoints and thresholds are frozen. No manual
 masking is required for Objective 2.
 
+If a fresh Kaggle runtime loses the private test CSV,
+`scripts/recover_objective2_locked_test_cohort.py` reconstructs it from the
+verified full NIH manifest. Patient identities are selected from only the
+`patient_id` and `split` columns using the frozen role seed. The recovered CSV
+is written atomically only when its complete byte-level SHA-256 exactly matches
+the original protected cohort hash; test-label statistics are neither computed
+nor displayed.
+
 After every validation candidate has been published and its checkpoint hash is
 frozen, `scripts/generate_objective2_locked_test_graph_shards.py` creates the
 test graphs. It reads the test CSV with `usecols` that explicitly exclude every

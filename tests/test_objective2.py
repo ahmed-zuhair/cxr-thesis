@@ -21,10 +21,90 @@ from cxr_thesis.objective2.evaluation import paired_bootstrap_comparison
 from cxr_thesis.objective2.graph_generation import build_frozen_roi_graph
 from cxr_thesis.objective2.metrics import multilabel_metrics, select_f1_thresholds
 from cxr_thesis.objective2.models import build_classifier
+from cxr_thesis.objective2.cohort_recovery import (
+    greedy_complete_patient_selection,
+    recover_exact_cohort_bytes,
+    serialize_cohort,
+    sha256_bytes,
+)
 from cxr_thesis.objective2.training import (
     restore_rng_state,
     save_training_state,
 )
+
+
+class Objective2CohortRecoveryTests(unittest.TestCase):
+    def test_label_blind_exact_complete_patient_recovery(self) -> None:
+        rows = []
+        patient_counts = {"1": 2, "2": 1, "10": 3, "11": 2}
+        image_index = 0
+        for patient_id, count in patient_counts.items():
+            for _ in range(count):
+                rows.append(
+                    {
+                        "dataset": "synthetic",
+                        "patient_id": patient_id,
+                        "study_id": f"study-{image_index}",
+                        "image_id": f"image-{image_index:03d}",
+                        "image_path": f"/private/image-{image_index:03d}.png",
+                        "modality": "CXR",
+                        "view": "PA",
+                        "split": "test",
+                        "label_a": image_index % 2,
+                    }
+                )
+                image_index += 1
+        full = pd.DataFrame(rows)
+        identity = full[["patient_id", "split"]].copy()
+        numeric_order = sorted(patient_counts, key=lambda value: int(value))
+        selected = greedy_complete_patient_selection(
+            identity,
+            ordered_patients=numeric_order,
+            seed=42,
+            target_images=5,
+        )
+        expected = serialize_cohort(
+            full,
+            selected_patients=selected,
+            row_order="manifest",
+            selection_order=selected,
+        )
+        recovered, record = recover_exact_cohort_bytes(
+            identity,
+            full,
+            split="test",
+            seed=42,
+            target_images=5,
+            expected_patients=len(selected),
+            expected_sha256=sha256_bytes(expected),
+        )
+        self.assertEqual(recovered, expected)
+        self.assertFalse(record["selection_used_labels"])
+
+        changed_labels = full.copy()
+        changed_labels["label_a"] = 1 - changed_labels["label_a"]
+        changed_identity = changed_labels[["patient_id", "split"]]
+        selected_after_label_change = greedy_complete_patient_selection(
+            changed_identity,
+            ordered_patients=numeric_order,
+            seed=42,
+            target_images=5,
+        )
+        self.assertEqual(selected_after_label_change, selected)
+
+    def test_locked_test_cohort_recovery_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "scripts" / "recover_objective2_locked_test_cohort.py"),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--expected-test-sha256", result.stdout)
 
 
 class Objective2ModelTests(unittest.TestCase):
