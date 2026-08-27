@@ -27,6 +27,17 @@ classical_control:
 head:
   residual_fusion: true
   dropout: 0.2
+training:
+  epochs: 30
+  patience: 6
+  batch_size: 256
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  gradient_clip_norm: 1.0
+  execution_device: cpu
+  embedding_standardization: training_only
+  loss: weighted_binary_cross_entropy
+  positive_weights: identical_to_objective2_gat
 selection:
   primary_metric: validation_macro_auroc
   secondary_metric: validation_macro_auprc

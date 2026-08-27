@@ -32,3 +32,14 @@ completed shard is checksum-protected and uploaded to a verified private Hub
 repository, so a fresh Kaggle runtime restores completed work instead of
 repeating it. Test manifests, test labels, medical images, and predicted masks
 are not accessed or stored by this stage.
+
+`scripts/train_objective3_with_private_recovery.py` trains one member of the
+paired comparison from those frozen embeddings. Embedding standardization and
+positive class weights are fitted on training data only. Shared projection and
+classifier layers receive exactly the same seeded initialization for the
+quantum and classical variants, while each bottleneck has exactly 24 trainable
+parameters. The head contains 2,648 trainable parameters in total and executes
+on CPU because the quantum simulator is CPU-bound. Every completed epoch is
+checksum-protected and uploaded to the private recovery repository. The full
+study runs both variants at seeds 42, 43, and 44; smoke outputs made with case
+limits are explicitly marked as non-research results.

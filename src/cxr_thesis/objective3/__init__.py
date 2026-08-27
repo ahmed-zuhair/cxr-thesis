@@ -7,12 +7,28 @@ from .models import (
     QuantumBottleneck,
     bottleneck_parameter_count,
 )
+from .training import (
+    apply_standardizer,
+    fit_standardizer,
+    initialize_shared_layers,
+    labels_from_manifest,
+    load_embedding_corpus,
+    positive_weights,
+    shared_layer_state,
+)
 
 __all__ = [
     "ClassicalMatchedBottleneck",
     "HybridGraphHead",
     "QuantumBottleneck",
+    "apply_standardizer",
     "bottleneck_parameter_count",
+    "fit_standardizer",
+    "initialize_shared_layers",
+    "labels_from_manifest",
+    "load_embedding_corpus",
     "load_embedding_shard",
+    "positive_weights",
     "save_embedding_shard",
+    "shared_layer_state",
 ]
