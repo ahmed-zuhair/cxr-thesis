@@ -29,6 +29,12 @@ remote shards and resumes an interrupted local shard. The driver cannot accept
 a locked-test manifest, does not save predicted masks, and does not copy source
 medical images.
 
+After a completely fresh Kaggle runtime,
+`scripts/recover_objective2_graph_shards.py` reconstructs both frozen
+train/validation manifests and all graph files directly from those private,
+checksum-protected archives. It therefore does not need to rescan NIH images or
+repeat segmentation inference.
+
 The 5,000-case test cohort is label-blind during selection and must be evaluated
 exactly once after all five checkpoints and thresholds are frozen. No manual
 masking is required for Objective 2.

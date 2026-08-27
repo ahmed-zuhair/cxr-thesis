@@ -178,6 +178,27 @@ class Objective2MetricTests(unittest.TestCase):
 
 
 class Objective2RecoveryTests(unittest.TestCase):
+    def test_graph_fresh_runtime_recovery_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        environment = dict(os.environ)
+        environment["PYTHONPATH"] = str(repository / "src")
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(
+                    repository
+                    / "scripts"
+                    / "recover_objective2_graph_shards.py"
+                ),
+                "--help",
+            ],
+            env=environment,
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--cohort-root", result.stdout)
+
     def test_private_training_recovery_cli_imports(self) -> None:
         repository = Path(__file__).resolve().parents[1]
         environment = dict(os.environ)
