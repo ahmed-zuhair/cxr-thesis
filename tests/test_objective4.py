@@ -21,6 +21,14 @@ assert _LOCK_SPEC is not None and _LOCK_SPEC.loader is not None
 _LOCK_MODULE = importlib.util.module_from_spec(_LOCK_SPEC)
 _LOCK_SPEC.loader.exec_module(_LOCK_MODULE)
 
+_PUBLISH_SPEC = importlib.util.spec_from_file_location(
+    "publish_objective4_xai_protocol",
+    Path(__file__).parents[1] / "scripts" / "publish_objective4_xai_protocol.py",
+)
+assert _PUBLISH_SPEC is not None and _PUBLISH_SPEC.loader is not None
+_PUBLISH_MODULE = importlib.util.module_from_spec(_PUBLISH_SPEC)
+_PUBLISH_SPEC.loader.exec_module(_PUBLISH_MODULE)
+
 
 class TinyModel(nn.Module):
     def __init__(self) -> None:
@@ -98,6 +106,48 @@ class Objective4Tests(unittest.TestCase):
         invalid.loc[0, "split"] = "test"
         with self.assertRaises(ValueError):
             _LOCK_MODULE.select_cohort(invalid, seed=42, cases_per_label=2)
+
+    def test_public_protocol_validation_rejects_test_access(self) -> None:
+        protocol = {
+            "artifact": "Objective 4 quantitative XAI protocol lock",
+            "status": "locked_before_explanation_generation",
+            "objective": 4,
+            "model": "densenet121",
+            "expected_checkpoint_sha256": "checkpoint",
+            "private_xai_cohort_sha256": "cohort",
+            "cohort": {
+                "split": "val",
+                "cases": 240,
+                "unique_patients": 240,
+                "unique_images": 240,
+                "cases_per_target_label": 20,
+                "target_label_counts": {f"label-{index}": 20 for index in range(12)},
+                "predictions_used_for_selection": False,
+                "risk_scores_used_for_selection": False,
+            },
+            "protections": {
+                "test_manifest_opened": False,
+                "test_labels_accessed": False,
+                "test_evaluated": False,
+                "manual_masking_required": False,
+                "private_manifest_allowed_for_public_upload": False,
+                "medical_images_public": False,
+                "case_level_explanations_public": False,
+            },
+        }
+        checks = _PUBLISH_MODULE.validate_protocol(
+            protocol,
+            expected_private_hash="cohort",
+            expected_checkpoint_hash="checkpoint",
+        )
+        self.assertTrue(all(checks.values()))
+        protocol["protections"]["test_manifest_opened"] = True
+        with self.assertRaises(RuntimeError):
+            _PUBLISH_MODULE.validate_protocol(
+                protocol,
+                expected_private_hash="cohort",
+                expected_checkpoint_hash="checkpoint",
+            )
 
 
 if __name__ == "__main__":
