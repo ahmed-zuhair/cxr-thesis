@@ -1,0 +1,74 @@
+{
+  "artifact": "Objective 4 quantitative XAI protocol lock",
+  "cohort": {
+    "cases": 240,
+    "cases_per_target_label": 20,
+    "labels_used_for_selection": true,
+    "predictions_used_for_selection": false,
+    "risk_scores_used_for_selection": false,
+    "selection": "deterministic_label_positive_patient_unique",
+    "split": "val",
+    "target_label_counts": {
+      "Atelectasis": 20,
+      "Cardiomegaly": 20,
+      "Consolidation": 20,
+      "Edema": 20,
+      "Effusion": 20,
+      "Emphysema": 20,
+      "Fibrosis": 20,
+      "Infiltration": 20,
+      "Mass": 20,
+      "Nodule": 20,
+      "Pleural_Thickening": 20,
+      "Pneumothorax": 20
+    },
+    "unique_images": 240,
+    "unique_patients": 240
+  },
+  "expected_checkpoint_sha256": "2b7fa0d2f3dee3c59c538be15dd0435c71ad26b411fc1312bd7e5fe99fbac55f",
+  "methods": {
+    "grad_cam": {
+      "target_layer": "encoder.features.norm5"
+    },
+    "integrated_gradients": {
+      "baseline": "zero_in_normalised_space",
+      "steps": 32
+    }
+  },
+  "metrics": {
+    "agreement": "grad_cam_vs_integrated_gradients_spearman",
+    "anatomical_concentration": "fraction_inside_predicted_lung_roi",
+    "faithfulness": [
+      "deletion_auc",
+      "insertion_auc"
+    ],
+    "stability": "spearman_under_mild_intensity_perturbation"
+  },
+  "model": "densenet121",
+  "model_selection_basis": "objective2_independent_confirmation_winner",
+  "objective": 4,
+  "private_xai_cohort_sha256": "daa7eeda7104f64dcd353f45604310748ca2ff84ea9ffa7cb4110e7c8daa0d2a",
+  "protections": {
+    "case_level_explanations_public": false,
+    "image_identifiers_public": false,
+    "manual_masking_required": false,
+    "medical_images_public": false,
+    "patient_identifiers_public": false,
+    "private_manifest_allowed_for_public_upload": false,
+    "test_evaluated": false,
+    "test_labels_accessed": false,
+    "test_manifest_opened": false,
+    "threshold_tuning": false
+  },
+  "reporting": {
+    "case_level_explanations_public": false,
+    "image_identifiers_public": false,
+    "labels": 12,
+    "medical_images_public": false,
+    "patient_identifiers_public": false,
+    "representative_panels_per_label": 4
+  },
+  "seed": 42,
+  "source_validation_manifest_sha256": "3d1f3a984ab92cac43dbd91696639f46fb4046540dbf80c968415f2106506704",
+  "status": "locked_before_explanation_generation"
+}

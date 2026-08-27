@@ -1,0 +1,50 @@
+{
+  "artifact": "Objective 4 XAI protocol public inventory",
+  "case_level_explanations_included": false,
+  "checkpoint_sha256": "2b7fa0d2f3dee3c59c538be15dd0435c71ad26b411fc1312bd7e5fe99fbac55f",
+  "explanation_results_included": false,
+  "files": {
+    "README.md": {
+      "bytes": 951,
+      "sha256": "7b73fba2fa30cff8d65399a2dabac37f73a00b8b73ded531660e645f3449f94e"
+    },
+    "objective4_xai_protocol_lock_public.json": {
+      "bytes": 2340,
+      "sha256": "a596c284bc60ab3b7fc680e7f10760b32249963104e9ce81b98d0c7aa4d6f7b7"
+    },
+    "objective4_xai_protocol_lock_public.sha256": {
+      "bytes": 107,
+      "sha256": "7b5487e716dfb3e9cec5b7cb66c5af19a4b6a7c51d91d2ef35df1fbae2906937"
+    }
+  },
+  "image_identifiers_included": false,
+  "medical_images_included": false,
+  "patient_identifiers_included": false,
+  "private_cohort_sha256": "daa7eeda7104f64dcd353f45604310748ca2ff84ea9ffa7cb4110e7c8daa0d2a",
+  "private_manifest_included": false,
+  "protocol_checks": {
+    "artifact": true,
+    "balanced": true,
+    "case_explanations": true,
+    "cases": true,
+    "checkpoint": true,
+    "images": true,
+    "label_count": true,
+    "manual_masking": true,
+    "medical_images": true,
+    "model": true,
+    "objective": true,
+    "patients": true,
+    "per_label": true,
+    "predictions": true,
+    "private_hash": true,
+    "private_manifest": true,
+    "risk": true,
+    "split": true,
+    "status": true,
+    "test_evaluation": true,
+    "test_labels": true,
+    "test_manifest": true
+  },
+  "protocol_sha256": "a596c284bc60ab3b7fc680e7f10760b32249963104e9ce81b98d0c7aa4d6f7b7"
+}
