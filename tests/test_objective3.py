@@ -269,6 +269,46 @@ class Objective3ArchitectureTests(unittest.TestCase):
             self.assertEqual(amendment["original_protocol_sha256"], original_hash)
             self.assertFalse(amendment["test_evaluated"])
 
+    def test_enhancement_protocol_lock_records_missing_artifact(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "amendment"
+            original_hash = "3fa2199e3188a3c0d9c1fc29a7e27c0510965c73524982d5f9a7094c8d796944"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(
+                        repository
+                        / "scripts"
+                        / "lock_objective3_enhancement_protocol.py"
+                    ),
+                    "--expected-original-sha256",
+                    original_hash,
+                    "--recover-missing-original-from-recorded-lock",
+                    "--output-dir",
+                    str(output),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, msg=result.stderr)
+            amendment = json.loads(
+                (
+                    output
+                    / "objective3_enhancement_protocol_amendment_public.json"
+                ).read_text(encoding="utf-8")
+            )
+            self.assertFalse(amendment["original_protocol_artifact_available"])
+            self.assertFalse(
+                amendment["original_protocol_hash_verified_against_artifact"]
+            )
+            self.assertIsNotNone(
+                amendment["original_protocol_recovery_limitation"]
+            )
+            self.assertFalse(amendment["test_evaluated"])
+
     @unittest.skipUnless(find_spec("pennylane"), "PennyLane is optional")
     def test_paired_training_cli_end_to_end(self) -> None:
         labels = [

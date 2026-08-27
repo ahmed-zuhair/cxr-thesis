@@ -53,6 +53,13 @@ freezes one and only one enhancement attempt. The amendment references the
 original protocol by SHA-256 and refuses to run unless the original record is
 still test-blind.
 
+If Kaggle restarts after printing the successful v1.0 lock but before that
+public JSON is uploaded, the same tool supports the explicit
+`--recover-missing-original-from-recorded-lock` mode. The amendment then keeps
+the recorded v1.0 SHA-256 and test-blind terminal record but states that the
+missing ephemeral artifact cannot be byte-for-byte re-verified. This recovery
+mode is rejected whenever the original file is available.
+
 The v1.1 head repeats four-feature angle encoding before each of three shallow
 entangling blocks, producing a 36-parameter quantum bottleneck. Its classical
 control uses two four-feature linear transformations with exactly 36 trainable

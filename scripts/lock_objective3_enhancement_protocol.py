@@ -12,9 +12,17 @@ from pathlib import Path
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--original-protocol", type=Path, required=True)
+    parser.add_argument("--original-protocol", type=Path)
     parser.add_argument("--expected-original-sha256", required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument(
+        "--recover-missing-original-from-recorded-lock",
+        action="store_true",
+        help=(
+            "Record that the original ephemeral JSON was lost after its successful "
+            "lock output and SHA-256 were recorded; never use when the file exists"
+        ),
+    )
     return parser.parse_args()
 
 
@@ -34,29 +42,50 @@ def write_json(path: Path, payload: dict[str, object]) -> None:
 
 def main() -> None:
     args = parse_args()
-    if not args.original_protocol.is_file():
-        raise FileNotFoundError(args.original_protocol)
     if args.output_dir.exists():
         raise FileExistsError(
             "The v1.1 protocol amendment already exists; it must not be overwritten"
         )
-    original_hash = sha256_file(args.original_protocol)
-    if original_hash != args.expected_original_sha256:
-        raise RuntimeError("Original v1.0 protocol SHA-256 does not match")
-    original = json.loads(args.original_protocol.read_text(encoding="utf-8"))
-    if not isinstance(original, dict):
-        raise RuntimeError("Original protocol must be a JSON object")
-    protected_false_fields = (
-        "new_test_cohort_selected",
-        "test_manifest_opened",
-        "test_labels_accessed",
-        "test_evaluated",
+    original_available = bool(
+        args.original_protocol is not None and args.original_protocol.is_file()
     )
-    failed = [name for name in protected_false_fields if original.get(name) is not False]
-    if failed:
-        raise RuntimeError(f"Original protocol is not test-blind: {failed}")
-    if original.get("quantum_improvement_observed") is not False:
-        raise RuntimeError("v1.0 must record that quantum improvement was not observed")
+    if original_available and args.recover_missing_original_from_recorded_lock:
+        raise RuntimeError(
+            "The original protocol exists; missing-artifact recovery mode is forbidden"
+        )
+    if not original_available and not args.recover_missing_original_from_recorded_lock:
+        raise FileNotFoundError(
+            args.original_protocol or "No original v1.0 protocol path was supplied"
+        )
+    if original_available:
+        original_hash = sha256_file(args.original_protocol)
+        if original_hash != args.expected_original_sha256:
+            raise RuntimeError("Original v1.0 protocol SHA-256 does not match")
+        original = json.loads(args.original_protocol.read_text(encoding="utf-8"))
+        if not isinstance(original, dict):
+            raise RuntimeError("Original protocol must be a JSON object")
+        protected_false_fields = (
+            "new_test_cohort_selected",
+            "test_manifest_opened",
+            "test_labels_accessed",
+            "test_evaluated",
+        )
+        failed = [
+            name
+            for name in protected_false_fields
+            if original.get(name) is not False
+        ]
+        if failed:
+            raise RuntimeError(f"Original protocol is not test-blind: {failed}")
+        if original.get("quantum_improvement_observed") is not False:
+            raise RuntimeError(
+                "v1.0 must record that quantum improvement was not observed"
+            )
+    else:
+        # The immutable notebook output records the successful v1.0 lock, its hash,
+        # the negative validation decision, and that no test data were touched. The
+        # ephemeral JSON itself cannot be re-verified and that limitation is retained.
+        original_hash = args.expected_original_sha256
 
     payload = {
         "artifact": "Objective 3 bounded enhancement protocol amendment",
@@ -64,7 +93,23 @@ def main() -> None:
         "amendment_version": "1.1",
         "locked_at_utc": datetime.now(timezone.utc).isoformat(),
         "supersedes_original_for_future_training": True,
-        "original_protocol_preserved": True,
+        "original_protocol_preserved": original_available,
+        "original_protocol_artifact_available": original_available,
+        "original_protocol_hash_verified_against_artifact": original_available,
+        "original_protocol_sha256_source": (
+            "verified original JSON artifact"
+            if original_available
+            else "recorded successful Kaggle protocol-lock output before runtime restart"
+        ),
+        "original_protocol_recovery_limitation": (
+            None
+            if original_available
+            else (
+                "The ephemeral v1.0 JSON was not uploaded before the Kaggle runtime "
+                "restarted. Its recorded SHA-256 and lock status are retained, but "
+                "the missing artifact cannot be byte-for-byte re-verified."
+            )
+        ),
         "original_protocol_sha256": original_hash,
         "reason_for_amendment": (
             "The preregistered v1.0 quantum head did not improve mean validation "
@@ -128,6 +173,8 @@ def main() -> None:
     )
     print("--- OBJECTIVE 3 V1.1 PROTOCOL AMENDMENT ---")
     print("Original v1.0 SHA-256:", original_hash)
+    print("Original v1.0 artifact available:", original_available)
+    print("Original hash re-verified against artifact:", original_available)
     print("Amendment:", protocol_path)
     print("Amendment SHA-256:", protocol_hash)
     print("Architecture: v1_1_reupload_gated")
