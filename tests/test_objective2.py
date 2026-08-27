@@ -214,6 +214,20 @@ class Objective2MetricTests(unittest.TestCase):
 
 
 class Objective2RecoveryTests(unittest.TestCase):
+    def test_candidate_publication_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "scripts" / "publish_objective2_candidate.py"),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--release-tag", result.stdout)
+
     def test_graph_fresh_runtime_recovery_cli_imports(self) -> None:
         repository = Path(__file__).resolve().parents[1]
         environment = dict(os.environ)
