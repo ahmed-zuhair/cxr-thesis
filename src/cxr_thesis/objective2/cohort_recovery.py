@@ -115,6 +115,44 @@ def sha256_bytes(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
+def select_disjoint_confirmation_patients(
+    identity_frame: pd.DataFrame,
+    *,
+    excluded_patient_ids: Iterable[str],
+    split: str,
+    seed: int,
+    target_images: int,
+) -> list[str]:
+    """Select a label-blind complete-patient confirmation cohort.
+
+    Patients in ``excluded_patient_ids`` are removed before the deterministic
+    numeric-order/default-RNG selection. Only identity and split values are
+    inspected; disease labels, predictions, and risk scores are not inputs.
+    """
+    required = {"patient_id", "split"}
+    missing = required - set(identity_frame.columns)
+    if missing:
+        raise ValueError(f"Identity frame is missing columns: {sorted(missing)}")
+    excluded = set(map(str, excluded_patient_ids))
+    eligible = identity_frame[
+        identity_frame["split"].astype(str).str.lower().eq(split.lower())
+        & ~identity_frame["patient_id"].astype(str).isin(excluded)
+    ].copy()
+    if eligible.empty:
+        raise RuntimeError("No eligible confirmation patients remain")
+    ordered = patient_orders(eligible)["patient_numeric"]
+    selected = greedy_complete_patient_selection(
+        eligible,
+        ordered_patients=ordered,
+        seed=seed,
+        target_images=target_images,
+        randomizer="default_rng",
+    )
+    if set(selected) & excluded:
+        raise RuntimeError("Confirmation cohort overlaps excluded patients")
+    return selected
+
+
 def recover_exact_cohort_bytes(
     identity_frame: pd.DataFrame,
     full_manifest: pd.DataFrame,

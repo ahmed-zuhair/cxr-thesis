@@ -19,6 +19,7 @@ from cxr_thesis.objective1.graphs import GraphSample
 from cxr_thesis.objective2.cohort_recovery import (
     greedy_complete_patient_selection,
     recover_exact_cohort_bytes,
+    select_disjoint_confirmation_patients,
     serialize_cohort,
     sha256_bytes,
 )
@@ -113,6 +114,54 @@ class Objective2CohortRecoveryTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("--expected-test-sha256", result.stdout)
+
+    def test_confirmation_selection_is_disjoint_and_label_blind(self) -> None:
+        identity = pd.DataFrame(
+            {
+                "patient_id": ["1", "2", "3", "3", "4", "5"],
+                "split": ["test"] * 6,
+            }
+        )
+        selected = select_disjoint_confirmation_patients(
+            identity,
+            excluded_patient_ids={"1", "2"},
+            split="test",
+            seed=3042,
+            target_images=4,
+        )
+        self.assertFalse(set(selected) & {"1", "2"})
+        selected_rows = identity[identity["patient_id"].isin(selected)]
+        self.assertEqual(len(selected_rows), 4)
+
+        with_labels = identity.assign(label_disease=[1, 0, 1, 1, 0, 1])
+        changed_labels = with_labels.assign(label_disease=[0, 1, 0, 0, 1, 0])
+        selected_after_label_change = select_disjoint_confirmation_patients(
+            changed_labels[["patient_id", "split"]],
+            excluded_patient_ids={"1", "2"},
+            split="test",
+            seed=3042,
+            target_images=4,
+        )
+        self.assertEqual(selected, selected_after_label_change)
+
+    def test_confirmation_cohort_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(
+                    repository
+                    / "scripts"
+                    / "create_objective2_confirmation_cohort.py"
+                ),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--original-locked-manifest", result.stdout)
 
 
 class Objective2LockedTestGuardTests(unittest.TestCase):

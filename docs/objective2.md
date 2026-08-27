@@ -58,6 +58,14 @@ The reusable validation-candidate publisher also accepts the enhanced
 ImageNet-pretrained DenseNet-121 candidate. Image candidates do not receive
 graph-input provenance fields in their sanitized public summaries.
 
+Because the enhancement was designed after observing the original locked-test
+comparison, it is not evaluated as though that cohort were still untouched.
+`scripts/create_objective2_confirmation_cohort.py` instead selects a new
+complete-patient confirmation cohort from the remaining official NIH test
+patients. The original locked-test patients are excluded before a fixed,
+label-blind identity-only selection, and the confirmation hash is locked before
+any confirmation-label evaluation.
+
 `scripts/evaluate_objective2_locked_test.py` is the only program allowed to
 load test label values. Before doing so it verifies all five checkpoint hashes,
 model identities, label order and validation-selected thresholds. It evaluates
