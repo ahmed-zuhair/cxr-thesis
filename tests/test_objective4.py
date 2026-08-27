@@ -3,12 +3,23 @@ from __future__ import annotations
 import subprocess
 import sys
 import unittest
+import importlib.util
 from pathlib import Path
 
+import pandas as pd
 import torch
 from torch import nn
 
 from cxr_thesis.objective4 import GradCAM, integrated_gradients
+
+
+_LOCK_SPEC = importlib.util.spec_from_file_location(
+    "lock_objective4_xai_protocol",
+    Path(__file__).parents[1] / "scripts" / "lock_objective4_xai_protocol.py",
+)
+assert _LOCK_SPEC is not None and _LOCK_SPEC.loader is not None
+_LOCK_MODULE = importlib.util.module_from_spec(_LOCK_SPEC)
+_LOCK_SPEC.loader.exec_module(_LOCK_MODULE)
 
 
 class TinyModel(nn.Module):
@@ -56,6 +67,32 @@ class Objective4Tests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("OBJECTIVE 4 XAI METHOD SMOKE SUCCESSFUL", result.stdout)
+
+    def test_validation_only_balanced_protocol_selection(self) -> None:
+        rows = []
+        for label_index, label in enumerate(_LOCK_MODULE.LABELS):
+            for case_index in range(4):
+                row = {
+                    "patient_id": f"p-{label_index}-{case_index}",
+                    "image_id": f"i-{label_index}-{case_index}",
+                    "image_path": f"images/{label_index}-{case_index}.png",
+                    "split": "val",
+                }
+                row.update({name: int(name == label) for name in _LOCK_MODULE.LABELS})
+                rows.append(row)
+        cohort = _LOCK_MODULE.select_cohort(
+            pd.DataFrame(rows), seed=42, cases_per_label=2
+        )
+        self.assertEqual(len(cohort), 24)
+        self.assertEqual(cohort["patient_id"].nunique(), 24)
+        self.assertEqual(cohort["image_id"].nunique(), 24)
+        self.assertEqual(set(cohort["split"]), {"val"})
+        self.assertEqual(set(cohort["xai_target_label"].value_counts()), {2})
+
+        invalid = pd.DataFrame(rows)
+        invalid.loc[0, "split"] = "test"
+        with self.assertRaises(ValueError):
+            _LOCK_MODULE.select_cohort(invalid, seed=42, cases_per_label=2)
 
 
 if __name__ == "__main__":
