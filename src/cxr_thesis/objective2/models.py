@@ -178,8 +178,13 @@ class GATLayer(nn.Module):
         denominator = scores.new_zeros((nodes, self.heads))
         denominator.scatter_add_(0, target_heads, exponent)
         attention = exponent / denominator[target].clamp_min(1e-8)
+        # CUDA autocast may keep the scatter-based softmax in float32 while
+        # producing float16 value projections. index_add_ requires the source
+        # and destination to have the same dtype, so cast only the final
+        # normalised attention coefficients back to the value dtype.
+        attention = attention.to(dtype=value.dtype)
         messages = value[source] * attention[:, :, None]
-        aggregated = value.new_zeros((nodes, self.heads, self.head_dim))
+        aggregated = messages.new_zeros((nodes, self.heads, self.head_dim))
         aggregated.index_add_(0, target, messages)
         return torch.relu(self.output(aggregated.reshape(nodes, -1)))
 

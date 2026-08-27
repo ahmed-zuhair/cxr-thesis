@@ -67,6 +67,42 @@ class Objective2ModelTests(unittest.TestCase):
                 self.assertEqual(tuple(output.shape), (2, 2))
                 output.mean().backward()
 
+    @unittest.skipUnless(torch.cuda.is_available(), "CUDA is required for float16 AMP")
+    def test_gat_cuda_amp_message_dtype_matches_aggregation(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            GraphSample(
+                x=np.random.default_rng(42).normal(size=(8, 7)).astype(np.float32),
+                edge_index=np.asarray(
+                    [
+                        [0, 1, 2, 3, 4, 5, 6, 7, 0, 2, 4, 6],
+                        [0, 1, 2, 3, 4, 5, 6, 7, 1, 3, 5, 7],
+                    ],
+                    dtype=np.int64,
+                ),
+                edge_attr=np.zeros((12, 5), dtype=np.float32),
+                node_type=np.asarray(["image_patch"] * 8),
+                node_position=np.zeros((8, 2), dtype=np.float32),
+            ).save(root / "image-amp.npz")
+            row = {
+                "image_id": "image-amp",
+                "age": 50,
+                "sex": "M",
+                "view": "PA",
+                "label_a": 1,
+                "label_b": 0,
+            }
+            dataset = GraphClassificationDataset(
+                pd.DataFrame([row]), ["label_a", "label_b"], root
+            )
+            batch = collate_graph_samples([dataset[0]]).to("cuda")
+            model = build_classifier("gat", 2, node_dim=7).to("cuda")
+            with torch.autocast("cuda", dtype=torch.float16):
+                output = model(batch)
+            self.assertEqual(tuple(output.shape), (1, 2))
+            self.assertTrue(torch.isfinite(output).all())
+            output.mean().backward()
+
 
 class Objective2GraphGenerationTests(unittest.TestCase):
     def test_graph_shard_recovery_cli_imports(self) -> None:
