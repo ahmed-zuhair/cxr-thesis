@@ -12,6 +12,15 @@ consume an automatically generated ROI-aware patch graph plus the same clinical
 context. The implementation is dependency-light PyTorch and does not require
 PyTorch Geometric.
 
+`scripts/generate_objective2_graphs.py` applies the frozen, target-adapted
+Objective 1 U-Net in GPU batches and converts each model-space probability map
+directly into a compact seven-feature ROI patch graph. It deliberately saves no
+predicted masks or preprocessed medical images. Generation is resumable, binds
+every graph to the exact cohort and checkpoint SHA-256 values, and writes a
+private per-case audit plus an aggregate summary. The same immutable graph root
+is then supplied to both GCN and GAT so their comparison changes only the graph
+message-passing architecture.
+
 The 5,000-case test cohort is label-blind during selection and must be evaluated
 exactly once after all five checkpoints and thresholds are frozen. No manual
 masking is required for Objective 2.

@@ -9,8 +9,10 @@ import numpy as np
 import pandas as pd
 import torch
 
+from cxr_thesis.objective1.config import load_config
 from cxr_thesis.objective1.graphs import GraphSample
 from cxr_thesis.objective2.data import GraphClassificationDataset, collate_graph_samples
+from cxr_thesis.objective2.graph_generation import build_frozen_roi_graph
 from cxr_thesis.objective2.metrics import multilabel_metrics, select_f1_thresholds
 from cxr_thesis.objective2.models import build_classifier
 from cxr_thesis.objective2.training import (
@@ -61,6 +63,67 @@ class Objective2ModelTests(unittest.TestCase):
                 output = model(batch)
                 self.assertEqual(tuple(output.shape), (2, 2))
                 output.mean().backward()
+
+
+class Objective2GraphGenerationTests(unittest.TestCase):
+    def test_frozen_probability_builds_private_roi_graph_without_mask_file(self) -> None:
+        config = load_config(
+            Path(__file__).resolve().parents[1]
+            / "configs"
+            / "objective1"
+            / "default.yaml"
+        )
+        image = np.zeros((224, 224), dtype=np.uint8)
+        probability = np.zeros((224, 224), dtype=np.float32)
+        image[35:195, 35:100] = 100
+        image[35:195, 124:189] = 180
+        probability[35:195, 35:100] = 0.95
+        probability[35:195, 124:189] = 0.95
+        record = {
+            "image_id": "image-1",
+            "patient_id": "patient-1",
+            "dataset": "synthetic",
+            "split": "train",
+        }
+        result = build_frozen_roi_graph(
+            image,
+            probability,
+            threshold=0.55,
+            config=config,
+            record=record,
+            checkpoint_sha256="abc123",
+        )
+        self.assertEqual(result.graph.x.shape[1], 7)
+        self.assertGreater(result.graph.x.shape[0], 0)
+        self.assertGreater(result.graph.edge_index.shape[1], 0)
+        self.assertTrue(result.mask_quality["is_nonempty"])
+        self.assertEqual(
+            result.graph.metadata["mask_source"],
+            "frozen_adapted_unet_probability",
+        )
+        self.assertEqual(result.graph.metadata["mask_checkpoint_sha256"], "abc123")
+
+    def test_empty_frozen_probability_is_rejected(self) -> None:
+        config = load_config(
+            Path(__file__).resolve().parents[1]
+            / "configs"
+            / "objective1"
+            / "default.yaml"
+        )
+        with self.assertRaisesRegex(ValueError, "empty ROI"):
+            build_frozen_roi_graph(
+                np.zeros((224, 224), dtype=np.uint8),
+                np.zeros((224, 224), dtype=np.float32),
+                threshold=0.55,
+                config=config,
+                record={
+                    "image_id": "image-1",
+                    "patient_id": "patient-1",
+                    "dataset": "synthetic",
+                    "split": "train",
+                },
+                checkpoint_sha256="abc123",
+            )
 
 
 class Objective2MetricTests(unittest.TestCase):
