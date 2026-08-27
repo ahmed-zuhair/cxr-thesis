@@ -35,7 +35,15 @@ def stable_rank(seed: int, label: str, patient: object, image: object) -> str:
 def select_cohort(
     manifest: pd.DataFrame, *, seed: int, cases_per_label: int
 ) -> pd.DataFrame:
-    required = {"patient_id", "image_id", "split", *LABELS}
+    label_columns = {
+        label: (
+            f"label_{label}"
+            if f"label_{label}" in manifest.columns
+            else label
+        )
+        for label in LABELS
+    }
+    required = {"patient_id", "image_id", "split", *label_columns.values()}
     missing = sorted(required - set(manifest.columns))
     if missing:
         raise ValueError(f"Validation manifest columns are missing: {missing}")
@@ -48,7 +56,9 @@ def select_cohort(
     used_patients: set[str] = set()
     used_images: set[str] = set()
     positive_counts = {
-        label: int(pd.to_numeric(manifest[label], errors="raise").sum())
+        label: int(
+            pd.to_numeric(manifest[label_columns[label]], errors="raise").sum()
+        )
         for label in LABELS
     }
     # Allocate rare labels first so common multi-label cases cannot exhaust them.
@@ -56,7 +66,10 @@ def select_cohort(
     target_index = {label: index for index, label in enumerate(LABELS)}
 
     for label in allocation_order:
-        candidates = manifest.loc[pd.to_numeric(manifest[label]) == 1].copy()
+        source_column = label_columns[label]
+        candidates = manifest.loc[
+            pd.to_numeric(manifest[source_column], errors="raise") == 1
+        ].copy()
         candidates["_rank"] = [
             stable_rank(seed, label, patient, image)
             for patient, image in zip(

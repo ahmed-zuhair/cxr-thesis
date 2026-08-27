@@ -78,7 +78,12 @@ class Objective4Tests(unittest.TestCase):
                     "image_path": f"images/{label_index}-{case_index}.png",
                     "split": "val",
                 }
-                row.update({name: int(name == label) for name in _LOCK_MODULE.LABELS})
+                row.update(
+                    {
+                        f"label_{name}": int(name == label)
+                        for name in _LOCK_MODULE.LABELS
+                    }
+                )
                 rows.append(row)
         cohort = _LOCK_MODULE.select_cohort(
             pd.DataFrame(rows), seed=42, cases_per_label=2
