@@ -46,3 +46,9 @@ with `--resume`. Resume is rejected when the model settings or the SHA-256 of
 either training/validation manifest differs from the saved run. Optimizer,
 scheduler, data-loader generator, and Python/NumPy/PyTorch RNG states are all
 restored; the test cohort remains inaccessible.
+
+`scripts/train_objective2_with_private_recovery.py` adds private Hub recovery
+around that atomic state. It verifies that the recovery repository is private,
+uploads each stable completed epoch, restores the newest verified snapshot after
+a fresh Kaggle runtime, and uploads the final validation-selected artifacts. It
+does not accept a test manifest.

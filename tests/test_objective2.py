@@ -178,6 +178,27 @@ class Objective2MetricTests(unittest.TestCase):
 
 
 class Objective2RecoveryTests(unittest.TestCase):
+    def test_private_training_recovery_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        environment = dict(os.environ)
+        environment["PYTHONPATH"] = str(repository / "src")
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(
+                    repository
+                    / "scripts"
+                    / "train_objective2_with_private_recovery.py"
+                ),
+                "--help",
+            ],
+            env=environment,
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--hf-path", result.stdout)
+
     def test_epoch_recovery_is_complete_and_atomic(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             target = Path(directory) / "last.pt"
