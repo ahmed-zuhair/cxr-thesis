@@ -21,8 +21,11 @@ from cxr_thesis.objective3.embeddings import (
 )
 from cxr_thesis.objective3.models import (
     ClassicalMatchedBottleneck,
+    ClassicalReuploadingBottleneck,
+    EnhancedHybridGraphHead,
     HybridGraphHead,
     QuantumBottleneck,
+    QuantumReuploadingBottleneck,
     bottleneck_parameter_count,
 )
 from cxr_thesis.objective3.training import (
@@ -62,6 +65,30 @@ class Objective3ArchitectureTests(unittest.TestCase):
         output = model(torch.rand(3, 160))
         self.assertEqual(tuple(output.shape), (3, 12))
 
+    def test_enhanced_classical_control_and_head_parameter_budget(self) -> None:
+        bottleneck = ClassicalReuploadingBottleneck()
+        self.assertEqual(bottleneck_parameter_count(bottleneck), 36)
+        model = EnhancedHybridGraphHead(12, bottleneck="classical_matched")
+        output = model(torch.rand(3, 160))
+        self.assertEqual(tuple(output.shape), (3, 12))
+        self.assertEqual(
+            sum(parameter.numel() for parameter in model.parameters()), 3253
+        )
+        self.assertAlmostEqual(float(model.fusion_scale.detach()), 0.1, places=6)
+        output.mean().backward()
+
+    @unittest.skipUnless(find_spec("pennylane"), "PennyLane is optional")
+    def test_reuploading_quantum_matches_classical_parameter_budget(self) -> None:
+        classical = ClassicalReuploadingBottleneck()
+        quantum = QuantumReuploadingBottleneck()
+        self.assertEqual(bottleneck_parameter_count(classical), 36)
+        self.assertEqual(bottleneck_parameter_count(quantum), 36)
+        inputs = torch.rand(3, 4, requires_grad=True)
+        output = quantum(inputs)
+        self.assertEqual(tuple(output.shape), (3, 4))
+        output.mean().backward()
+        self.assertTrue(torch.isfinite(inputs.grad).all().item())
+
     @unittest.skipUnless(find_spec("pennylane"), "PennyLane is optional")
     def test_quantum_control_matches_classical_parameter_budget(self) -> None:
         classical = ClassicalMatchedBottleneck()
@@ -88,6 +115,7 @@ class Objective3ArchitectureTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("--batch-size", result.stdout)
+        self.assertIn("--architecture", result.stdout)
 
     def test_private_embedding_shard_round_trip(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -165,6 +193,18 @@ class Objective3ArchitectureTests(unittest.TestCase):
         for name in classical_state:
             self.assertTrue(torch.equal(classical_state[name], quantum_state[name]))
 
+    @unittest.skipUnless(find_spec("pennylane"), "PennyLane is optional")
+    def test_enhanced_paired_heads_share_exact_initialization(self) -> None:
+        classical = EnhancedHybridGraphHead(12, bottleneck="classical_matched")
+        quantum = EnhancedHybridGraphHead(12, bottleneck="quantum")
+        initialize_shared_layers(classical, 42)
+        initialize_shared_layers(quantum, 42)
+        classical_state = shared_layer_state(classical)
+        quantum_state = shared_layer_state(quantum)
+        self.assertEqual(classical_state.keys(), quantum_state.keys())
+        for name in classical_state:
+            self.assertTrue(torch.equal(classical_state[name], quantum_state[name]))
+
     def test_paired_training_clis_import(self) -> None:
         repository = Path(__file__).resolve().parents[1]
         for name in (
@@ -180,6 +220,54 @@ class Objective3ArchitectureTests(unittest.TestCase):
                 )
                 self.assertEqual(result.returncode, 0, msg=result.stderr)
                 self.assertIn("--variant", result.stdout)
+                self.assertIn("--architecture", result.stdout)
+
+    def test_enhancement_protocol_lock_cli(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            original = root / "v1.json"
+            original.write_text(
+                json.dumps(
+                    {
+                        "quantum_improvement_observed": False,
+                        "new_test_cohort_selected": False,
+                        "test_manifest_opened": False,
+                        "test_labels_accessed": False,
+                        "test_evaluated": False,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            original_hash = hashlib.sha256(original.read_bytes()).hexdigest()
+            output = root / "amendment"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(
+                        repository
+                        / "scripts"
+                        / "lock_objective3_enhancement_protocol.py"
+                    ),
+                    "--original-protocol",
+                    str(original),
+                    "--expected-original-sha256",
+                    original_hash,
+                    "--output-dir",
+                    str(output),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, msg=result.stderr)
+            amendment_path = (
+                output / "objective3_enhancement_protocol_amendment_public.json"
+            )
+            amendment = json.loads(amendment_path.read_text(encoding="utf-8"))
+            self.assertEqual(amendment["amendment_version"], "1.1")
+            self.assertEqual(amendment["original_protocol_sha256"], original_hash)
+            self.assertFalse(amendment["test_evaluated"])
 
     @unittest.skipUnless(find_spec("pennylane"), "PennyLane is optional")
     def test_paired_training_cli_end_to_end(self) -> None:

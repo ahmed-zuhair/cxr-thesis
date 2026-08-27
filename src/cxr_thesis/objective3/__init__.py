@@ -3,8 +3,11 @@
 from .embeddings import load_embedding_shard, save_embedding_shard
 from .models import (
     ClassicalMatchedBottleneck,
+    ClassicalReuploadingBottleneck,
+    EnhancedHybridGraphHead,
     HybridGraphHead,
     QuantumBottleneck,
+    QuantumReuploadingBottleneck,
     bottleneck_parameter_count,
 )
 from .training import (
@@ -19,8 +22,11 @@ from .training import (
 
 __all__ = [
     "ClassicalMatchedBottleneck",
+    "ClassicalReuploadingBottleneck",
+    "EnhancedHybridGraphHead",
     "HybridGraphHead",
     "QuantumBottleneck",
+    "QuantumReuploadingBottleneck",
     "apply_standardizer",
     "bottleneck_parameter_count",
     "fit_standardizer",

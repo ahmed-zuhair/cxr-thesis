@@ -28,6 +28,11 @@ def parse_args() -> argparse.Namespace:
         required=True,
         choices=("quantum", "classical_matched"),
     )
+    parser.add_argument(
+        "--architecture",
+        choices=("v1_concat", "v1_1_reupload_gated"),
+        default="v1_concat",
+    )
     parser.add_argument("--train-manifest", type=Path, required=True)
     parser.add_argument("--val-manifest", type=Path, required=True)
     parser.add_argument("--embedding-root", type=Path, required=True)
@@ -176,6 +181,7 @@ def validate_final_summary(path: Path, args: argparse.Namespace) -> dict[str, ob
     checks = {
         "objective": summary.get("objective") == 3,
         "variant": summary.get("variant") == args.variant,
+        "architecture": summary.get("architecture_version") == args.architecture,
         "seed": summary.get("seed") == args.seed,
         "train_hash": configuration.get("train_manifest_sha256")
         == args.expected_train_sha256,
@@ -274,6 +280,8 @@ def main() -> None:
         str(REPOSITORY_ROOT / "scripts" / "train_objective3_head.py"),
         "--variant",
         args.variant,
+        "--architecture",
+        args.architecture,
         "--train-manifest",
         str(args.train_manifest),
         "--val-manifest",
@@ -343,6 +351,7 @@ def main() -> None:
                                 {
                                     "private_recovery_uploaded_epoch": epoch,
                                     "variant": args.variant,
+                                    "architecture_version": args.architecture,
                                     "seed": args.seed,
                                     "test_evaluated": False,
                                 }
@@ -390,6 +399,7 @@ def main() -> None:
             {
                 "event": "objective3_private_training_finalized",
                 "variant": args.variant,
+                "architecture_version": args.architecture,
                 "seed": args.seed,
                 "best_epoch": summary["best_epoch"],
                 "validation_macro_auroc": summary["validation_metrics"]["macro"][

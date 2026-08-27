@@ -32,6 +32,7 @@ from cxr_thesis.objective2.training import (
     seed_everything,
 )
 from cxr_thesis.objective3.models import (
+    EnhancedHybridGraphHead,
     HybridGraphHead,
     bottleneck_parameter_count,
 )
@@ -71,6 +72,12 @@ def parse_args() -> argparse.Namespace:
         "--variant",
         required=True,
         choices=("quantum", "classical_matched"),
+    )
+    parser.add_argument(
+        "--architecture",
+        choices=("v1_concat", "v1_1_reupload_gated"),
+        default="v1_concat",
+        help="Use v1_concat for historical checkpoints or the locked v1.1 enhancement",
     )
     parser.add_argument("--train-manifest", type=Path, required=True)
     parser.add_argument("--val-manifest", type=Path, required=True)
@@ -203,6 +210,7 @@ def checkpoint_payload(
         "artifact": "Objective 3 validation-selected hybrid GAT head",
         "model_name": f"hybrid_gat_{args.variant}",
         "variant": args.variant,
+        "architecture_version": args.architecture,
         "model_state": model.state_dict(),
         "label_names": PRIMARY_LABELS,
         "epoch": int(epoch),
@@ -283,7 +291,12 @@ def main() -> None:
     weights = positive_weights(train_labels)
 
     seed_everything(args.seed)
-    model = HybridGraphHead(
+    model_class = (
+        EnhancedHybridGraphHead
+        if args.architecture == "v1_1_reupload_gated"
+        else HybridGraphHead
+    )
+    model = model_class(
         len(PRIMARY_LABELS),
         bottleneck=args.variant,
         dropout=args.dropout,
@@ -325,6 +338,7 @@ def main() -> None:
     signature = {
         "objective": 3,
         "variant": args.variant,
+        "architecture_version": args.architecture,
         "labels": PRIMARY_LABELS,
         "train_manifest_sha256": args.expected_train_sha256,
         "validation_manifest_sha256": args.expected_val_sha256,
@@ -377,13 +391,22 @@ def main() -> None:
 
     bottleneck_parameters = bottleneck_parameter_count(model.bottleneck)
     total_parameters = sum(parameter.numel() for parameter in model.parameters())
-    if bottleneck_parameters != 24 or total_parameters != 2648:
-        raise RuntimeError("Objective 3 parameter budget changed")
+    expected_budget = {
+        "v1_concat": (24, 2648),
+        "v1_1_reupload_gated": (36, 3253),
+    }[args.architecture]
+    if (bottleneck_parameters, total_parameters) != expected_budget:
+        raise RuntimeError(
+            "Objective 3 parameter budget changed: "
+            f"observed={(bottleneck_parameters, total_parameters)}, "
+            f"expected={expected_budget}"
+        )
     print(
         json.dumps(
             {
                 "objective": 3,
                 "variant": args.variant,
+                "architecture_version": args.architecture,
                 "train_cases": len(train_frame),
                 "validation_cases": len(validation_frame),
                 "test_cases_accessed": 0,
@@ -489,6 +512,7 @@ def main() -> None:
         "artifact": "Objective 3 validation-selected paired hybrid GAT head",
         "objective": 3,
         "variant": args.variant,
+        "architecture_version": args.architecture,
         "model": f"hybrid_gat_{args.variant}",
         "seed": args.seed,
         "train_cases": len(train_frame),

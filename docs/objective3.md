@@ -43,3 +43,29 @@ on CPU because the quantum simulator is CPU-bound. Every completed epoch is
 checksum-protected and uploaded to the private recovery repository. The full
 study runs both variants at seeds 42, 43, and 44; smoke outputs made with case
 limits are explicitly marked as non-research results.
+
+## Bounded v1.1 enhancement amendment
+
+The original v1.0 protocol and its negative validation result remain immutable.
+Before any additional training or test-cohort selection,
+`scripts/lock_objective3_enhancement_protocol.py` records a v1.1 amendment that
+freezes one and only one enhancement attempt. The amendment references the
+original protocol by SHA-256 and refuses to run unless the original record is
+still test-blind.
+
+The v1.1 head repeats four-feature angle encoding before each of three shallow
+entangling blocks, producing a 36-parameter quantum bottleneck. Its classical
+control uses two four-feature linear transformations with exactly 36 trainable
+parameters. Both variants use the same learned, initially 0.1-scaled 4-to-160
+residual back-projection, classifier, initialization, embeddings, losses,
+optimizer, and seeds. Each head has 3,253 trainable parameters in total.
+
+The enhanced quantum head advances to the single final evaluation only when
+its mean validation macro AUROC exceeds the matched control and it wins at
+least two of three seeds. Macro AUPRC and macro F1 are reported but do not
+select the model. If either primary rule fails, no further Objective 3
+architecture tuning is permitted and the negative result is reported.
+
+Use `--architecture v1_1_reupload_gated` with the smoke, direct-training, and
+private-recovery scripts. Use a new output directory and private Hub path so
+the v1.0 checkpoints are never overwritten.

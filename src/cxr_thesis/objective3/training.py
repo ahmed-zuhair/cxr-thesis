@@ -111,22 +111,33 @@ def initialize_shared_layers(model: nn.Module, seed: int) -> None:
     """Give both heads identical shared projection/classifier initialization."""
 
     generator = torch.Generator(device="cpu").manual_seed(seed + 10_000)
-    layers = [model.input_projection, model.classifier[-1]]
+    layers = [model.input_projection]
+    if hasattr(model, "output_projection"):
+        layers.append(model.output_projection)
+    layers.append(model.classifier[-1])
     with torch.no_grad():
         for layer in layers:
             nn.init.xavier_uniform_(layer.weight, generator=generator)
-            nn.init.zeros_(layer.bias)
+            if layer.bias is not None:
+                nn.init.zeros_(layer.bias)
 
 
 def shared_layer_state(model: nn.Module) -> dict[str, torch.Tensor]:
     """Return a detached copy of parameters shared by both paired heads."""
 
-    return {
+    state = {
         "input_projection.weight": model.input_projection.weight.detach().cpu().clone(),
         "input_projection.bias": model.input_projection.bias.detach().cpu().clone(),
         "classifier.weight": model.classifier[-1].weight.detach().cpu().clone(),
         "classifier.bias": model.classifier[-1].bias.detach().cpu().clone(),
     }
+    if hasattr(model, "output_projection"):
+        state["output_projection.weight"] = (
+            model.output_projection.weight.detach().cpu().clone()
+        )
+    if hasattr(model, "fusion_logit"):
+        state["fusion_logit"] = model.fusion_logit.detach().cpu().clone()
+    return state
 
 
 def positive_weights(labels: np.ndarray) -> np.ndarray:

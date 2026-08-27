@@ -18,6 +18,7 @@ if str(SOURCE_ROOT) not in sys.path:
     sys.path.insert(0, str(SOURCE_ROOT))
 
 from cxr_thesis.objective3.models import (
+    EnhancedHybridGraphHead,
     HybridGraphHead,
     bottleneck_parameter_count,
 )
@@ -32,6 +33,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--architecture",
+        choices=("v1_concat", "v1_1_reupload_gated"),
+        default="v1_concat",
+    )
     return parser.parse_args()
 
 
@@ -56,8 +62,16 @@ def main() -> None:
     torch.manual_seed(args.seed)
     embeddings = torch.randn(args.batch_size, 160)
     targets = torch.randint(0, 2, (args.batch_size, 12)).float()
+    model_class = (
+        EnhancedHybridGraphHead
+        if args.architecture == "v1_1_reupload_gated"
+        else HybridGraphHead
+    )
+    expected_bottleneck_parameters = (
+        36 if args.architecture == "v1_1_reupload_gated" else 24
+    )
     models = {
-        name: HybridGraphHead(12, embedding_dim=160, bottleneck=name)
+        name: model_class(12, embedding_dim=160, bottleneck=name)
         for name in ("classical_matched", "quantum")
     }
     results: dict[str, object] = {}
@@ -86,9 +100,9 @@ def main() -> None:
         "classical_bottleneck_parameters": results["classical_matched"][
             "bottleneck_parameters"
         ]
-        == 24,
+        == expected_bottleneck_parameters,
         "quantum_bottleneck_parameters": results["quantum"]["bottleneck_parameters"]
-        == 24,
+        == expected_bottleneck_parameters,
         "exact_parameter_match": results["classical_matched"][
             "total_trainable_parameters"
         ]
@@ -108,7 +122,12 @@ def main() -> None:
                 "python": sys.version,
                 "platform": platform.platform(),
                 "config_sha256": sha256_file(args.config),
-                "circuit": "4 qubits x 2 strongly-entangling layers",
+                "architecture_version": args.architecture,
+                "circuit": (
+                    "4 qubits x 3 data-reuploading blocks"
+                    if args.architecture == "v1_1_reupload_gated"
+                    else "4 qubits x 2 strongly-entangling layers"
+                ),
                 "simulator": "default.qubit analytic",
                 "execution_device": "cpu",
                 "models": results,
