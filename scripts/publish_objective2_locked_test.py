@@ -148,13 +148,20 @@ def main() -> None:
         cwd=REPOSITORY_ROOT,
     ).returncode != 0:
         raise RuntimeError("Declared source commit is not in current history")
-    if run_git(["status", "--porcelain"]):
-        raise RuntimeError("Repository must be clean before publication")
-
     result_root = REPOSITORY_ROOT / args.result_path
-    if result_root.exists():
-        raise FileExistsError(f"Public result directory already exists: {result_root}")
-    result_root.mkdir(parents=True)
+    result_prefix = str(args.result_path).replace("\\", "/").rstrip("/") + "/"
+    status_lines = run_git(["status", "--porcelain"]).splitlines()
+    unexpected_changes = []
+    for line in status_lines:
+        changed_path = line[3:].replace("\\", "/")
+        if changed_path.rstrip("/") == result_prefix.rstrip("/"):
+            continue
+        if not changed_path.startswith(result_prefix):
+            unexpected_changes.append(line)
+    if unexpected_changes:
+        raise RuntimeError(f"Unexpected repository changes: {unexpected_changes}")
+
+    result_root.mkdir(parents=True, exist_ok=True)
     shutil.copy2(summary_source, result_root / summary_source.name)
     shutil.copy2(figure_source, result_root / figure_source.name)
     public_lock = {
@@ -190,15 +197,31 @@ def main() -> None:
         "case_level_predictions_included": False,
         "private_data_included": False,
     }
+    inventory_name = "artifact_inventory_public.json"
     for path in sorted(result_root.iterdir()):
-        if path.is_file():
+        if path.is_file() and path.name != inventory_name:
             inventory["files"][path.name] = {
                 "bytes": path.stat().st_size,
                 "sha256": sha256_file(path),
             }
-    (result_root / "artifact_inventory_public.json").write_text(
+    (result_root / inventory_name).write_text(
         json.dumps(inventory, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
+    expected_result_files = {
+        "README.md",
+        "artifact_inventory_public.json",
+        "locked_test_evaluation_lock_public.json",
+        summary_source.name,
+        figure_source.name,
+    }
+    actual_result_files = {
+        path.name for path in result_root.iterdir() if path.is_file()
+    }
+    if actual_result_files != expected_result_files:
+        raise RuntimeError(
+            "Unexpected public result files: "
+            f"{sorted(actual_result_files - expected_result_files)}"
+        )
     privacy_scan(result_root)
 
     backups = Path("/kaggle/working/backups")
@@ -210,34 +233,57 @@ def main() -> None:
     checksum = archive.with_suffix(".zip.sha256")
     checksum.write_text(f"{archive_hash}  {archive.name}\n", encoding="utf-8")
 
-    from huggingface_hub import CommitOperationAdd, HfApi
+    from huggingface_hub import CommitOperationAdd, HfApi, hf_hub_download
 
     hf_api = HfApi(token=hf_token)
     if bool(hf_api.model_info(args.hf_repo, token=hf_token).private):
         raise RuntimeError("Public checkpoint repository is unexpectedly private")
     hf_files = [path for path in result_root.iterdir() if path.is_file()] + [archive, checksum]
-    hf_api.create_commit(
-        repo_id=args.hf_repo,
-        repo_type="model",
-        token=hf_token,
-        operations=[
+    remote_files = set(
+        hf_api.list_repo_files(args.hf_repo, repo_type="model", token=hf_token)
+    )
+    hf_cache = backups / "objective2_locked_test_hf_verification"
+    hf_cache.mkdir(parents=True, exist_ok=True)
+    operations = []
+    for path in hf_files:
+        remote_path = f"{args.hf_path.strip('/')}/{path.name}"
+        if remote_path in remote_files:
+            downloaded = Path(
+                hf_hub_download(
+                    args.hf_repo,
+                    filename=remote_path,
+                    repo_type="model",
+                    token=hf_token,
+                    local_dir=hf_cache,
+                    force_download=True,
+                )
+            )
+            if sha256_file(downloaded) != sha256_file(path):
+                raise RuntimeError(f"Existing HF artifact differs: {remote_path}")
+            continue
+        operations.append(
             CommitOperationAdd(
-                path_in_repo=f"{args.hf_path.strip('/')}/{path.name}",
+                path_in_repo=remote_path,
                 path_or_fileobj=str(path),
             )
-            for path in hf_files
-        ],
-        commit_message="results: publish Objective 2 locked-test comparison",
-    )
+        )
+    if operations:
+        hf_api.create_commit(
+            repo_id=args.hf_repo,
+            repo_type="model",
+            token=hf_token,
+            operations=operations,
+            commit_message="results: publish Objective 2 locked-test comparison",
+        )
 
     run_git(["config", "user.name", "Ahmed Zuhair"])
     run_git(["config", "user.email", "ahmed-zuhair@users.noreply.github.com"])
     run_git(["add", "--", str(args.result_path).replace("\\", "/")])
     staged = run_git(["diff", "--cached", "--name-only"]).splitlines()
-    prefix = str(args.result_path).replace("\\", "/").rstrip("/") + "/"
-    if not staged or any(not path.startswith(prefix) for path in staged):
+    if any(not path.startswith(result_prefix) for path in staged):
         raise RuntimeError(f"Unexpected staged files: {staged}")
-    run_git(["commit", "-m", "results: publish Objective 2 locked-test comparison"])
+    if staged:
+        run_git(["commit", "-m", "results: publish Objective 2 locked-test comparison"])
     with tempfile.TemporaryDirectory(prefix="git_askpass_") as directory:
         askpass = Path(directory) / "askpass.sh"
         askpass.write_text(
