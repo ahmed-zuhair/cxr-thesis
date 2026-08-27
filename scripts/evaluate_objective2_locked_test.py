@@ -154,6 +154,76 @@ def validate_candidate(
     return checkpoint, thresholds
 
 
+def validate_final_lock_payload(
+    payload: dict[str, object],
+    *,
+    expected_test_sha256: str,
+    checkpoint_hashes: dict[str, str],
+) -> None:
+    """Validate a remote final lock before allowing any test-label access."""
+    checks = {
+        "test_manifest": payload.get("test_manifest_sha256") == expected_test_sha256,
+        "checkpoint_hashes": payload.get("checkpoint_sha256") == checkpoint_hashes,
+        "completed_models": payload.get("completed_models") == list(MODEL_ORDER),
+        "thresholds_frozen": (
+            payload.get("validation_thresholds_reused_without_change") is True
+        ),
+        "test_not_used_for_selection": (
+            payload.get("test_used_for_model_selection") is False
+        ),
+        "test_evaluated": payload.get("test_evaluated") is True,
+    }
+    if not all(checks.values()):
+        raise RuntimeError(f"Private final evaluation lock is invalid: {checks}")
+
+
+def reject_if_remotely_finalized(
+    args: argparse.Namespace,
+    checkpoint_hashes: dict[str, str],
+) -> None:
+    """Stop a repeated evaluation when its immutable lock already exists remotely."""
+    if bool(args.private_hf_repo) != bool(args.private_hf_path):
+        raise ValueError("--private-hf-repo and --private-hf-path must be supplied together")
+    if not args.private_hf_repo:
+        return
+    token = os.environ.get("HF_TOKEN", "").strip()
+    if not token:
+        raise RuntimeError("HF_TOKEN is required for private evaluation recovery")
+    from huggingface_hub import HfApi, hf_hub_download
+
+    api = HfApi(token=token)
+    info = api.model_info(args.private_hf_repo, token=token)
+    if not bool(info.private):
+        raise RuntimeError("Locked-test evaluation recovery repository must be private")
+    remote_lock = (
+        f"{args.private_hf_path.strip('/')}/FINAL_LOCKED_TEST_EVALUATION.json"
+    )
+    remote_files = set(
+        api.list_repo_files(args.private_hf_repo, repo_type="model", token=token)
+    )
+    if remote_lock not in remote_files:
+        return
+    downloaded = Path(
+        hf_hub_download(
+            args.private_hf_repo,
+            filename=remote_lock,
+            repo_type="model",
+            token=token,
+            force_download=True,
+        )
+    )
+    payload = json.loads(downloaded.read_text(encoding="utf-8"))
+    validate_final_lock_payload(
+        payload,
+        expected_test_sha256=args.expected_test_sha256,
+        checkpoint_hashes=checkpoint_hashes,
+    )
+    raise RuntimeError(
+        "The locked-test evaluation is already finalized in private recovery; "
+        "a second evaluation is forbidden"
+    )
+
+
 def make_loader(
     model: str,
     frame: pd.DataFrame,
@@ -246,6 +316,10 @@ def main() -> None:
         thresholds[model] = model_thresholds
         checkpoint_hashes[model] = expected_hash
         checkpoint_paths[model] = checkpoint_path
+
+    # This remote immutable-lock guard runs before the test manifest is loaded,
+    # so a fresh runtime cannot repeat an already finalized evaluation.
+    reject_if_remotely_finalized(args, checkpoint_hashes)
 
     test_hash = sha256_file(args.test_manifest)
     if test_hash != args.expected_test_sha256:

@@ -32,6 +32,8 @@ from cxr_thesis.objective2.training import (
     save_training_state,
 )
 
+from scripts.evaluate_objective2_locked_test import validate_final_lock_payload
+
 
 class Objective2CohortRecoveryTests(unittest.TestCase):
     def test_label_blind_exact_complete_patient_recovery(self) -> None:
@@ -105,6 +107,35 @@ class Objective2CohortRecoveryTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("--expected-test-sha256", result.stdout)
+
+
+class Objective2LockedTestGuardTests(unittest.TestCase):
+    def test_remote_final_lock_requires_exact_frozen_signature(self) -> None:
+        checkpoint_hashes = {
+            model: f"hash-{model}"
+            for model in ("cnn", "attention_cnn", "vit", "gcn", "gat")
+        }
+        payload = {
+            "test_manifest_sha256": "test-hash",
+            "checkpoint_sha256": checkpoint_hashes,
+            "completed_models": ["cnn", "attention_cnn", "vit", "gcn", "gat"],
+            "validation_thresholds_reused_without_change": True,
+            "test_used_for_model_selection": False,
+            "test_evaluated": True,
+        }
+        validate_final_lock_payload(
+            payload,
+            expected_test_sha256="test-hash",
+            checkpoint_hashes=checkpoint_hashes,
+        )
+        invalid = dict(payload)
+        invalid["test_manifest_sha256"] = "different"
+        with self.assertRaises(RuntimeError):
+            validate_final_lock_payload(
+                invalid,
+                expected_test_sha256="test-hash",
+                checkpoint_hashes=checkpoint_hashes,
+            )
 
 
 class Objective2ModelTests(unittest.TestCase):
