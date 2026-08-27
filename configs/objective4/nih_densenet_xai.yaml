@@ -1,0 +1,27 @@
+objective: 4
+seed: 42
+model: densenet121
+checkpoint_source: objective2_independent_confirmation_winner
+cohort:
+  split: val
+  cases: 240
+  selection: deterministic_label_stratified
+  test_access: false
+methods:
+  grad_cam:
+    target_layer: encoder.features.norm5
+  integrated_gradients:
+    steps: 32
+    baseline: zero_in_normalised_space
+metrics:
+  faithfulness: [deletion_auc, insertion_auc]
+  stability: spearman_under_mild_intensity_perturbation
+  anatomical_concentration: fraction_inside_predicted_lung_roi
+  agreement: grad_cam_vs_integrated_gradients_spearman
+reporting:
+  labels: 12
+  representative_panels_per_label: 4
+  patient_identifiers_public: false
+  image_identifiers_public: false
+  medical_images_public: false
+  case_level_explanations_public: false
