@@ -1,0 +1,19 @@
+{
+  "artifact": "Objective 2 immutable independent confirmation evaluation lock",
+  "checkpoint_sha256": {
+    "cnn": "3f5e37ad4995f0af8381396dc6b01947c2cceb858d49879f4c67d39d0f9da3b0",
+    "densenet121": "2b7fa0d2f3dee3c59c538be15dd0435c71ad26b411fc1312bd7e5fe99fbac55f"
+  },
+  "completed_models": [
+    "cnn",
+    "densenet121"
+  ],
+  "confirmation_evaluated": true,
+  "confirmation_evaluation_count": 1,
+  "confirmation_manifest_sha256": "8665f6a603c622bf095ae5a813a289eed59533833869795a9d79858507ddb600",
+  "confirmation_used_for_model_selection": false,
+  "figure_sha256": "24ada040cce76486d1cdbaa4b45d267614ff1058bcc8f2b90824e509cad83114",
+  "protocol_sha256": "b537b393716e9db5351f4c21e445f12e7999aa931e310d813eb687f203d5be82",
+  "summary_sha256": "c0e36c7377c0a71b1a03978e9434af4185ff1f4f9ec62773de480b4d5f6306aa",
+  "validation_thresholds_reused_without_change": true
+}

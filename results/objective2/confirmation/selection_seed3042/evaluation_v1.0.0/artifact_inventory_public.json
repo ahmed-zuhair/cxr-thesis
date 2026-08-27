@@ -1,0 +1,30 @@
+{
+  "artifact": "Objective 2 independent confirmation public inventory",
+  "case_level_predictions_included": false,
+  "checkpoints_included": false,
+  "confirmation_manifest_sha256": "8665f6a603c622bf095ae5a813a289eed59533833869795a9d79858507ddb600",
+  "files": {
+    "README.md": {
+      "bytes": 1246,
+      "sha256": "8425b7cc49f5c0d5c4b359c9b493b447732e150abda3c1f4d52c1e00b599f3c5"
+    },
+    "confirmation_evaluation_lock_public.json": {
+      "bytes": 879,
+      "sha256": "8218bab7d28884c622fbb065107c20bb0ed669bc0da99ccca11ec5d570fc1e01"
+    },
+    "independent_confirmation_comparison.png": {
+      "bytes": 77582,
+      "sha256": "24ada040cce76486d1cdbaa4b45d267614ff1058bcc8f2b90824e509cad83114"
+    },
+    "independent_confirmation_summary_public.json": {
+      "bytes": 12590,
+      "sha256": "c0e36c7377c0a71b1a03978e9434af4185ff1f4f9ec62773de480b4d5f6306aa"
+    }
+  },
+  "image_identifiers_included": false,
+  "medical_images_included": false,
+  "patient_identifiers_included": false,
+  "private_manifest_included": false,
+  "protocol_sha256": "b537b393716e9db5351f4c21e445f12e7999aa931e310d813eb687f203d5be82",
+  "summary_sha256": "c0e36c7377c0a71b1a03978e9434af4185ff1f4f9ec62773de480b4d5f6306aa"
+}
