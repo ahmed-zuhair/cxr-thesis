@@ -4,6 +4,7 @@ __pycache__/
 .ruff_cache/
 .venv/
 venv/
+*.egg-info/
 
 # Restricted/raw medical data and generated artifacts must stay local.
 data/
@@ -12,4 +13,3 @@ artifacts/
 checkpoints/
 *.pt
 *.pth
-

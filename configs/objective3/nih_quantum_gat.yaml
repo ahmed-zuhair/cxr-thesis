@@ -1,0 +1,40 @@
+objective: 3
+seed_values: [42, 43, 44]
+task: multilabel_classification
+graph_encoder:
+  architecture: gat
+  frozen: true
+  node_feature_dimension: 7
+  graph_embedding_dimension: 128
+  clinical_embedding_dimension: 32
+  fused_embedding_dimension: 160
+quantum_bottleneck:
+  framework: pennylane
+  framework_version: 0.45.1
+  device: default.qubit
+  interface: torch
+  differentiation: backprop
+  qubits: 4
+  layers: 2
+  encoding: angle_embedding_y
+  entanglement: strongly_entangling_layers
+  measurements: pauli_z_expectations
+  trainable_parameters: 24
+classical_control:
+  bottleneck_features: 4
+  trainable_parameters: 24
+  parameter_matched: true
+head:
+  residual_fusion: true
+  dropout: 0.2
+selection:
+  primary_metric: validation_macro_auroc
+  secondary_metric: validation_macro_auprc
+  thresholds: validation_per_label_f1
+  confirmation_test_access_during_selection: false
+final_evaluation:
+  new_unused_patient_cohort: true
+  target_images: 5000
+  selection_seed: 4042
+  selection_uses_labels: false
+  evaluations: 1

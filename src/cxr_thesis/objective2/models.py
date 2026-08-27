@@ -272,16 +272,19 @@ class GraphClinicalClassifier(nn.Module):
         self.clinical = ClinicalEncoder(clinical_dim, 32)
         self.classifier = nn.Linear(hidden_dim + 32, labels)
 
-    def forward(self, batch: GraphBatch) -> torch.Tensor:
+    def encode(self, batch: GraphBatch) -> torch.Tensor:
+        """Return the fused graph/clinical representation before classification."""
+
         x = batch.x
         for layer in self.layers:
             x = layer(x, batch.edge_index)
         graph_embedding = _global_mean_pool(
             x, batch.batch_index, int(batch.clinical.shape[0])
         )
-        return self.classifier(
-            torch.cat([graph_embedding, self.clinical(batch.clinical)], dim=1)
-        )
+        return torch.cat([graph_embedding, self.clinical(batch.clinical)], dim=1)
+
+    def forward(self, batch: GraphBatch) -> torch.Tensor:
+        return self.classifier(self.encode(batch))
 
 
 def build_classifier(
