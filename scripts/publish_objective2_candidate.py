@@ -10,7 +10,6 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 import tempfile
 import zipfile
 from pathlib import Path
@@ -23,7 +22,11 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--model", required=True, choices=("gcn", "gat"))
+    parser.add_argument(
+        "--model",
+        required=True,
+        choices=("gcn", "gat", "densenet121"),
+    )
     parser.add_argument("--training-output", type=Path, required=True)
     parser.add_argument("--source-commit", required=True)
     parser.add_argument("--hf-repo", required=True)
@@ -58,6 +61,7 @@ def run_git(arguments: list[str], *, environment: dict[str, str] | None = None) 
         env=environment,
         text=True,
         capture_output=True,
+        check=False,
     )
     if result.returncode != 0:
         print(result.stdout)
@@ -183,6 +187,7 @@ def main() -> None:
     ancestor = subprocess.run(
         ["git", "merge-base", "--is-ancestor", args.source_commit, "HEAD"],
         cwd=REPOSITORY_ROOT,
+        check=False,
     )
     if ancestor.returncode != 0:
         raise RuntimeError("The declared source commit is not in the current history")
@@ -197,7 +202,12 @@ def main() -> None:
     make_figure(history, int(summary["best_epoch"]), figure_path, args.model)
     history.to_csv(result_root / "history.csv", index=False)
     shutil.copy2(source_files["best.sha256"], result_root / "best.sha256")
-    architecture = "graph convolutional network" if args.model == "gcn" else "graph attention network"
+    architectures = {
+        "gcn": "graph convolutional network",
+        "gat": "graph attention network",
+        "densenet121": "ImageNet-pretrained DenseNet-121",
+    }
+    architecture = architectures[args.model]
     public_summary = {
         "artifact": f"Objective 2 {args.model.upper()} validation-selected candidate",
         "model": args.model,
@@ -205,7 +215,7 @@ def main() -> None:
         "parameters": int(summary["parameters"]),
         "training_cases": 30_000,
         "validation_cases": 5_000,
-        "epochs_completed": int(len(history)),
+        "epochs_completed": len(history),
         "best_epoch": int(summary["best_epoch"]),
         "seed": args.seed,
         "labels": summary["labels"],
@@ -215,7 +225,6 @@ def main() -> None:
         "checkpoint_sha256": actual_checkpoint_hash,
         "training_figure_sha256": sha256_file(figure_path),
         "source_code_commit": args.source_commit,
-        "same_frozen_graph_inputs_for_gcn_and_gat": True,
         "locked_test_manifest_read": False,
         "locked_test_labels_accessed": False,
         "locked_test_evaluated": False,
@@ -226,6 +235,8 @@ def main() -> None:
         "private_manifests_included": False,
         "status": "validation-selected candidate; final model comparison incomplete",
     }
+    if args.model in {"gcn", "gat"}:
+        public_summary["same_frozen_graph_inputs_for_gcn_and_gat"] = True
     atomic_json(public_summary, result_root / "validation_summary_public.json")
     readme = f"""# Objective 2 {args.model.upper()} validation candidate
 

@@ -725,6 +725,7 @@ class Objective2RecoveryTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("--release-tag", result.stdout)
+        self.assertIn("densenet121", result.stdout)
 
     def test_graph_fresh_runtime_recovery_cli_imports(self) -> None:
         repository = Path(__file__).resolve().parents[1]

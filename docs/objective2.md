@@ -54,6 +54,10 @@ test graphs. It reads the test CSV with `usecols` that explicitly exclude every
 repository, and saves neither probability masks nor source images. Thus graph
 construction cannot expose test labels to model selection.
 
+The reusable validation-candidate publisher also accepts the enhanced
+ImageNet-pretrained DenseNet-121 candidate. Image candidates do not receive
+graph-input provenance fields in their sanitized public summaries.
+
 `scripts/evaluate_objective2_locked_test.py` is the only program allowed to
 load test label values. Before doing so it verifies all five checkpoint hashes,
 model identities, label order and validation-selected thresholds. It evaluates
