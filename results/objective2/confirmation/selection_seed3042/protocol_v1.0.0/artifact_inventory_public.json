@@ -1,0 +1,24 @@
+{
+  "artifact": "Objective 2 confirmation protocol public inventory",
+  "confirmation_manifest_sha256": "8665f6a603c622bf095ae5a813a289eed59533833869795a9d79858507ddb600",
+  "confirmation_results_included": false,
+  "files": {
+    "README.md": {
+      "bytes": 871,
+      "sha256": "1333ed9734b11d106e939bab45874370006e875120d182d64d12c04d0e8a75ab"
+    },
+    "confirmation_protocol_lock_public.json": {
+      "bytes": 1168,
+      "sha256": "b537b393716e9db5351f4c21e445f12e7999aa931e310d813eb687f203d5be82"
+    },
+    "confirmation_protocol_lock_public.json.sha256": {
+      "bytes": 105,
+      "sha256": "206a442c8325d5e11bc7ef519d9bca7e499531e2734eba036b053f85747f975e"
+    }
+  },
+  "image_identifiers_included": false,
+  "medical_images_included": false,
+  "patient_identifiers_included": false,
+  "private_manifest_included": false,
+  "protocol_sha256": "b537b393716e9db5351f4c21e445f12e7999aa931e310d813eb687f203d5be82"
+}
