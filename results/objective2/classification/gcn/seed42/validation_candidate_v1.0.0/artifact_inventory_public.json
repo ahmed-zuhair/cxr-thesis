@@ -1,0 +1,28 @@
+{
+  "artifact": "Objective 2 GCN public artifact inventory",
+  "checkpoint_sha256": "a6e88ebe8e709ffaef72eb7eac3536a3edc97bb143a8a5c41020d46c461bc4f5",
+  "files": {
+    "README.md": {
+      "bytes": 746,
+      "sha256": "84fea6cde9d6123bf79404959eb29d80ba4de6ae692757798417ca5660fff94e"
+    },
+    "best.sha256": {
+      "bytes": 74,
+      "sha256": "a6130db827f6b6f3e27b3e762a9d4a1c7ece8bc5e5e0b773c7d84a4681bfc1b1"
+    },
+    "history.csv": {
+      "bytes": 1397,
+      "sha256": "1afedaa80d3e1bda5095bb5ea2c1a84b50ae52547f628738eaa783aca335d34c"
+    },
+    "training_history.png": {
+      "bytes": 143866,
+      "sha256": "f78587cd682d55494e1bae162d16889030ab046cfadb2a7b143c395f19a0c4cf"
+    },
+    "validation_summary_public.json": {
+      "bytes": 5166,
+      "sha256": "cdbf145b4da73be15c0693dd8fd96b06b4dbadc0c0d2695709e265274cf29192"
+    }
+  },
+  "locked_test_results_included": false,
+  "private_data_included": false
+}
