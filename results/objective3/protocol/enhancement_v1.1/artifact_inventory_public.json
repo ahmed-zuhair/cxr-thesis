@@ -1,0 +1,14 @@
+{
+  "amendment_sha256": "493fb4e3fe45e874f09635f96d7d423e39a081a3579d10343bb487f64c2eb4e6",
+  "artifact": "Objective 3 v1.1 public protocol inventory",
+  "case_level_predictions_included": false,
+  "image_identifiers_included": false,
+  "masks_included": false,
+  "medical_images_included": false,
+  "original_protocol_artifact_available": false,
+  "original_protocol_hash_reverified": false,
+  "original_protocol_recorded_sha256": "3fa2199e3188a3c0d9c1fc29a7e27c0510965c73524982d5f9a7094c8d796944",
+  "patient_identifiers_included": false,
+  "private_checkpoints_included": false,
+  "test_evaluation_included": false
+}

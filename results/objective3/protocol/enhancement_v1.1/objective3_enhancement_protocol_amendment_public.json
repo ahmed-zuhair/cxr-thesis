@@ -1,0 +1,65 @@
+{
+  "advance_rules": {
+    "additional_architecture_tuning_if_rules_fail": false,
+    "both_rules_required": true,
+    "mean_quantum_minus_classical_validation_macro_auroc_above_zero": true,
+    "quantum_seed_wins_required": 2,
+    "secondary_metrics": [
+      "macro_auprc",
+      "macro_f1"
+    ],
+    "secondary_metrics_used_for_selection": false,
+    "seed_runs": 3
+  },
+  "allowed_for_publication": true,
+  "amendment_version": "1.1",
+  "artifact": "Objective 3 bounded enhancement protocol amendment",
+  "frozen_enhancement": {
+    "architecture": "v1_1_reupload_gated",
+    "classical_bottleneck_parameters": 36,
+    "data_reuploading_blocks": 3,
+    "embedding_dimension": 160,
+    "encoder": "unchanged frozen Objective 2 GAT",
+    "fusion": "learned gated residual 4-to-160 back-projection",
+    "initial_fusion_scale": 0.1,
+    "optimization_protocol_unchanged": true,
+    "parameter_matched": true,
+    "quantum_bottleneck_parameters": 36,
+    "qubits": 4,
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "total_trainable_parameters_each": 3253,
+    "training_and_validation_cohorts_unchanged": true
+  },
+  "image_identifiers_included": false,
+  "locked_at_utc": "2026-08-27T22:03:48.204290+00:00",
+  "new_test_cohort_selected": false,
+  "objective": 3,
+  "original_protocol_artifact_available": false,
+  "original_protocol_hash_verified_against_artifact": false,
+  "original_protocol_preserved": false,
+  "original_protocol_recovery_limitation": "The ephemeral v1.0 JSON was not uploaded before the Kaggle runtime restarted. Its recorded SHA-256 and lock status are retained, but the missing artifact cannot be byte-for-byte re-verified.",
+  "original_protocol_sha256": "3fa2199e3188a3c0d9c1fc29a7e27c0510965c73524982d5f9a7094c8d796944",
+  "original_protocol_sha256_source": "recorded successful Kaggle protocol-lock output before runtime restart",
+  "patient_identifiers_included": false,
+  "private_checkpoints_included": false,
+  "reason_for_amendment": "The preregistered v1.0 quantum head did not improve mean validation AUROC over its parameter-matched classical control. The four-value branch was concatenated with 160 untouched features and could be diluted.",
+  "status": "locked before v1.1 training and before final evaluation",
+  "supersedes_original_for_future_training": true,
+  "test_evaluated": false,
+  "test_labels_accessed": false,
+  "test_manifest_opened": false,
+  "v1_validation_result": {
+    "classical_mean_macro_auroc": 0.6565523408644843,
+    "mean_quantum_minus_classical_macro_auroc": -0.0025656356238777933,
+    "quantum_mean_macro_auroc": 0.6539867052406065,
+    "quantum_minus_classical_by_seed": [
+      -0.006022755247143574,
+      0.0007092287945338338,
+      -0.0023833804190236396
+    ]
+  }
+}
