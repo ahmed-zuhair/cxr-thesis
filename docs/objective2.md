@@ -72,6 +72,13 @@ public checkpoint repository and GitHub. The private confirmation CSV remains
 in private recovery. The public commit and release therefore timestamp the
 cohort hash before any confirmation labels are evaluated.
 
+`scripts/evaluate_objective2_confirmation.py` performs the one-time independent
+confirmation comparison of the frozen original CNN and enhanced DenseNet-121.
+It verifies the published protocol and both checkpoint hashes before opening the
+private labels, reuses validation thresholds without tuning, saves resumable
+per-model predictions only to private recovery, and writes an immutable final
+lock that prevents a second evaluation.
+
 `scripts/evaluate_objective2_locked_test.py` is the only program allowed to
 load test label values. Before doing so it verifies all five checkpoint hashes,
 model identities, label order and validation-selected thresholds. It evaluates

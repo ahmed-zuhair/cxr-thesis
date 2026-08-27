@@ -37,6 +37,9 @@ from cxr_thesis.objective2.training import (
     restore_rng_state,
     save_training_state,
 )
+from scripts.evaluate_objective2_confirmation import (
+    validate_final_lock_payload as validate_confirmation_final_lock_payload,
+)
 from scripts.evaluate_objective2_locked_test import validate_final_lock_payload
 
 
@@ -150,9 +153,7 @@ class Objective2CohortRecoveryTests(unittest.TestCase):
             [
                 sys.executable,
                 str(
-                    repository
-                    / "scripts"
-                    / "create_objective2_confirmation_cohort.py"
+                    repository / "scripts" / "create_objective2_confirmation_cohort.py"
                 ),
                 "--help",
             ],
@@ -182,6 +183,21 @@ class Objective2CohortRecoveryTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("--expected-confirmation-sha256", result.stdout)
 
+    def test_confirmation_evaluation_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "scripts" / "evaluate_objective2_confirmation.py"),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--expected-protocol-sha256", result.stdout)
+
 
 class Objective2LockedTestGuardTests(unittest.TestCase):
     def test_remote_final_lock_requires_exact_frozen_signature(self) -> None:
@@ -208,6 +224,34 @@ class Objective2LockedTestGuardTests(unittest.TestCase):
             validate_final_lock_payload(
                 invalid,
                 expected_test_sha256="test-hash",
+                checkpoint_hashes=checkpoint_hashes,
+            )
+
+    def test_confirmation_final_lock_requires_exact_frozen_signature(self) -> None:
+        checkpoint_hashes = {"cnn": "cnn-hash", "densenet121": "dense-hash"}
+        payload = {
+            "confirmation_manifest_sha256": "confirmation-hash",
+            "protocol_sha256": "protocol-hash",
+            "checkpoint_sha256": checkpoint_hashes,
+            "completed_models": ["cnn", "densenet121"],
+            "validation_thresholds_reused_without_change": True,
+            "confirmation_used_for_model_selection": False,
+            "confirmation_evaluated": True,
+            "confirmation_evaluation_count": 1,
+        }
+        validate_confirmation_final_lock_payload(
+            payload,
+            confirmation_hash="confirmation-hash",
+            protocol_hash="protocol-hash",
+            checkpoint_hashes=checkpoint_hashes,
+        )
+        invalid = dict(payload)
+        invalid["confirmation_evaluation_count"] = 2
+        with self.assertRaises(RuntimeError):
+            validate_confirmation_final_lock_payload(
+                invalid,
+                confirmation_hash="confirmation-hash",
+                protocol_hash="protocol-hash",
                 checkpoint_hashes=checkpoint_hashes,
             )
 
