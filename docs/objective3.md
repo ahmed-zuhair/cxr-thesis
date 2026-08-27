@@ -86,6 +86,12 @@ validation aggregate, amendment, final-cohort hash, and protocol lock before
 any final-cohort label evaluation. It rejects private manifests, identifiers,
 images, and case-level predictions.
 
+If the frozen advance rule fails,
+`scripts/publish_objective3_enhancement_validation.py` instead publishes the
+sanitized negative validation aggregate and a paired comparison figure. It
+records that Objective 3 is closed without selecting or evaluating a final
+cohort and without permitting additional architecture tuning.
+
 Use `--architecture v1_1_reupload_gated` with the smoke, direct-training, and
 private-recovery scripts. Use a new output directory and private Hub path so
 the v1.0 checkpoints are never overwritten.

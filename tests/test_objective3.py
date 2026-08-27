@@ -227,6 +227,7 @@ class Objective3ArchitectureTests(unittest.TestCase):
         expected_options = {
             "create_objective3_final_evaluation_cohort.py": "--excluded-manifest",
             "publish_objective3_final_protocol.py": "--validation-summary",
+            "publish_objective3_enhancement_validation.py": "--summary",
         }
         for name, option in expected_options.items():
             with self.subTest(script=name):
