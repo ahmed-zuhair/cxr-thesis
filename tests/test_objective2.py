@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import os
 import random
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -66,6 +69,23 @@ class Objective2ModelTests(unittest.TestCase):
 
 
 class Objective2GraphGenerationTests(unittest.TestCase):
+    def test_graph_generation_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        environment = dict(os.environ)
+        environment["PYTHONPATH"] = str(repository / "src")
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "scripts" / "generate_objective2_graphs.py"),
+                "--help",
+            ],
+            env=environment,
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--graph-dir", result.stdout)
+
     def test_frozen_probability_builds_private_roi_graph_without_mask_file(self) -> None:
         config = load_config(
             Path(__file__).resolve().parents[1]

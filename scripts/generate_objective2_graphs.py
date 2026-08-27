@@ -21,8 +21,8 @@ if str(SOURCE_ROOT) not in sys.path:
 from cxr_thesis.objective1.config import load_config
 from cxr_thesis.objective1.graphs import GraphSample
 from cxr_thesis.objective1.manifest import validate_manifest
-from cxr_thesis.object1.preprocessing import load_image, preprocess_cxr
-from cxr_thesis.object1.segmentation import UNet2D
+from cxr_thesis.objective1.preprocessing import load_image, preprocess_cxr
+from cxr_thesis.objective1.segmentation import UNet2D
 from cxr_thesis.objective2.graph_generation import (
     build_frozen_roi_graph,
     safe_graph_name,
