@@ -21,6 +21,14 @@ private per-case audit plus an aggregate summary. The same immutable graph root
 is then supplied to both GCN and GAT so their comparison changes only the graph
 message-passing architecture.
 
+For a full Kaggle run, `scripts/generate_objective2_graph_shards.py` divides
+the 35,000 frozen training and validation cases into deterministic private
+archives. It verifies that the recovery repository is private and uploads each
+completed shard before continuing. Repeating the same command restores verified
+remote shards and resumes an interrupted local shard. The driver cannot accept
+a locked-test manifest, does not save predicted masks, and does not copy source
+medical images.
+
 The 5,000-case test cohort is label-blind during selection and must be evaluated
 exactly once after all five checkpoints and thresholds are frozen. No manual
 masking is required for Objective 2.

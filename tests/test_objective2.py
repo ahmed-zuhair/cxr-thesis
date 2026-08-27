@@ -69,6 +69,23 @@ class Objective2ModelTests(unittest.TestCase):
 
 
 class Objective2GraphGenerationTests(unittest.TestCase):
+    def test_graph_shard_recovery_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        environment = dict(os.environ)
+        environment["PYTHONPATH"] = str(repository / "src")
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "scripts" / "generate_objective2_graph_shards.py"),
+                "--help",
+            ],
+            env=environment,
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--hf-repo", result.stdout)
+
     def test_graph_generation_cli_imports(self) -> None:
         repository = Path(__file__).resolve().parents[1]
         environment = dict(os.environ)
