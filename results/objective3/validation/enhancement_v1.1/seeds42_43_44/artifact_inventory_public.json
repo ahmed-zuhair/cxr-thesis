@@ -1,0 +1,37 @@
+{
+  "advance_to_final_evaluation": false,
+  "artifact": "Objective 3 v1.1 negative validation public inventory",
+  "case_level_predictions_included": false,
+  "files": {
+    "README.md": {
+      "bytes": 747,
+      "sha256": "15035ecc5d6d664a9f7a68b5c74eefc815c50ecfaa613a4dfb654e05470dc66d"
+    },
+    "nih_quantum_gat_v1_1.yaml": {
+      "bytes": 1637,
+      "sha256": "d576ac5ec61708bb7e5adb11c333cadf18e0009bf8de629b93bc36346ed5c322"
+    },
+    "objective3_enhancement_protocol_amendment_public.json": {
+      "bytes": 2750,
+      "sha256": "493fb4e3fe45e874f09635f96d7d423e39a081a3579d10343bb487f64c2eb4e6"
+    },
+    "objective3_enhancement_validation_summary_public.json": {
+      "bytes": 3863,
+      "sha256": "c820965f8bf246833cae6ea772c4a0050fb3b1d4c3678528a6034469f5399c27"
+    },
+    "objective3_enhancement_validation_summary_public.json.sha256": {
+      "bytes": 120,
+      "sha256": "47cf9663d943fe8ba550f18e74f1353e3a4e15978bb67d51bd0aa636072e8e93"
+    },
+    "objective3_v1_1_paired_validation.png": {
+      "bytes": 112926,
+      "sha256": "a7e0b126dc3e698955293e7d25b9b388383e757fe4cee39c1b8e6311002a7c60"
+    }
+  },
+  "identifiers_included": false,
+  "medical_images_included": false,
+  "objective3_closed": true,
+  "private_checkpoints_included": false,
+  "private_manifests_included": false,
+  "summary_sha256": "c820965f8bf246833cae6ea772c4a0050fb3b1d4c3678528a6034469f5399c27"
+}

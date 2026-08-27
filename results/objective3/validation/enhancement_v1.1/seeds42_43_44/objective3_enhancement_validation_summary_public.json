@@ -1,0 +1,99 @@
+{
+  "additional_architecture_tuning_allowed": false,
+  "advance_to_single_final_evaluation": false,
+  "allowed_for_publication": true,
+  "architecture_version": "v1_1_reupload_gated",
+  "artifact": "Objective 3 v1.1 enhanced paired validation result",
+  "classical_mean_validation_macro_auroc": 0.6551222404058966,
+  "image_identifiers_included": false,
+  "mean_quantum_minus_classical_validation_macro_auroc": -0.0008286672715197193,
+  "new_test_cohort_selected": false,
+  "objective": 3,
+  "patient_identifiers_included": false,
+  "private_checkpoints_included": false,
+  "protocol_amendment_sha256": "493fb4e3fe45e874f09635f96d7d423e39a081a3579d10343bb487f64c2eb4e6",
+  "quantum_mean_validation_macro_auroc": 0.654293573134377,
+  "quantum_minus_classical_by_seed": [
+    -0.00370688875776215,
+    0.001975354435193366,
+    -0.0007544674919903738
+  ],
+  "quantum_seed_wins": 1,
+  "required_seed_wins": 2,
+  "runs": [
+    {
+      "best_epoch": 19,
+      "checkpoint_sha256": "51ab6fd2fafa791a963d1f719f65d6697a67aefe255732cb584de00f403f258f",
+      "private_recovery_path": "objective3/enhancement_v1_1/classical_matched/seed42/validation_v1.0.0",
+      "seed": 42,
+      "test_evaluated": false,
+      "validation_macro_auprc": 0.08936506543106454,
+      "validation_macro_auroc": 0.65691146574191,
+      "validation_macro_f1": 0.14769229835697947,
+      "variant": "classical_matched"
+    },
+    {
+      "best_epoch": 14,
+      "checkpoint_sha256": "5398859ce148760ea479fe6a4c00b37d2e31b25e07b71a9ac77d4fd5a99a0aea",
+      "private_recovery_path": "objective3/enhancement_v1_1/quantum/seed42/validation_v1.0.0",
+      "seed": 42,
+      "test_evaluated": false,
+      "validation_macro_auprc": 0.08926935782804792,
+      "validation_macro_auroc": 0.6532045769841478,
+      "validation_macro_f1": 0.1449908670595049,
+      "variant": "quantum"
+    },
+    {
+      "best_epoch": 21,
+      "checkpoint_sha256": "edb5471e8a066e1e39277be74cc0b24d83266b545e179cc25c17b07050337482",
+      "private_recovery_path": "objective3/enhancement_v1_1/classical_matched/seed43/validation_v1.0.0",
+      "seed": 43,
+      "test_evaluated": false,
+      "validation_macro_auprc": 0.08901926304935788,
+      "validation_macro_auroc": 0.6547677169826769,
+      "validation_macro_f1": 0.14777493202481765,
+      "variant": "classical_matched"
+    },
+    {
+      "best_epoch": 12,
+      "checkpoint_sha256": "42f54867939151fac8985669e45938941041d7fa6c0e3cb0bb8501cfdd60da61",
+      "private_recovery_path": "objective3/enhancement_v1_1/quantum/seed43/validation_v1.0.0",
+      "seed": 43,
+      "test_evaluated": false,
+      "validation_macro_auprc": 0.08834910141741081,
+      "validation_macro_auroc": 0.6567430714178702,
+      "validation_macro_f1": 0.14790743221927996,
+      "variant": "quantum"
+    },
+    {
+      "best_epoch": 19,
+      "checkpoint_sha256": "64797ccaae79ad87fc8940ebbba05bfdecc8208dbde4c6a8e68f383d2326126c",
+      "private_recovery_path": "objective3/enhancement_v1_1/classical_matched/seed44/validation_v1.0.0",
+      "seed": 44,
+      "test_evaluated": false,
+      "validation_macro_auprc": 0.08869215636364274,
+      "validation_macro_auroc": 0.6536875384931032,
+      "validation_macro_f1": 0.14613854952989005,
+      "variant": "classical_matched"
+    },
+    {
+      "best_epoch": 14,
+      "checkpoint_sha256": "f58e755adef54351bd05f4f4100d54827fc05bb30e1ea2ad1571d2d6e1139e23",
+      "private_recovery_path": "objective3/enhancement_v1_1/quantum/seed44/validation_v1.0.0",
+      "seed": 44,
+      "test_evaluated": false,
+      "validation_macro_auprc": 0.08809830844282719,
+      "validation_macro_auroc": 0.6529330710011129,
+      "validation_macro_f1": 0.14520131679872497,
+      "variant": "quantum"
+    }
+  ],
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "test_evaluated": false,
+  "test_labels_accessed": false,
+  "test_manifest_opened": false
+}

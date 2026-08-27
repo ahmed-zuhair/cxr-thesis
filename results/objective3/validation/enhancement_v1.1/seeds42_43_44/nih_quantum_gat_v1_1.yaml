@@ -1,0 +1,55 @@
+objective: 3
+protocol_amendment: v1.1
+seed_values: [42, 43, 44]
+task: multilabel_classification
+graph_encoder:
+  architecture: gat
+  frozen: true
+  fused_embedding_dimension: 160
+quantum_bottleneck:
+  framework: pennylane
+  framework_version: 0.45.1
+  device: default.qubit
+  interface: torch
+  differentiation: backprop
+  qubits: 4
+  reuploading_blocks: 3
+  encoding: angle_embedding_y_repeated_each_block
+  entanglement: strongly_entangling_layer_per_block
+  measurements: pauli_z_expectations
+  trainable_parameters: 36
+classical_control:
+  bottleneck_features: 4
+  architecture: linear_4x4_with_bias_then_linear_4x4_without_bias
+  trainable_parameters: 36
+  parameter_matched: true
+head:
+  fusion: learned_gated_residual_back_projection
+  initial_fusion_scale: 0.1
+  back_projection: linear_4_to_160_without_bias
+  dropout: 0.2
+  total_trainable_parameters: 3253
+training:
+  epochs: 30
+  patience: 6
+  batch_size: 256
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  gradient_clip_norm: 1.0
+  execution_device: cpu
+  embedding_standardization: training_only
+  loss: weighted_binary_cross_entropy
+selection:
+  primary_metric: validation_macro_auroc
+  advance_if_mean_quantum_minus_classical_is_positive: true
+  advance_if_quantum_wins_at_least_two_of_three_seeds: true
+  secondary_metrics_reported_without_selection: [macro_auprc, macro_f1]
+  additional_architecture_tuning_after_this_amendment: false
+  test_access_during_selection: false
+final_evaluation:
+  performed_only_if_both_advance_rules_pass: true
+  new_unused_patient_cohort: true
+  target_images: 5000
+  selection_seed: 4042
+  selection_uses_labels: false
+  evaluations: 1
