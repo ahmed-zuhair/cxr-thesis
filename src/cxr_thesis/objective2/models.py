@@ -14,7 +14,9 @@ class ClinicalEncoder(nn.Module):
     def __init__(self, input_dim: int = 9, output_dim: int = 32) -> None:
         super().__init__()
         self.network = nn.Sequential(
-            nn.Linear(input_dim, output_dim), nn.ReLU(inplace=True), nn.LayerNorm(output_dim)
+            nn.Linear(input_dim, output_dim),
+            nn.ReLU(inplace=True),
+            nn.LayerNorm(output_dim),
         )
 
     def forward(self, values: torch.Tensor) -> torch.Tensor:
@@ -22,10 +24,14 @@ class ClinicalEncoder(nn.Module):
 
 
 class ConvBlock(nn.Module):
-    def __init__(self, input_channels: int, output_channels: int, stride: int = 1) -> None:
+    def __init__(
+        self, input_channels: int, output_channels: int, stride: int = 1
+    ) -> None:
         super().__init__()
         self.block = nn.Sequential(
-            nn.Conv2d(input_channels, output_channels, 3, stride=stride, padding=1, bias=False),
+            nn.Conv2d(
+                input_channels, output_channels, 3, stride=stride, padding=1, bias=False
+            ),
             nn.BatchNorm2d(output_channels),
             nn.ReLU(inplace=True),
             nn.Conv2d(output_channels, output_channels, 3, padding=1, bias=False),
@@ -42,7 +48,9 @@ class CBAM(nn.Module):
         super().__init__()
         hidden = max(4, channels // reduction)
         self.channel = nn.Sequential(
-            nn.Linear(channels, hidden), nn.ReLU(inplace=True), nn.Linear(hidden, channels)
+            nn.Linear(channels, hidden),
+            nn.ReLU(inplace=True),
+            nn.Linear(hidden, channels),
         )
         self.spatial = nn.Conv2d(2, 1, kernel_size=7, padding=3)
 
@@ -58,7 +66,9 @@ class CBAM(nn.Module):
 
 
 class ImageCNNClassifier(nn.Module):
-    def __init__(self, labels: int, *, attention: bool = False, clinical_dim: int = 9) -> None:
+    def __init__(
+        self, labels: int, *, attention: bool = False, clinical_dim: int = 9
+    ) -> None:
         super().__init__()
         channels = [32, 64, 128, 256]
         stages: list[nn.Module] = []
@@ -75,6 +85,53 @@ class ImageCNNClassifier(nn.Module):
 
     def forward(self, image: torch.Tensor, clinical: torch.Tensor) -> torch.Tensor:
         image_embedding = self.pool(self.encoder(image)).flatten(1)
+        return self.classifier(
+            torch.cat([image_embedding, self.clinical(clinical)], dim=1)
+        )
+
+
+class PretrainedDenseNet121Classifier(nn.Module):
+    """DenseNet-121 image encoder with a small clinical-feature fusion head.
+
+    ``torchvision`` is imported lazily so the dependency-light frozen Objective 2
+    baselines remain usable in environments that do not need the enhanced model.
+    Pretrained weights are requested only during training. Checkpoint restoration
+    constructs the same architecture without downloading weights before loading
+    the saved state dictionary.
+    """
+
+    def __init__(
+        self,
+        labels: int,
+        *,
+        clinical_dim: int = 9,
+        pretrained: bool = False,
+        dropout: float = 0.2,
+    ) -> None:
+        super().__init__()
+        if not 0.0 <= dropout < 1.0:
+            raise ValueError("dropout must be in [0, 1)")
+        try:
+            from torchvision.models import DenseNet121_Weights, densenet121
+        except ImportError as error:
+            raise RuntimeError(
+                "torchvision is required for the enhanced DenseNet-121 model"
+            ) from error
+        weights = DenseNet121_Weights.DEFAULT if pretrained else None
+        backbone = densenet121(weights=weights)
+        embedding_dim = int(backbone.classifier.in_features)
+        backbone.classifier = nn.Identity()
+        self.encoder = backbone
+        self.clinical = ClinicalEncoder(clinical_dim, 32)
+        self.classifier = nn.Sequential(
+            nn.Dropout(dropout),
+            nn.Linear(embedding_dim + 32, labels),
+        )
+
+    def forward(self, image: torch.Tensor, clinical: torch.Tensor) -> torch.Tensor:
+        if image.ndim != 4 or image.shape[1] != 3:
+            raise ValueError("DenseNet-121 expects three-channel CXR tensors")
+        image_embedding = self.encoder(image)
         return self.classifier(
             torch.cat([image_embedding, self.clinical(clinical)], dim=1)
         )
@@ -173,7 +230,9 @@ class GATLayer(nn.Module):
         scores = torch.nn.functional.leaky_relu(scores, negative_slope=0.2)
         target_heads = target[:, None].expand(-1, self.heads)
         maximum = scores.new_full((nodes, self.heads), -torch.inf)
-        maximum.scatter_reduce_(0, target_heads, scores, reduce="amax", include_self=True)
+        maximum.scatter_reduce_(
+            0, target_heads, scores, reduce="amax", include_self=True
+        )
         exponent = torch.exp(scores - maximum[target])
         denominator = scores.new_zeros((nodes, self.heads))
         denominator.scatter_add_(0, target_heads, exponent)
@@ -232,6 +291,8 @@ def build_classifier(
     image_size: int = 224,
     node_dim: int = 7,
     clinical_dim: int = 9,
+    pretrained: bool = False,
+    dropout: float = 0.2,
 ) -> nn.Module:
     """Construct one of the five frozen Objective 2 model families."""
     normalised = name.strip().lower().replace("-", "_")
@@ -239,6 +300,13 @@ def build_classifier(
         return ImageCNNClassifier(labels, attention=False, clinical_dim=clinical_dim)
     if normalised == "attention_cnn":
         return ImageCNNClassifier(labels, attention=True, clinical_dim=clinical_dim)
+    if normalised in {"densenet121", "enhanced_cnn", "pretrained_densenet121"}:
+        return PretrainedDenseNet121Classifier(
+            labels,
+            clinical_dim=clinical_dim,
+            pretrained=pretrained,
+            dropout=dropout,
+        )
     if normalised in {"vit", "vision_transformer", "transformer"}:
         return VisionTransformerClassifier(
             labels, image_size=image_size, clinical_dim=clinical_dim

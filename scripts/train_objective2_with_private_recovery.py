@@ -32,7 +32,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--model",
         required=True,
-        choices=("cnn", "attention_cnn", "vit", "gcn", "gat"),
+        choices=("cnn", "attention_cnn", "vit", "gcn", "gat", "densenet121"),
     )
     parser.add_argument("--train-manifest", type=Path, required=True)
     parser.add_argument("--val-manifest", type=Path, required=True)
@@ -53,6 +53,25 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--weight-decay", type=float, default=1e-4)
     parser.add_argument("--image-size", type=int, default=224)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--limit-train", type=int)
+    parser.add_argument("--limit-val", type=int)
+    parser.add_argument("--pretrained", action="store_true")
+    parser.add_argument("--dropout", type=float, default=0.2)
+    parser.add_argument(
+        "--augmentation-profile", choices=("baseline", "cxr_mild"), default="baseline"
+    )
+    parser.add_argument("--epoch-varying-augmentation", action="store_true")
+    parser.add_argument("--loss", choices=("bce", "asymmetric"), default="bce")
+    parser.add_argument(
+        "--positive-weight-transform",
+        choices=("raw", "sqrt", "log1p", "none"),
+        default="raw",
+    )
+    parser.add_argument("--max-positive-weight", type=float)
+    parser.add_argument("--scheduler", choices=("plateau", "cosine"), default="plateau")
+    parser.add_argument("--accumulation-steps", type=int, default=1)
+    parser.add_argument("--gradient-clip-norm", type=float)
+    parser.add_argument("--backbone-learning-rate-multiplier", type=float, default=1.0)
     parser.add_argument("--poll-seconds", type=float, default=2.0)
     parser.add_argument("--no-amp", action="store_true")
     return parser.parse_args()
@@ -66,7 +85,9 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def validate_manifest(path: Path, split: str, expected_hash: str, cases: int) -> pd.DataFrame:
+def validate_manifest(
+    path: Path, split: str, expected_hash: str, cases: int
+) -> pd.DataFrame:
     if sha256_file(path) != expected_hash:
         raise RuntimeError(f"{split} manifest SHA-256 does not match")
     frame = pd.read_csv(path, dtype={"patient_id": str, "image_id": str})
@@ -95,7 +116,9 @@ def stable_recovery(output_dir: Path) -> tuple[str, int] | None:
     return recorded, checkpoint_is_test_blind(checkpoint)
 
 
-def restore_files(api, hf_hub_download, args: argparse.Namespace, remote_files: set[str]) -> bool:
+def restore_files(
+    api, hf_hub_download, args: argparse.Namespace, remote_files: set[str]
+) -> bool:
     prefix = args.hf_path.strip("/")
     final_remote = f"{prefix}/validation_summary.json"
     recovery_remote = f"{prefix}/last.pt"
@@ -129,9 +152,13 @@ def restore_files(api, hf_hub_download, args: argparse.Namespace, remote_files: 
     if (args.output_dir / "last.pt").is_file():
         recovery = stable_recovery(args.output_dir)
         if recovery is None:
-            raise RuntimeError("Downloaded recovery checkpoint failed SHA-256 verification")
+            raise RuntimeError(
+                "Downloaded recovery checkpoint failed SHA-256 verification"
+            )
     if (args.output_dir / "best.sha256").is_file():
-        expected = (args.output_dir / "best.sha256").read_text(encoding="utf-8").split()[0]
+        expected = (
+            (args.output_dir / "best.sha256").read_text(encoding="utf-8").split()[0]
+        )
         if sha256_file(args.output_dir / "best.pt") != expected:
             raise RuntimeError("Downloaded final best.pt failed SHA-256 verification")
     return True
@@ -157,7 +184,9 @@ def snapshot_recovery(output_dir: Path, destination: Path) -> tuple[list[Path], 
     return selected, epoch
 
 
-def upload_paths(api, CommitOperationAdd, args: argparse.Namespace, paths: list[Path], message: str) -> None:
+def upload_paths(
+    api, CommitOperationAdd, args: argparse.Namespace, paths: list[Path], message: str
+) -> None:
     prefix = args.hf_path.strip("/")
     api.create_commit(
         repo_id=args.hf_repo,
@@ -224,33 +253,86 @@ def main() -> None:
     final_summary = args.output_dir / "validation_summary.json"
     if final_summary.is_file():
         summary = json.loads(final_summary.read_text(encoding="utf-8"))
-        if summary.get("model") != args.model or summary.get("test_evaluated") is not False:
-            raise RuntimeError("Recovered final summary does not match this test-blind run")
-        print(json.dumps({"event": "final_training_restored", "model": args.model, "training_repeated": False, "test_evaluated": False}))
+        if (
+            summary.get("model") != args.model
+            or summary.get("test_evaluated") is not False
+        ):
+            raise RuntimeError(
+                "Recovered final summary does not match this test-blind run"
+            )
+        print(
+            json.dumps(
+                {
+                    "event": "final_training_restored",
+                    "model": args.model,
+                    "training_repeated": False,
+                    "test_evaluated": False,
+                }
+            )
+        )
         print("OBJECTIVE 2 PRIVATE TRAINING RESULT RESTORED SUCCESSFULLY")
         return
 
     command = [
         sys.executable,
         str(REPOSITORY_ROOT / "scripts" / "train_objective2_classifier.py"),
-        "--model", args.model,
-        "--train-manifest", str(args.train_manifest),
-        "--val-manifest", str(args.val_manifest),
-        "--output-dir", str(args.output_dir),
-        "--data-root", str(args.data_root),
-        "--epochs", str(args.epochs),
-        "--patience", str(args.patience),
-        "--batch-size", str(args.batch_size),
-        "--workers", str(args.workers),
-        "--learning-rate", str(args.learning_rate),
-        "--weight-decay", str(args.weight_decay),
-        "--image-size", str(args.image_size),
-        "--seed", str(args.seed),
+        "--model",
+        args.model,
+        "--train-manifest",
+        str(args.train_manifest),
+        "--val-manifest",
+        str(args.val_manifest),
+        "--output-dir",
+        str(args.output_dir),
+        "--data-root",
+        str(args.data_root),
+        "--epochs",
+        str(args.epochs),
+        "--patience",
+        str(args.patience),
+        "--batch-size",
+        str(args.batch_size),
+        "--workers",
+        str(args.workers),
+        "--learning-rate",
+        str(args.learning_rate),
+        "--weight-decay",
+        str(args.weight_decay),
+        "--image-size",
+        str(args.image_size),
+        "--seed",
+        str(args.seed),
+        "--dropout",
+        str(args.dropout),
+        "--augmentation-profile",
+        args.augmentation_profile,
+        "--loss",
+        args.loss,
+        "--positive-weight-transform",
+        args.positive_weight_transform,
+        "--scheduler",
+        args.scheduler,
+        "--accumulation-steps",
+        str(args.accumulation_steps),
+        "--backbone-learning-rate-multiplier",
+        str(args.backbone_learning_rate_multiplier),
     ]
+    if args.pretrained:
+        command.append("--pretrained")
+    if args.epoch_varying_augmentation:
+        command.append("--epoch-varying-augmentation")
+    if args.max_positive_weight is not None:
+        command.extend(["--max-positive-weight", str(args.max_positive_weight)])
+    if args.gradient_clip_norm is not None:
+        command.extend(["--gradient-clip-norm", str(args.gradient_clip_norm)])
     if args.graph_root is not None:
         command.extend(["--graph-root", str(args.graph_root)])
     if args.no_amp:
         command.append("--no-amp")
+    if args.limit_train is not None:
+        command.extend(["--limit-train", str(args.limit_train)])
+    if args.limit_val is not None:
+        command.extend(["--limit-val", str(args.limit_val)])
     if restored or stable_recovery(args.output_dir) is not None:
         command.append("--resume")
 
@@ -308,7 +390,9 @@ def main() -> None:
     final_paths = [args.output_dir / name for name in final_names]
     if not all(path.is_file() for path in final_paths):
         raise RuntimeError("Final training artifacts are incomplete")
-    expected_best = (args.output_dir / "best.sha256").read_text(encoding="utf-8").split()[0]
+    expected_best = (
+        (args.output_dir / "best.sha256").read_text(encoding="utf-8").split()[0]
+    )
     if sha256_file(args.output_dir / "best.pt") != expected_best:
         raise RuntimeError("Final best.pt checksum does not match")
     checkpoint_is_test_blind(args.output_dir / "best.pt")
@@ -320,16 +404,26 @@ def main() -> None:
         f"recovery: finalize Objective 2 {args.model} validation candidate",
     )
     summary = json.loads(final_summary.read_text(encoding="utf-8"))
-    print(json.dumps({
-        "event": "private_training_finalized",
-        "model": args.model,
-        "best_epoch": summary["best_epoch"],
-        "validation_macro_auroc": summary["validation_metrics"]["macro"]["auroc"],
-        "validation_macro_auprc": summary["validation_metrics"]["macro"]["auprc"],
-        "checkpoint_sha256": expected_best,
-        "test_evaluated": False,
-        "private_recovery_verified": True,
-    }, indent=2, sort_keys=True))
+    print(
+        json.dumps(
+            {
+                "event": "private_training_finalized",
+                "model": args.model,
+                "best_epoch": summary["best_epoch"],
+                "validation_macro_auroc": summary["validation_metrics"]["macro"][
+                    "auroc"
+                ],
+                "validation_macro_auprc": summary["validation_metrics"]["macro"][
+                    "auprc"
+                ],
+                "checkpoint_sha256": expected_best,
+                "test_evaluated": False,
+                "private_recovery_verified": True,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
     print("OBJECTIVE 2 TEST-BLIND TRAINING WITH PRIVATE RECOVERY SUCCESSFUL")
 
 

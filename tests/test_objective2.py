@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import os
-import random
 import hashlib
 import json
+import os
+import random
 import subprocess
 import sys
 import tempfile
@@ -16,22 +16,26 @@ import torch
 
 from cxr_thesis.objective1.config import load_config
 from cxr_thesis.objective1.graphs import GraphSample
-from cxr_thesis.objective2.data import GraphClassificationDataset, collate_graph_samples
-from cxr_thesis.objective2.evaluation import paired_bootstrap_comparison
-from cxr_thesis.objective2.graph_generation import build_frozen_roi_graph
-from cxr_thesis.objective2.metrics import multilabel_metrics, select_f1_thresholds
-from cxr_thesis.objective2.models import build_classifier
 from cxr_thesis.objective2.cohort_recovery import (
     greedy_complete_patient_selection,
     recover_exact_cohort_bytes,
     serialize_cohort,
     sha256_bytes,
 )
+from cxr_thesis.objective2.data import (
+    GraphClassificationDataset,
+    ImageClassificationDataset,
+    collate_graph_samples,
+)
+from cxr_thesis.objective2.evaluation import paired_bootstrap_comparison
+from cxr_thesis.objective2.graph_generation import build_frozen_roi_graph
+from cxr_thesis.objective2.losses import AsymmetricLoss, transform_positive_weights
+from cxr_thesis.objective2.metrics import multilabel_metrics, select_f1_thresholds
+from cxr_thesis.objective2.models import build_classifier
 from cxr_thesis.objective2.training import (
     restore_rng_state,
     save_training_state,
 )
-
 from scripts.evaluate_objective2_locked_test import validate_final_lock_payload
 
 
@@ -99,7 +103,9 @@ class Objective2CohortRecoveryTests(unittest.TestCase):
         result = subprocess.run(
             [
                 sys.executable,
-                str(repository / "scripts" / "recover_objective2_locked_test_cohort.py"),
+                str(
+                    repository / "scripts" / "recover_objective2_locked_test_cohort.py"
+                ),
                 "--help",
             ],
             text=True,
@@ -155,7 +161,9 @@ class Objective2ModelTests(unittest.TestCase):
             for index in range(2):
                 image_id = f"image-{index}"
                 GraphSample(
-                    x=np.random.default_rng(index).normal(size=(4, 7)).astype(np.float32),
+                    x=np.random.default_rng(index)
+                    .normal(size=(4, 7))
+                    .astype(np.float32),
                     edge_index=np.asarray([[0, 1, 2, 3], [0, 1, 2, 3]], dtype=np.int64),
                     edge_attr=np.zeros((4, 5), dtype=np.float32),
                     node_type=np.asarray(["image_patch"] * 4),
@@ -180,6 +188,175 @@ class Objective2ModelTests(unittest.TestCase):
                 output = model(batch)
                 self.assertEqual(tuple(output.shape), (2, 2))
                 output.mean().backward()
+
+    def test_enhanced_densenet121_forward_without_downloading_weights(self) -> None:
+        try:
+            import torchvision  # noqa: F401
+        except ImportError:
+            self.skipTest("torchvision is not installed")
+        model = build_classifier(
+            "densenet121", 12, image_size=64, pretrained=False, dropout=0.2
+        )
+        output = model(torch.rand(2, 3, 64, 64), torch.rand(2, 9))
+        self.assertEqual(tuple(output.shape), (2, 12))
+        output.mean().backward()
+
+
+class Objective2EnhancedTrainingTests(unittest.TestCase):
+    def test_epoch_varying_cxr_augmentation_is_reproducible(self) -> None:
+        import cv2
+
+        with tempfile.TemporaryDirectory() as directory:
+            image_path = Path(directory) / "image.png"
+            image = np.tile(np.arange(64, dtype=np.uint8), (64, 1)) * 4
+            cv2.imwrite(str(image_path), image)
+            manifest = pd.DataFrame(
+                [
+                    {
+                        "image_path": str(image_path),
+                        "age": 50,
+                        "sex": "F",
+                        "view": "PA",
+                        "label_a": 1,
+                    }
+                ]
+            )
+            dataset = ImageClassificationDataset(
+                manifest,
+                ["label_a"],
+                image_size=64,
+                augment=True,
+                seed=42,
+                augmentation_profile="cxr_mild",
+                epoch_varying_augmentation=True,
+                output_channels=3,
+                normalisation="imagenet",
+            )
+            dataset.set_epoch(1)
+            first = dataset[0]["image"].clone()
+            repeated = dataset[0]["image"].clone()
+            dataset.set_epoch(2)
+            second = dataset[0]["image"].clone()
+            self.assertEqual(tuple(first.shape), (3, 64, 64))
+            self.assertTrue(torch.equal(first, repeated))
+            self.assertFalse(torch.equal(first, second))
+
+    def test_imbalance_controls_are_finite_and_bounded(self) -> None:
+        weights = transform_positive_weights(
+            np.asarray([1, 25, 50], dtype=np.float32),
+            100,
+            transform="sqrt",
+            maximum=5.0,
+        )
+        self.assertTrue(np.isfinite(weights).all())
+        self.assertLessEqual(float(weights.max()), 5.0)
+        logits = torch.tensor([[2.0, -1.0], [-2.0, 1.0]], requires_grad=True)
+        targets = torch.tensor([[1.0, 0.0], [0.0, 1.0]])
+        loss = AsymmetricLoss()(logits, targets)
+        self.assertTrue(torch.isfinite(loss))
+        loss.backward()
+
+    def test_enhanced_training_cli_writes_test_blind_checkpoint(self) -> None:
+        try:
+            import torchvision  # noqa: F401
+        except ImportError:
+            self.skipTest("torchvision is not installed")
+        import cv2
+
+        repository = Path(__file__).resolve().parents[1]
+        labels = [
+            "Infiltration",
+            "Effusion",
+            "Atelectasis",
+            "Nodule",
+            "Mass",
+            "Consolidation",
+            "Pneumothorax",
+            "Pleural_Thickening",
+            "Cardiomegaly",
+            "Emphysema",
+            "Edema",
+            "Fibrosis",
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            rows = []
+            for index in range(6):
+                image_path = root / f"image-{index}.png"
+                image = np.tile(np.arange(64, dtype=np.uint8), (64, 1))
+                image = np.roll(image, index * 3, axis=1)
+                cv2.imwrite(str(image_path), image)
+                row = {
+                    "dataset": "synthetic",
+                    "patient_id": str(index),
+                    "image_id": f"image-{index}",
+                    "image_path": str(image_path),
+                    "split": "train" if index < 4 else "val",
+                    "age": 40 + index,
+                    "sex": "F" if index % 2 else "M",
+                    "view": "PA",
+                }
+                for label_index, label in enumerate(labels):
+                    row[f"label_{label}"] = (index + label_index) % 2
+                rows.append(row)
+            frame = pd.DataFrame(rows)
+            train_path = root / "train.csv"
+            validation_path = root / "val.csv"
+            frame.iloc[:4].to_csv(train_path, index=False)
+            frame.iloc[4:].to_csv(validation_path, index=False)
+            output = root / "output"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(repository / "scripts" / "train_objective2_classifier.py"),
+                    "--model",
+                    "densenet121",
+                    "--train-manifest",
+                    str(train_path),
+                    "--val-manifest",
+                    str(validation_path),
+                    "--output-dir",
+                    str(output),
+                    "--data-root",
+                    "/",
+                    "--epochs",
+                    "1",
+                    "--patience",
+                    "1",
+                    "--batch-size",
+                    "2",
+                    "--workers",
+                    "0",
+                    "--image-size",
+                    "64",
+                    "--augmentation-profile",
+                    "cxr_mild",
+                    "--epoch-varying-augmentation",
+                    "--positive-weight-transform",
+                    "sqrt",
+                    "--max-positive-weight",
+                    "5",
+                    "--scheduler",
+                    "cosine",
+                    "--accumulation-steps",
+                    "2",
+                    "--gradient-clip-norm",
+                    "1",
+                    "--no-amp",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+                env={**os.environ, "PYTHONPATH": str(repository / "src")},
+            )
+            self.assertEqual(result.returncode, 0, msg=result.stderr + result.stdout)
+            checkpoint = torch.load(
+                output / "best.pt", map_location="cpu", weights_only=False
+            )
+            self.assertEqual(checkpoint["model_name"], "densenet121")
+            self.assertFalse(checkpoint["test_evaluated"])
+            self.assertEqual(checkpoint["model_config"]["input_channels"], 3)
+            self.assertTrue((output / "last.sha256").is_file())
 
     @unittest.skipUnless(torch.cuda.is_available(), "CUDA is required for float16 AMP")
     def test_gat_cuda_amp_message_dtype_matches_aggregation(self) -> None:
@@ -253,7 +430,9 @@ class Objective2GraphGenerationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("--graph-dir", result.stdout)
 
-    def test_frozen_probability_builds_private_roi_graph_without_mask_file(self) -> None:
+    def test_frozen_probability_builds_private_roi_graph_without_mask_file(
+        self,
+    ) -> None:
         config = load_config(
             Path(__file__).resolve().parents[1]
             / "configs"
@@ -337,7 +516,10 @@ class Objective2MetricTests(unittest.TestCase):
         arguments = {
             "probabilities": {"cnn": reference, "gat": weaker},
             "targets": targets,
-            "thresholds": {"cnn": np.asarray([0.5, 0.5]), "gat": np.asarray([0.5, 0.5])},
+            "thresholds": {
+                "cnn": np.asarray([0.5, 0.5]),
+                "gat": np.asarray([0.5, 0.5]),
+            },
             "reference_model": "cnn",
             "replicates": 20,
             "seed": 42,
@@ -355,7 +537,11 @@ class Objective2RecoveryTests(unittest.TestCase):
         result = subprocess.run(
             [
                 sys.executable,
-                str(repository / "scripts" / "generate_objective2_locked_test_graph_shards.py"),
+                str(
+                    repository
+                    / "scripts"
+                    / "generate_objective2_locked_test_graph_shards.py"
+                ),
                 "--help",
             ],
             text=True,
@@ -395,9 +581,18 @@ class Objective2RecoveryTests(unittest.TestCase):
     def test_five_model_locked_test_evaluation_is_finalized_once(self) -> None:
         repository = Path(__file__).resolve().parents[1]
         labels = [
-            "Infiltration", "Effusion", "Atelectasis", "Nodule", "Mass",
-            "Consolidation", "Pneumothorax", "Pleural_Thickening",
-            "Cardiomegaly", "Emphysema", "Edema", "Fibrosis",
+            "Infiltration",
+            "Effusion",
+            "Atelectasis",
+            "Nodule",
+            "Mass",
+            "Consolidation",
+            "Pneumothorax",
+            "Pleural_Thickening",
+            "Cardiomegaly",
+            "Emphysema",
+            "Edema",
+            "Fibrosis",
         ]
 
         def file_hash(path: Path) -> str:
@@ -416,9 +611,13 @@ class Objective2RecoveryTests(unittest.TestCase):
                 image_path = root / f"image-{index}.png"
                 import cv2
 
-                cv2.imwrite(str(image_path), np.full((32, 32), 80 + index * 80, dtype=np.uint8))
+                cv2.imwrite(
+                    str(image_path), np.full((32, 32), 80 + index * 80, dtype=np.uint8)
+                )
                 GraphSample(
-                    x=np.random.default_rng(index).normal(size=(4, 7)).astype(np.float32),
+                    x=np.random.default_rng(index)
+                    .normal(size=(4, 7))
+                    .astype(np.float32),
                     edge_index=np.asarray([[0, 1, 2, 3], [0, 1, 2, 3]], dtype=np.int64),
                     edge_attr=np.zeros((4, 5), dtype=np.float32),
                     node_type=np.asarray(["image_patch"] * 4),
@@ -445,7 +644,9 @@ class Objective2RecoveryTests(unittest.TestCase):
             model_names = ("cnn", "attention_cnn", "vit", "gcn", "gat")
             checkpoint_paths = {}
             for model_name in model_names:
-                model = build_classifier(model_name, len(labels), image_size=32, node_dim=7)
+                model = build_classifier(
+                    model_name, len(labels), image_size=32, node_dim=7
+                )
                 checkpoint_path = checkpoint_root / f"{model_name}.pt"
                 torch.save(
                     {
@@ -465,25 +666,39 @@ class Objective2RecoveryTests(unittest.TestCase):
             command = [
                 sys.executable,
                 str(repository / "scripts" / "evaluate_objective2_locked_test.py"),
-                "--test-manifest", str(manifest),
-                "--graph-root", str(graph_root),
-                "--output-dir", str(output),
-                "--data-root", "/",
-                "--expected-test-sha256", file_hash(manifest),
-                "--expected-test-cases", "2",
-                "--expected-test-patients", "2",
-                "--image-size", "32",
-                "--image-batch-size", "2",
-                "--graph-batch-size", "2",
-                "--workers", "0",
-                "--bootstrap-replicates", "5",
+                "--test-manifest",
+                str(manifest),
+                "--graph-root",
+                str(graph_root),
+                "--output-dir",
+                str(output),
+                "--data-root",
+                "/",
+                "--expected-test-sha256",
+                file_hash(manifest),
+                "--expected-test-cases",
+                "2",
+                "--expected-test-patients",
+                "2",
+                "--image-size",
+                "32",
+                "--image-batch-size",
+                "2",
+                "--graph-batch-size",
+                "2",
+                "--workers",
+                "0",
+                "--bootstrap-replicates",
+                "5",
             ]
             for model_name, checkpoint_path in checkpoint_paths.items():
                 option = model_name.replace("_", "-")
                 command.extend(
                     [
-                        f"--{option}-checkpoint", str(checkpoint_path),
-                        f"--expected-{option}-sha256", file_hash(checkpoint_path),
+                        f"--{option}-checkpoint",
+                        str(checkpoint_path),
+                        f"--expected-{option}-sha256",
+                        file_hash(checkpoint_path),
                     ]
                 )
             result = subprocess.run(command, text=True, capture_output=True)
@@ -518,11 +733,7 @@ class Objective2RecoveryTests(unittest.TestCase):
         result = subprocess.run(
             [
                 sys.executable,
-                str(
-                    repository
-                    / "scripts"
-                    / "recover_objective2_graph_shards.py"
-                ),
+                str(repository / "scripts" / "recover_objective2_graph_shards.py"),
                 "--help",
             ],
             env=environment,
@@ -540,9 +751,7 @@ class Objective2RecoveryTests(unittest.TestCase):
             [
                 sys.executable,
                 str(
-                    repository
-                    / "scripts"
-                    / "train_objective2_with_private_recovery.py"
+                    repository / "scripts" / "train_objective2_with_private_recovery.py"
                 ),
                 "--help",
             ],

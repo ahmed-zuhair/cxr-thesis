@@ -24,6 +24,7 @@ from cxr_thesis.objective2.data import (
     ImageClassificationDataset,
     collate_graph_samples,
 )
+from cxr_thesis.objective2.losses import AsymmetricLoss, transform_positive_weights
 from cxr_thesis.objective2.metrics import multilabel_metrics, select_f1_thresholds
 from cxr_thesis.objective2.models import build_classifier
 from cxr_thesis.objective2.training import (
@@ -35,7 +36,6 @@ from cxr_thesis.objective2.training import (
     seed_everything,
     train_epoch,
 )
-
 
 PRIMARY_LABELS = [
     "Infiltration",
@@ -77,7 +77,11 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Train one Objective 2 classifier without accessing the test cohort."
     )
-    parser.add_argument("--model", required=True, choices=["cnn", "attention_cnn", "vit", "gcn", "gat"])
+    parser.add_argument(
+        "--model",
+        required=True,
+        choices=["cnn", "attention_cnn", "vit", "gcn", "gat", "densenet121"],
+    )
     parser.add_argument("--train-manifest", type=Path, required=True)
     parser.add_argument("--val-manifest", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
@@ -91,6 +95,37 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--weight-decay", type=float, default=1e-4)
     parser.add_argument("--image-size", type=int, default=224)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--pretrained",
+        action="store_true",
+        help="Initialize the enhanced DenseNet-121 from ImageNet weights.",
+    )
+    parser.add_argument("--dropout", type=float, default=0.2)
+    parser.add_argument(
+        "--augmentation-profile",
+        choices=["baseline", "cxr_mild"],
+        default="baseline",
+    )
+    parser.add_argument("--epoch-varying-augmentation", action="store_true")
+    parser.add_argument(
+        "--loss",
+        choices=["bce", "asymmetric"],
+        default="bce",
+    )
+    parser.add_argument(
+        "--positive-weight-transform",
+        choices=["raw", "sqrt", "log1p", "none"],
+        default="raw",
+    )
+    parser.add_argument("--max-positive-weight", type=float)
+    parser.add_argument(
+        "--scheduler",
+        choices=["plateau", "cosine"],
+        default="plateau",
+    )
+    parser.add_argument("--accumulation-steps", type=int, default=1)
+    parser.add_argument("--gradient-clip-norm", type=float)
+    parser.add_argument("--backbone-learning-rate-multiplier", type=float, default=1.0)
     parser.add_argument("--limit-train", type=int)
     parser.add_argument("--limit-val", type=int)
     parser.add_argument("--no-amp", action="store_true")
@@ -107,11 +142,19 @@ def main() -> None:
     if args.output_dir.exists() and not args.resume:
         raise FileExistsError(f"Output directory already exists: {args.output_dir}")
     if args.resume and not args.output_dir.is_dir():
-        raise FileNotFoundError(f"Resume output directory does not exist: {args.output_dir}")
+        raise FileNotFoundError(
+            f"Resume output directory does not exist: {args.output_dir}"
+        )
     if args.resume and (args.output_dir / "validation_summary.json").is_file():
         raise RuntimeError("Training is already complete; refusing to resume it")
     if args.epochs <= 0 or args.patience <= 0 or args.batch_size <= 0:
         raise ValueError("epochs, patience, and batch-size must be positive")
+    if args.accumulation_steps <= 0:
+        raise ValueError("accumulation-steps must be positive")
+    if not 0.0 < args.backbone_learning_rate_multiplier <= 1.0:
+        raise ValueError("backbone-learning-rate-multiplier must be in (0, 1]")
+    if args.pretrained and args.model != "densenet121":
+        raise ValueError("--pretrained is supported only for densenet121")
     graph_model = args.model in {"gcn", "gat"}
     if graph_model and args.graph_root is None:
         raise ValueError("--graph-root is required for GCN and GAT")
@@ -123,7 +166,9 @@ def main() -> None:
     ):
         observed = set(frame["split"].astype(str).str.lower())
         if observed != {expected_split}:
-            raise ValueError(f"{name} manifest has unexpected splits: {sorted(observed)}")
+            raise ValueError(
+                f"{name} manifest has unexpected splits: {sorted(observed)}"
+            )
         if "test" in observed:
             raise ValueError("Test rows are forbidden during model training")
     if args.limit_train is not None:
@@ -136,12 +181,15 @@ def main() -> None:
         raise ValueError(f"Training labels are missing: {missing}")
     seed_everything(args.seed)
     if graph_model:
-        train_dataset = GraphClassificationDataset(train_frame, label_columns, args.graph_root)
+        train_dataset = GraphClassificationDataset(
+            train_frame, label_columns, args.graph_root
+        )
         validation_dataset = GraphClassificationDataset(
             validation_frame, label_columns, args.graph_root
         )
         collate = collate_graph_samples
     else:
+        enhanced_image_model = args.model == "densenet121"
         train_dataset = ImageClassificationDataset(
             train_frame,
             label_columns,
@@ -149,6 +197,10 @@ def main() -> None:
             image_size=args.image_size,
             augment=True,
             seed=args.seed,
+            augmentation_profile=args.augmentation_profile,
+            epoch_varying_augmentation=args.epoch_varying_augmentation,
+            output_channels=3 if enhanced_image_model else 1,
+            normalisation="imagenet" if enhanced_image_model else "unit",
         )
         validation_dataset = ImageClassificationDataset(
             validation_frame,
@@ -157,6 +209,8 @@ def main() -> None:
             image_size=args.image_size,
             augment=False,
             seed=args.seed,
+            output_channels=3 if enhanced_image_model else 1,
+            normalisation="imagenet" if enhanced_image_model else "unit",
         )
         collate = None
     generator = torch.Generator().manual_seed(args.seed)
@@ -168,7 +222,7 @@ def main() -> None:
         pin_memory=torch.cuda.is_available(),
         collate_fn=collate,
         generator=generator,
-        persistent_workers=args.workers > 0,
+        persistent_workers=(args.workers > 0 and not args.epoch_varying_augmentation),
     )
     validation_loader = DataLoader(
         validation_dataset,
@@ -180,8 +234,12 @@ def main() -> None:
         persistent_workers=args.workers > 0,
     )
     positives = train_frame[label_columns].sum(axis=0).to_numpy(dtype=np.float32)
-    negatives = len(train_frame) - positives
-    positive_weights = negatives / np.maximum(positives, 1.0)
+    positive_weights = transform_positive_weights(
+        positives,
+        len(train_frame),
+        transform=args.positive_weight_transform,
+        maximum=args.max_positive_weight,
+    )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = build_classifier(
         args.model,
@@ -189,16 +247,42 @@ def main() -> None:
         image_size=args.image_size,
         node_dim=7,
         clinical_dim=9,
+        pretrained=args.pretrained,
+        dropout=args.dropout,
     ).to(device)
-    criterion = nn.BCEWithLogitsLoss(
-        pos_weight=torch.tensor(positive_weights, dtype=torch.float32, device=device)
-    )
+    if args.loss == "bce":
+        criterion = nn.BCEWithLogitsLoss(
+            pos_weight=torch.tensor(
+                positive_weights, dtype=torch.float32, device=device
+            )
+        )
+    else:
+        criterion = AsymmetricLoss()
+    if args.model == "densenet121" and args.backbone_learning_rate_multiplier < 1.0:
+        encoder_parameters = list(model.encoder.parameters())
+        head_parameters = list(model.clinical.parameters()) + list(
+            model.classifier.parameters()
+        )
+        parameter_groups = [
+            {
+                "params": encoder_parameters,
+                "lr": args.learning_rate * args.backbone_learning_rate_multiplier,
+            },
+            {"params": head_parameters, "lr": args.learning_rate},
+        ]
+    else:
+        parameter_groups = model.parameters()
     optimizer = torch.optim.AdamW(
-        model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay
+        parameter_groups, lr=args.learning_rate, weight_decay=args.weight_decay
     )
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="max", factor=0.5, patience=2
-    )
+    if args.scheduler == "plateau":
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, mode="max", factor=0.5, patience=2
+        )
+    else:
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=args.epochs, eta_min=args.learning_rate * 0.01
+        )
     if not args.resume:
         args.output_dir.mkdir(parents=True, exist_ok=False)
     checkpoint_path = args.output_dir / "best.pt"
@@ -225,6 +309,17 @@ def main() -> None:
         "limit_train": args.limit_train,
         "limit_val": args.limit_val,
         "amp": not args.no_amp,
+        "pretrained_initialization": bool(args.pretrained),
+        "dropout": args.dropout,
+        "augmentation_profile": args.augmentation_profile,
+        "epoch_varying_augmentation": bool(args.epoch_varying_augmentation),
+        "loss": args.loss,
+        "positive_weight_transform": args.positive_weight_transform,
+        "max_positive_weight": args.max_positive_weight,
+        "scheduler": args.scheduler,
+        "accumulation_steps": args.accumulation_steps,
+        "gradient_clip_norm": args.gradient_clip_norm,
+        "backbone_learning_rate_multiplier": args.backbone_learning_rate_multiplier,
     }
     if args.resume:
         if not recovery_path.is_file():
@@ -243,7 +338,9 @@ def main() -> None:
         expected_best_hash = recovery.get("best_checkpoint_sha256")
         if expected_best_hash is not None:
             if not checkpoint_path.is_file():
-                raise FileNotFoundError("The saved best.pt required for resume is missing")
+                raise FileNotFoundError(
+                    "The saved best.pt required for resume is missing"
+                )
             if sha256_file(checkpoint_path) != expected_best_hash:
                 raise RuntimeError("best.pt changed after the last completed epoch")
         model.load_state_dict(recovery["model_state"])
@@ -285,6 +382,8 @@ def main() -> None:
         )
     )
     for epoch in range(start_epoch, args.epochs + 1):
+        if not graph_model and args.epoch_varying_augmentation:
+            train_dataset.set_epoch(epoch)
         train_loss = train_epoch(
             model,
             train_loader,
@@ -292,6 +391,8 @@ def main() -> None:
             criterion,
             device,
             amp=not args.no_amp,
+            accumulation_steps=args.accumulation_steps,
+            gradient_clip_norm=args.gradient_clip_norm,
         )
         validation_probabilities, validation_targets = predict(
             model, validation_loader, device
@@ -300,7 +401,10 @@ def main() -> None:
             validation_probabilities, validation_targets, thresholds=0.5
         )
         macro_auroc = float(validation_metrics["macro"]["auroc"])
-        scheduler.step(macro_auroc)
+        if args.scheduler == "plateau":
+            scheduler.step(macro_auroc)
+        else:
+            scheduler.step()
         row = {
             "epoch": epoch,
             "train_loss": train_loss,
@@ -308,6 +412,8 @@ def main() -> None:
             "validation_macro_auprc": float(validation_metrics["macro"]["auprc"]),
             "learning_rate": float(optimizer.param_groups[0]["lr"]),
         }
+        if len(optimizer.param_groups) > 1:
+            row["head_learning_rate"] = float(optimizer.param_groups[1]["lr"])
         history.append(row)
         print(json.dumps(row))
         if np.isfinite(macro_auroc) and macro_auroc > best_auroc:
@@ -321,6 +427,16 @@ def main() -> None:
                 epoch=epoch,
                 validation_macro_auroc=macro_auroc,
                 seed=args.seed,
+                model_config={
+                    "image_size": args.image_size,
+                    "node_dim": 7,
+                    "clinical_dim": 9,
+                    "input_channels": 3 if args.model == "densenet121" else 1,
+                    "normalisation": (
+                        "imagenet" if args.model == "densenet121" else "unit"
+                    ),
+                    "dropout": args.dropout,
+                },
             )
         else:
             stale_epochs += 1
@@ -343,9 +459,7 @@ def main() -> None:
             resume_count=resume_count,
         )
         recovery_hash = sha256_file(recovery_path)
-        recovery_hash_path.write_text(
-            f"{recovery_hash}  last.pt\n", encoding="utf-8"
-        )
+        recovery_hash_path.write_text(f"{recovery_hash}  last.pt\n", encoding="utf-8")
         print(
             json.dumps(
                 {
@@ -361,7 +475,9 @@ def main() -> None:
         raise RuntimeError("Training did not produce a finite validation checkpoint")
     checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
     model.load_state_dict(checkpoint["model_state"])
-    validation_probabilities, validation_targets = predict(model, validation_loader, device)
+    validation_probabilities, validation_targets = predict(
+        model, validation_loader, device
+    )
     thresholds = select_f1_thresholds(validation_probabilities, validation_targets)
     final_validation_metrics = multilabel_metrics(
         validation_probabilities, validation_targets, thresholds=thresholds
@@ -371,6 +487,7 @@ def main() -> None:
     checkpoint["validation_thresholds"] = thresholds.tolist()
     checkpoint["validation_metrics"] = _json_safe(final_validation_metrics)
     checkpoint["positive_weights"] = positive_weights.tolist()
+    checkpoint["training_signature"] = signature
     checkpoint["test_evaluated"] = False
     torch.save(checkpoint, checkpoint_path)
     pd.DataFrame(history).to_csv(args.output_dir / "history.csv", index=False)
@@ -389,13 +506,16 @@ def main() -> None:
         "seed": args.seed,
         "resume_count": resume_count,
         "epoch_recovery_enabled": True,
+        "training_configuration": signature,
         "python": sys.version,
         "platform": platform.platform(),
         "torch": torch.__version__,
         "cuda": torch.version.cuda,
         "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
     }
-    with (args.output_dir / "validation_summary.json").open("w", encoding="utf-8") as handle:
+    with (args.output_dir / "validation_summary.json").open(
+        "w", encoding="utf-8"
+    ) as handle:
         json.dump(summary, handle, indent=2, sort_keys=True)
     checkpoint_hash = sha256_file(checkpoint_path)
     (args.output_dir / "best.sha256").write_text(

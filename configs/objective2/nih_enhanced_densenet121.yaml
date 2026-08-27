@@ -1,0 +1,34 @@
+seed: 42
+task: multilabel_classification
+experiment: objective2_enhanced_densenet121_validation_candidate
+test_access_allowed: false
+model:
+  architecture: densenet121
+  initialization: imagenet
+  dropout: 0.2
+data:
+  image_size: 320
+  output_channels: 3
+  normalisation: imagenet
+  augmentation_profile: cxr_mild
+  epoch_varying_augmentation: true
+training:
+  epochs: 20
+  patience: 5
+  batch_size: 16
+  accumulation_steps: 4
+  effective_batch_size: 64
+  learning_rate: 0.0001
+  backbone_learning_rate_multiplier: 0.1
+  weight_decay: 0.0001
+  loss: bce
+  positive_weight_transform: sqrt
+  maximum_positive_weight: 10.0
+  scheduler: cosine
+  gradient_clip_norm: 1.0
+selection:
+  metric: validation_macro_auroc
+  threshold_selection: validation_per_label_f1
+recovery:
+  epoch_boundary_checkpoint: true
+  private_hugging_face_only: true

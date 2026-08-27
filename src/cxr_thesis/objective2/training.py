@@ -46,13 +46,22 @@ def train_epoch(
     device: torch.device,
     *,
     amp: bool = True,
+    accumulation_steps: int = 1,
+    gradient_clip_norm: float | None = None,
 ) -> float:
+    if accumulation_steps <= 0:
+        raise ValueError("accumulation_steps must be positive")
+    if gradient_clip_norm is not None and gradient_clip_norm <= 0.0:
+        raise ValueError("gradient_clip_norm must be positive")
     model.train()
     total_loss = 0.0
     total_cases = 0
     scaler = torch.amp.GradScaler("cuda", enabled=amp and device.type == "cuda")
-    for batch in loader:
-        optimizer.zero_grad(set_to_none=True)
+    optimizer.zero_grad(set_to_none=True)
+    batches = len(loader)
+    for batch_index, batch in enumerate(loader):
+        group_offset = batch_index % accumulation_steps
+        group_size = min(accumulation_steps, batches - (batch_index - group_offset))
         batch_cases = int(
             batch.labels.shape[0]
             if isinstance(batch, GraphBatch)
@@ -61,16 +70,25 @@ def train_epoch(
         with torch.amp.autocast("cuda", enabled=amp and device.type == "cuda"):
             logits, labels = model_logits(model, batch, device)
             loss = criterion(logits, labels)
-        scaler.scale(loss).backward()
-        scaler.step(optimizer)
-        scaler.update()
+            scaled_loss = loss / group_size
+        scaler.scale(scaled_loss).backward()
+        group_complete = group_offset + 1 == group_size
+        if group_complete:
+            if gradient_clip_norm is not None:
+                scaler.unscale_(optimizer)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), gradient_clip_norm)
+            scaler.step(optimizer)
+            scaler.update()
+            optimizer.zero_grad(set_to_none=True)
         total_loss += float(loss.detach()) * batch_cases
         total_cases += batch_cases
     return total_loss / max(1, total_cases)
 
 
 @torch.no_grad()
-def predict(model: nn.Module, loader, device: torch.device) -> tuple[np.ndarray, np.ndarray]:
+def predict(
+    model: nn.Module, loader, device: torch.device
+) -> tuple[np.ndarray, np.ndarray]:
     model.eval()
     probabilities = []
     targets = []
@@ -90,6 +108,7 @@ def save_checkpoint(
     epoch: int,
     validation_macro_auroc: float,
     seed: int,
+    model_config: dict[str, Any] | None = None,
 ) -> Path:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -102,6 +121,7 @@ def save_checkpoint(
             "epoch": int(epoch),
             "validation_macro_auroc": float(validation_macro_auroc),
             "seed": int(seed),
+            "model_config": dict(model_config or {}),
             "test_evaluated": False,
         },
         temporary,
@@ -117,7 +137,9 @@ def capture_rng_state() -> dict[str, Any]:
         "python": random.getstate(),
         "numpy": np.random.get_state(),
         "torch_cpu": torch.get_rng_state(),
-        "torch_cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else [],
+        "torch_cuda": torch.cuda.get_rng_state_all()
+        if torch.cuda.is_available()
+        else [],
     }
 
 

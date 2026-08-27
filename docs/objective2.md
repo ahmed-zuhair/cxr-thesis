@@ -84,3 +84,36 @@ around that atomic state. It verifies that the recovery repository is private,
 uploads each stable completed epoch, restores the newest verified snapshot after
 a fresh Kaggle runtime, and uploads the final validation-selected artifacts. It
 does not accept a test manifest.
+
+## Validation-only enhanced baseline
+
+The published five-model locked-test comparison is immutable. Enhancement work
+is stored as a separate validation candidate and cannot overwrite or reinterpret
+those results. The first enhanced candidate is an ImageNet-pretrained
+DenseNet-121 at 320 px with three-channel ImageNet normalisation, epoch-varying
+mild CXR augmentation, square-root transformed and clipped BCE positive
+weights, gradient accumulation, gradient clipping and a cosine learning-rate
+schedule. Its locked configuration is recorded in
+`configs/objective2/nih_enhanced_densenet121.yaml`.
+
+The enhanced path remains test-blind and uses the same epoch-atomic private Hub
+recovery wrapper. A typical validation run is:
+
+```bash
+python scripts/train_objective2_with_private_recovery.py \
+  --model densenet121 --pretrained \
+  --train-manifest /private/train_cohort_private.csv \
+  --val-manifest /private/val_cohort_private.csv \
+  --output-dir /kaggle/working/outputs/objective2_densenet121_seed42 \
+  --data-root / --hf-repo OWNER/PRIVATE_RECOVERY_REPO \
+  --hf-path objective2/densenet121/seed42/validation_candidate_v1.0.0 \
+  --expected-train-sha256 TRAIN_SHA256 --expected-val-sha256 VAL_SHA256 \
+  --image-size 320 --batch-size 16 --accumulation-steps 4 \
+  --learning-rate 0.0001 --backbone-learning-rate-multiplier 0.1 \
+  --augmentation-profile cxr_mild --epoch-varying-augmentation \
+  --loss bce --positive-weight-transform sqrt --max-positive-weight 10 \
+  --scheduler cosine --gradient-clip-norm 1.0
+```
+
+No previously evaluated locked-test cohort is accepted by this workflow. A new
+confirmation protocol must be frozen before any enhanced model is tested.

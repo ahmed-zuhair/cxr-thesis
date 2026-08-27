@@ -64,6 +64,10 @@ class ImageClassificationDataset(Dataset):
         image_size: int = 224,
         augment: bool = False,
         seed: int = 42,
+        augmentation_profile: str = "baseline",
+        epoch_varying_augmentation: bool = False,
+        output_channels: int = 1,
+        normalisation: str = "unit",
     ) -> None:
         if image_size <= 0:
             raise ValueError("image_size must be positive")
@@ -76,6 +80,79 @@ class ImageClassificationDataset(Dataset):
         self.image_size = int(image_size)
         self.augment = bool(augment)
         self.seed = int(seed)
+        if augmentation_profile not in {"baseline", "cxr_mild"}:
+            raise ValueError("augmentation_profile must be baseline or cxr_mild")
+        if output_channels not in {1, 3}:
+            raise ValueError("output_channels must be one or three")
+        if normalisation not in {"unit", "imagenet"}:
+            raise ValueError("normalisation must be unit or imagenet")
+        if normalisation == "imagenet" and output_channels != 3:
+            raise ValueError("ImageNet normalisation requires three output channels")
+        self.augmentation_profile = augmentation_profile
+        self.epoch_varying_augmentation = bool(epoch_varying_augmentation)
+        self.output_channels = int(output_channels)
+        self.normalisation = normalisation
+        self.epoch = 0
+
+    def set_epoch(self, epoch: int) -> None:
+        """Select a deterministic but epoch-varying augmentation stream."""
+
+        if epoch < 0:
+            raise ValueError("epoch must be non-negative")
+        self.epoch = int(epoch)
+
+    def _rng(self, index: int) -> np.random.Generator:
+        if not self.epoch_varying_augmentation:
+            # Preserve the exact frozen Objective 2 baseline augmentation stream.
+            return np.random.default_rng(self.seed + index)
+        return np.random.default_rng(
+            np.random.SeedSequence([self.seed, self.epoch, index])
+        )
+
+    def _augment(self, image: np.ndarray, index: int) -> np.ndarray:
+        rng = self._rng(index)
+        result = np.asarray(image, dtype=np.float32)
+        if rng.random() < 0.5:
+            result = np.fliplr(result).copy()
+        if self.augmentation_profile == "cxr_mild":
+            height, width = result.shape
+            angle = float(rng.uniform(-7.0, 7.0))
+            scale = float(rng.uniform(0.95, 1.05))
+            matrix = cv2.getRotationMatrix2D(
+                ((width - 1) / 2.0, (height - 1) / 2.0), angle, scale
+            )
+            matrix[0, 2] += float(rng.uniform(-0.03, 0.03) * width)
+            matrix[1, 2] += float(rng.uniform(-0.03, 0.03) * height)
+            result = cv2.warpAffine(
+                result,
+                matrix,
+                (width, height),
+                flags=cv2.INTER_LINEAR,
+                borderMode=cv2.BORDER_CONSTANT,
+                borderValue=0.0,
+            )
+            gamma = float(rng.uniform(0.90, 1.10))
+            result = np.power(np.clip(result, 0.0, 1.0), gamma)
+            noise_sigma = float(rng.uniform(0.0, 0.015))
+            if noise_sigma > 0.0:
+                result = result + rng.normal(0.0, noise_sigma, result.shape)
+            contrast = float(rng.uniform(0.85, 1.15))
+        else:
+            contrast = float(rng.uniform(0.90, 1.10))
+        brightness = float(rng.uniform(-0.05, 0.05))
+        return np.clip((result - 0.5) * contrast + 0.5 + brightness, 0.0, 1.0).astype(
+            np.float32
+        )
+
+    def _format_channels(self, image: np.ndarray) -> np.ndarray:
+        if self.output_channels == 1:
+            return image[None]
+        channels = np.repeat(image[None], 3, axis=0)
+        if self.normalisation == "imagenet":
+            mean = np.asarray([0.485, 0.456, 0.406], dtype=np.float32)[:, None, None]
+            std = np.asarray([0.229, 0.224, 0.225], dtype=np.float32)[:, None, None]
+            channels = (channels - mean) / std
+        return channels.astype(np.float32)
 
     def __len__(self) -> int:
         return len(self.records)
@@ -90,14 +167,10 @@ class ImageClassificationDataset(Dataset):
             image, (self.image_size, self.image_size), interpolation=cv2.INTER_AREA
         )
         if self.augment:
-            rng = np.random.default_rng(self.seed + index)
-            if rng.random() < 0.5:
-                image = np.fliplr(image).copy()
-            contrast = float(rng.uniform(0.90, 1.10))
-            brightness = float(rng.uniform(-0.05, 0.05))
-            image = np.clip((image - 0.5) * contrast + 0.5 + brightness, 0.0, 1.0)
+            image = self._augment(image, index)
+        image = self._format_channels(image)
         return {
-            "image": torch.from_numpy(np.ascontiguousarray(image[None])).float(),
+            "image": torch.from_numpy(np.ascontiguousarray(image)).float(),
             "clinical": _clinical(record),
             "labels": _labels(record, self.label_columns),
         }
