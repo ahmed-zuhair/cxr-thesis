@@ -1,0 +1,177 @@
+{
+  "architecture": {
+    "attention_heads": 3,
+    "embedding_dimension": 192,
+    "patch_size": 16,
+    "transformer_layers": 4
+  },
+  "artifact": "Objective 2 validation-selected Compact ViT classifier",
+  "best_epoch": 11,
+  "checkpoint_sha256": "2e61945141995763a963da099962e25f5d8362e85ff880e07fa03d3539bbe8fb",
+  "early_stopping_patience": 5,
+  "epochs_completed": 16,
+  "labels": [
+    "Infiltration",
+    "Effusion",
+    "Atelectasis",
+    "Nodule",
+    "Mass",
+    "Consolidation",
+    "Pneumothorax",
+    "Pleural_Thickening",
+    "Cardiomegaly",
+    "Emphysema",
+    "Edema",
+    "Fibrosis"
+  ],
+  "model": "vit",
+  "parameters": 1870284,
+  "recovered_from_private_epoch_snapshot": true,
+  "resume_count": 1,
+  "seed": 42,
+  "test_cases_accessed": 0,
+  "test_evaluated": false,
+  "train_cases": 30000,
+  "train_manifest_sha256": "eaca73a0fe7b0883216b67228e89dbee83e89646acfe32ea00ccf99b842cfef6",
+  "training_repeated_during_recovery": false,
+  "validation_cases": 5000,
+  "validation_macro_auprc": 0.08754899711889526,
+  "validation_macro_auroc": 0.6472075750002856,
+  "validation_manifest_sha256": "3d1f3a984ab92cac43dbd91696639f46fb4046540dbf80c968415f2106506704",
+  "validation_metrics": {
+    "macro": {
+      "auprc": 0.08754899711889526,
+      "auroc": 0.6472075750002856,
+      "f1": 0.13923841210438054,
+      "sensitivity": 0.5144330853584455,
+      "specificity": 0.6755038742580269
+    },
+    "micro_auprc": 0.07953816727491828,
+    "micro_auroc": 0.6400462430717375,
+    "per_label": [
+      {
+        "auprc": 0.23086030752563028,
+        "auroc": 0.6225660192584527,
+        "f1": 0.33107867568529725,
+        "label": "Infiltration",
+        "sensitivity": 0.5588942307692307,
+        "specificity": 0.6372360844529751,
+        "threshold": 0.5
+      },
+      {
+        "auprc": 0.22761437571705206,
+        "auroc": 0.7181819880418535,
+        "f1": 0.30859583555792847,
+        "label": "Effusion",
+        "sensitivity": 0.5351851851851852,
+        "specificity": 0.7659192825112108,
+        "threshold": 0.6000000000000001
+      },
+      {
+        "auprc": 0.17261029092869118,
+        "auroc": 0.6453910153122752,
+        "f1": 0.25008588114050156,
+        "label": "Atelectasis",
+        "sensitivity": 0.6558558558558558,
+        "specificity": 0.5518560179977503,
+        "threshold": 0.5
+      },
+      {
+        "auprc": 0.07122626582492375,
+        "auroc": 0.5865978657680427,
+        "f1": 0.12867132867132866,
+        "label": "Nodule",
+        "sensitivity": 0.36507936507936506,
+        "specificity": 0.7712721145745577,
+        "threshold": 0.55
+      },
+      {
+        "auprc": 0.044141317981453036,
+        "auroc": 0.5484681470083657,
+        "f1": 0.07890222984562607,
+        "label": "Mass",
+        "sensitivity": 0.8563829787234043,
+        "specificity": 0.22443890274314215,
+        "threshold": 0.5
+      },
+      {
+        "auprc": 0.09605287444954129,
+        "auroc": 0.7237325613009566,
+        "f1": 0.17674418604651163,
+        "label": "Consolidation",
+        "sensitivity": 0.3877551020408163,
+        "specificity": 0.8776019983347211,
+        "threshold": 0.6500000000000001
+      },
+      {
+        "auprc": 0.03372817349511727,
+        "auroc": 0.5420858129378003,
+        "f1": 0.05925925925925926,
+        "label": "Pneumothorax",
+        "sensitivity": 0.7194244604316546,
+        "specificity": 0.35486525406295,
+        "threshold": 0.4
+      },
+      {
+        "auprc": 0.03739026138959799,
+        "auroc": 0.6102793148502688,
+        "f1": 0.06969376979936642,
+        "label": "Pleural_Thickening",
+        "sensitivity": 0.2558139534883721,
+        "specificity": 0.8388421268733319,
+        "threshold": 0.6000000000000001
+      },
+      {
+        "auprc": 0.026906771383312326,
+        "auroc": 0.611668227928166,
+        "f1": 0.05970149253731343,
+        "label": "Cardiomegaly",
+        "sensitivity": 0.5490196078431373,
+        "specificity": 0.6492445896284198,
+        "threshold": 0.6000000000000001
+      },
+      {
+        "auprc": 0.022570386618394174,
+        "auroc": 0.6041636849386957,
+        "f1": 0.03916272788656313,
+        "label": "Emphysema",
+        "sensitivity": 0.4264705882352941,
+        "specificity": 0.7193836171938361,
+        "threshold": 0.5
+      },
+      {
+        "auprc": 0.04401168514945051,
+        "auroc": 0.8114459576934222,
+        "f1": 0.0931098696461825,
+        "label": "Edema",
+        "sensitivity": 0.35714285714285715,
+        "specificity": 0.9103448275862069,
+        "threshold": 0.8500000000000001
+      },
+      {
+        "auprc": 0.04347525496357921,
+        "auroc": 0.7419103049651264,
+        "f1": 0.07585568917668825,
+        "label": "Fibrosis",
+        "sensitivity": 0.5061728395061729,
+        "specificity": 0.805041675137223,
+        "threshold": 0.6000000000000001
+      }
+    ]
+  },
+  "validation_repeated_during_recovery": false,
+  "validation_thresholds": [
+    0.5,
+    0.6000000000000001,
+    0.5,
+    0.55,
+    0.5,
+    0.6500000000000001,
+    0.4,
+    0.6000000000000001,
+    0.6000000000000001,
+    0.5,
+    0.8500000000000001,
+    0.6000000000000001
+  ]
+}

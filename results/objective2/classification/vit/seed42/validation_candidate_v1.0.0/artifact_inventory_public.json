@@ -1,0 +1,29 @@
+{
+  "artifact": "Objective 2 Compact ViT public artifact inventory",
+  "checkpoint_sha256": "2e61945141995763a963da099962e25f5d8362e85ff880e07fa03d3539bbe8fb",
+  "files": {
+    "README.md": {
+      "bytes": 740,
+      "sha256": "6ae5027a2030fd47316952546e089b496bbdc839aa37f77f485639b96fe18667"
+    },
+    "best.sha256": {
+      "bytes": 74,
+      "sha256": "524b7db52ca5c07d7da224041ef884737eb70f9888fdae5188dff4ef853d1af3"
+    },
+    "history.csv": {
+      "bytes": 1162,
+      "sha256": "82d82bb7efb1ed1e2a0d49b7a35129c4fa537b00df5d9218cf9174233432ad31"
+    },
+    "training_history.png": {
+      "bytes": 181408,
+      "sha256": "6551bf8ff9cac8ce0673ec04136f234216387f5d97225a90e640477a2b86d130"
+    },
+    "validation_summary_public.json": {
+      "bytes": 5120,
+      "sha256": "5b24189d50c8d7a7866696501900160add4ecdf9e9d05a2841d2547bfd4c9d11"
+    }
+  },
+  "model": "vit",
+  "seed": 42,
+  "test_evaluated": false
+}
