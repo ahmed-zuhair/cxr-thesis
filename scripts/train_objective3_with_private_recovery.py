@@ -221,6 +221,34 @@ def main() -> None:
     final_summary = args.output_dir / "validation_summary.json"
     if final_summary.is_file():
         summary = validate_final_summary(final_summary, args)
+        final_names = (
+            "best.pt",
+            "best.sha256",
+            "history.csv",
+            "validation_summary.json",
+            "last.pt",
+            "last.sha256",
+            "history_progress.csv",
+        )
+        final_paths = [args.output_dir / name for name in final_names]
+        if not all(path.is_file() for path in final_paths):
+            raise RuntimeError("Recovered final Objective 3 artifacts are incomplete")
+        expected_best = (
+            (args.output_dir / "best.sha256")
+            .read_text(encoding="utf-8")
+            .split()[0]
+        )
+        if sha256_file(args.output_dir / "best.pt") != expected_best:
+            raise RuntimeError("Recovered final best.pt checksum does not match")
+        remote_final = f"{args.hf_path.strip('/')}/validation_summary.json"
+        if remote_final not in remote_files:
+            upload_paths(
+                api,
+                CommitOperationAdd,
+                args,
+                final_paths,
+                f"recovery: finalize Objective 3 {args.variant} seed {args.seed}",
+            )
         print(
             json.dumps(
                 {
@@ -232,6 +260,7 @@ def main() -> None:
                         "auroc"
                     ],
                     "training_repeated": False,
+                    "final_private_recovery_verified": True,
                     "test_evaluated": False,
                 },
                 indent=2,
