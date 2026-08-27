@@ -1,0 +1,28 @@
+{
+  "artifact": "Objective 2 GAT public artifact inventory",
+  "checkpoint_sha256": "f34c3db2038c136077011659daee2a1a7d799cc6f87652ddd94d8b5fced7c70d",
+  "files": {
+    "README.md": {
+      "bytes": 742,
+      "sha256": "5b852d955c34f3be537ee07a48ca5ca10edf7e869f94ce503f37f48c4a9b99b4"
+    },
+    "best.sha256": {
+      "bytes": 74,
+      "sha256": "4f57f0f0bbcdf91421dee2e463d567b1c2f82e2c0e7e52b12492231d7bba58f8"
+    },
+    "history.csv": {
+      "bytes": 1392,
+      "sha256": "4a4c62c70074a076c1b6ed19820ad092d834081083aaaeb6177a757bdf17a918"
+    },
+    "training_history.png": {
+      "bytes": 147812,
+      "sha256": "93a34904cf04ea732880a0fd7975d48a95d78e434c275f1338f7c97e4d618fe5"
+    },
+    "validation_summary_public.json": {
+      "bytes": 5103,
+      "sha256": "bebce074197eba4cc4dc882c370d94a1dca70b5d320cdd849fcd1077b8561e5f"
+    }
+  },
+  "locked_test_results_included": false,
+  "private_data_included": false
+}
