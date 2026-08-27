@@ -39,6 +39,24 @@ The 5,000-case test cohort is label-blind during selection and must be evaluated
 exactly once after all five checkpoints and thresholds are frozen. No manual
 masking is required for Objective 2.
 
+After every validation candidate has been published and its checkpoint hash is
+frozen, `scripts/generate_objective2_locked_test_graph_shards.py` creates the
+test graphs. It reads the test CSV with `usecols` that explicitly exclude every
+`label_*` column, stores each completed graph shard in the private recovery
+repository, and saves neither probability masks nor source images. Thus graph
+construction cannot expose test labels to model selection.
+
+`scripts/evaluate_objective2_locked_test.py` is the only program allowed to
+load test label values. Before doing so it verifies all five checkpoint hashes,
+model identities, label order and validation-selected thresholds. It evaluates
+the frozen CNN, attention-CNN, compact ViT, GCN and GAT candidates, saves each
+model's predictions atomically for interruption recovery, applies the unchanged
+validation thresholds, and writes a final lock that prevents a second completed
+evaluation. Confidence intervals and comparisons use the same paired bootstrap
+case resamples for every model. `scripts/publish_objective2_locked_test.py`
+publishes only the aggregate JSON, figure and lock record; case predictions,
+identifiers, manifests, images and graph files remain private.
+
 Use `scripts/train_objective2_classifier.py` to train exactly one model with
 training and validation manifests. The script deliberately accepts no test
 manifest, selects checkpoints by validation macro AUROC, freezes per-label

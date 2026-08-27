@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import random
+import hashlib
+import json
 import subprocess
 import sys
 import tempfile
@@ -15,6 +17,7 @@ import torch
 from cxr_thesis.objective1.config import load_config
 from cxr_thesis.objective1.graphs import GraphSample
 from cxr_thesis.objective2.data import GraphClassificationDataset, collate_graph_samples
+from cxr_thesis.objective2.evaluation import paired_bootstrap_comparison
 from cxr_thesis.objective2.graph_generation import build_frozen_roi_graph
 from cxr_thesis.objective2.metrics import multilabel_metrics, select_f1_thresholds
 from cxr_thesis.objective2.models import build_classifier
@@ -212,8 +215,177 @@ class Objective2MetricTests(unittest.TestCase):
         self.assertAlmostEqual(metrics["macro"]["auprc"], 1.0)
         self.assertAlmostEqual(metrics["macro"]["f1"], 1.0)
 
+    def test_paired_bootstrap_is_deterministic_and_paired(self) -> None:
+        targets = np.asarray(
+            [[1, 0], [1, 0], [0, 1], [0, 1], [1, 1], [0, 0]], dtype=np.int8
+        )
+        reference = np.asarray(
+            [[0.9, 0.1], [0.8, 0.2], [0.2, 0.8], [0.1, 0.9], [0.8, 0.8], [0.2, 0.2]]
+        )
+        weaker = 1.0 - reference
+        arguments = {
+            "probabilities": {"cnn": reference, "gat": weaker},
+            "targets": targets,
+            "thresholds": {"cnn": np.asarray([0.5, 0.5]), "gat": np.asarray([0.5, 0.5])},
+            "reference_model": "cnn",
+            "replicates": 20,
+            "seed": 42,
+        }
+        first = paired_bootstrap_comparison(**arguments)
+        second = paired_bootstrap_comparison(**arguments)
+        self.assertEqual(first, second)
+        difference = first["paired_model_minus_reference"]["gat"]["auroc"]
+        self.assertLess(difference["model_minus_reference_mean"], 0.0)
+
 
 class Objective2RecoveryTests(unittest.TestCase):
+    def test_locked_test_graph_shard_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "scripts" / "generate_objective2_locked_test_graph_shards.py"),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--test-manifest", result.stdout)
+
+    def test_locked_test_evaluation_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "scripts" / "evaluate_objective2_locked_test.py"),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--expected-test-sha256", result.stdout)
+
+    def test_locked_test_publication_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "scripts" / "publish_objective2_locked_test.py"),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--evaluation-output", result.stdout)
+
+    def test_five_model_locked_test_evaluation_is_finalized_once(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        labels = [
+            "Infiltration", "Effusion", "Atelectasis", "Nodule", "Mass",
+            "Consolidation", "Pneumothorax", "Pleural_Thickening",
+            "Cardiomegaly", "Emphysema", "Edema", "Fibrosis",
+        ]
+
+        def file_hash(path: Path) -> str:
+            digest = hashlib.sha256()
+            digest.update(path.read_bytes())
+            return digest.hexdigest()
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            graph_root = root / "graphs"
+            checkpoint_root = root / "checkpoints"
+            graph_root.mkdir()
+            checkpoint_root.mkdir()
+            rows = []
+            for index in range(2):
+                image_path = root / f"image-{index}.png"
+                import cv2
+
+                cv2.imwrite(str(image_path), np.full((32, 32), 80 + index * 80, dtype=np.uint8))
+                GraphSample(
+                    x=np.random.default_rng(index).normal(size=(4, 7)).astype(np.float32),
+                    edge_index=np.asarray([[0, 1, 2, 3], [0, 1, 2, 3]], dtype=np.int64),
+                    edge_attr=np.zeros((4, 5), dtype=np.float32),
+                    node_type=np.asarray(["image_patch"] * 4),
+                    node_position=np.zeros((4, 2), dtype=np.float32),
+                ).save(graph_root / f"image-{index}.npz")
+                row = {
+                    "dataset": "synthetic",
+                    "patient_id": str(index),
+                    "study_id": f"study-{index}",
+                    "image_id": f"image-{index}",
+                    "image_path": str(image_path),
+                    "modality": "CXR",
+                    "view": "PA",
+                    "split": "test",
+                    "age": 50,
+                    "sex": "M",
+                }
+                for label_index, label in enumerate(labels):
+                    row[f"label_{label}"] = (index + label_index) % 2
+                rows.append(row)
+            manifest = root / "test.csv"
+            pd.DataFrame(rows).to_csv(manifest, index=False)
+
+            model_names = ("cnn", "attention_cnn", "vit", "gcn", "gat")
+            checkpoint_paths = {}
+            for model_name in model_names:
+                model = build_classifier(model_name, len(labels), image_size=32, node_dim=7)
+                checkpoint_path = checkpoint_root / f"{model_name}.pt"
+                torch.save(
+                    {
+                        "model_name": model_name,
+                        "model_state": model.state_dict(),
+                        "label_names": labels,
+                        "epoch": 1,
+                        "validation_thresholds": [0.5] * len(labels),
+                        "validation_metrics": {"macro": {"auroc": 0.5}},
+                        "test_evaluated": False,
+                    },
+                    checkpoint_path,
+                )
+                checkpoint_paths[model_name] = checkpoint_path
+
+            output = root / "evaluation"
+            command = [
+                sys.executable,
+                str(repository / "scripts" / "evaluate_objective2_locked_test.py"),
+                "--test-manifest", str(manifest),
+                "--graph-root", str(graph_root),
+                "--output-dir", str(output),
+                "--data-root", "/",
+                "--expected-test-sha256", file_hash(manifest),
+                "--expected-test-cases", "2",
+                "--expected-test-patients", "2",
+                "--image-size", "32",
+                "--image-batch-size", "2",
+                "--graph-batch-size", "2",
+                "--workers", "0",
+                "--bootstrap-replicates", "5",
+            ]
+            for model_name, checkpoint_path in checkpoint_paths.items():
+                option = model_name.replace("_", "-")
+                command.extend(
+                    [
+                        f"--{option}-checkpoint", str(checkpoint_path),
+                        f"--expected-{option}-sha256", file_hash(checkpoint_path),
+                    ]
+                )
+            result = subprocess.run(command, text=True, capture_output=True)
+            self.assertEqual(result.returncode, 0, msg=result.stderr + result.stdout)
+            lock_path = output / "FINAL_LOCKED_TEST_EVALUATION.json"
+            self.assertTrue(lock_path.is_file())
+            lock = json.loads(lock_path.read_text(encoding="utf-8"))
+            self.assertEqual(lock["completed_models"], list(model_names))
+            self.assertTrue(lock["test_evaluated"])
+            repeated = subprocess.run(command, text=True, capture_output=True)
+            self.assertNotEqual(repeated.returncode, 0)
+            self.assertIn("already finalized", repeated.stderr)
+
     def test_candidate_publication_cli_imports(self) -> None:
         repository = Path(__file__).resolve().parents[1]
         result = subprocess.run(
