@@ -83,11 +83,14 @@ def integrated_gradients(
     *,
     baseline: torch.Tensor | None = None,
     steps: int = 32,
+    internal_batch_size: int = 1,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Return channel-aggregated absolute integrated gradients and logits."""
 
     if steps < 2:
         raise ValueError("Integrated gradients requires at least two steps")
+    if internal_batch_size <= 0:
+        raise ValueError("internal_batch_size must be positive")
     reference = torch.zeros_like(image) if baseline is None else baseline
     if reference.shape != image.shape:
         raise ValueError("Integrated-gradients baseline shape does not match")
@@ -101,12 +104,22 @@ def integrated_gradients(
         raise ValueError("One target label is required per image")
     gradients = []
     logits = None
-    for alpha in torch.linspace(0.0, 1.0, steps, device=image.device):
-        scaled = (reference + alpha * (image - reference)).detach().requires_grad_(True)
-        logits = model(scaled, clinical)
-        selected = logits.gather(1, indices[:, None]).sum()
+    alphas = torch.linspace(0.0, 1.0, steps, device=image.device)
+    batch = len(image)
+    for start in range(0, steps, internal_batch_size):
+        chunk = alphas[start : start + internal_batch_size]
+        scaled = (
+            reference[None]
+            + chunk[:, None, None, None, None] * (image - reference)[None]
+        ).reshape(-1, *image.shape[1:]).detach().requires_grad_(True)
+        repeated_clinical = clinical.repeat(len(chunk), 1)
+        repeated_indices = indices.repeat(len(chunk))
+        chunk_logits = model(scaled, repeated_clinical)
+        selected = chunk_logits.gather(1, repeated_indices[:, None]).sum()
         gradient = torch.autograd.grad(selected, scaled, retain_graph=False)[0]
-        gradients.append(gradient.detach())
+        gradients.extend(gradient.detach().reshape(len(chunk), batch, *image.shape[1:]))
+        if start + len(chunk) == steps:
+            logits = chunk_logits[-batch:]
     stacked = torch.stack(gradients)
     average = (stacked[:-1] + stacked[1:]).mean(dim=0) / 2.0
     attribution = ((image - reference) * average).abs().mean(dim=1, keepdim=True)

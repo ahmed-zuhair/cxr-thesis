@@ -7,10 +7,18 @@ import importlib.util
 from pathlib import Path
 
 import pandas as pd
+import numpy as np
 import torch
 from torch import nn
 
-from cxr_thesis.objective4 import GradCAM, integrated_gradients
+from cxr_thesis.objective4 import (
+    GradCAM,
+    deletion_insertion_auc,
+    imagenet_gamma_perturbation,
+    integrated_gradients,
+    saliency_concentration,
+    saliency_spearman,
+)
 
 
 _LOCK_SPEC = importlib.util.spec_from_file_location(
@@ -53,10 +61,33 @@ class Objective4Tests(unittest.TestCase):
         integrated, _ = integrated_gradients(
             model, image, clinical, 0, steps=4
         )
+        integrated_batched, _ = integrated_gradients(
+            model, image, clinical, 0, steps=4, internal_batch_size=2
+        )
         self.assertEqual(tuple(cam.shape), (2, 1, 16, 16))
         self.assertEqual(tuple(integrated.shape), tuple(cam.shape))
         self.assertTrue(torch.isfinite(cam).all())
         self.assertTrue(torch.isfinite(integrated).all())
+        self.assertTrue(torch.allclose(integrated, integrated_batched, atol=1e-6))
+
+    def test_quantitative_saliency_metrics(self) -> None:
+        torch.manual_seed(7)
+        model = TinyModel().eval()
+        image = torch.randn(1, 3, 8, 8)
+        clinical = torch.randn(1, 9)
+        saliency = torch.linspace(0, 1, 64).reshape(1, 1, 8, 8)
+        faithfulness = deletion_insertion_auc(
+            model, image, clinical, 0, saliency, steps=3
+        )
+        self.assertEqual(len(faithfulness["deletion_curve"]), 3)
+        self.assertTrue(np.isfinite(faithfulness["deletion_auc"]))
+        mask = torch.zeros(8, 8, dtype=torch.bool)
+        mask[:, 4:] = True
+        concentration = saliency_concentration(saliency, mask)
+        self.assertGreater(concentration, 0.5)
+        self.assertAlmostEqual(saliency_spearman(saliency, saliency), 1.0)
+        perturbed = imagenet_gamma_perturbation(image)
+        self.assertEqual(tuple(perturbed.shape), tuple(image.shape))
 
     def test_smoke_cli(self) -> None:
         repository = Path(__file__).resolve().parents[1]
