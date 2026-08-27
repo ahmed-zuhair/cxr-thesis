@@ -66,6 +66,12 @@ patients. The original locked-test patients are excluded before a fixed,
 label-blind identity-only selection, and the confirmation hash is locked before
 any confirmation-label evaluation.
 
+`scripts/publish_objective2_confirmation_protocol.py` publishes only the
+aggregate protocol record, its checksum, and a sanitized inventory to the
+public checkpoint repository and GitHub. The private confirmation CSV remains
+in private recovery. The public commit and release therefore timestamp the
+cohort hash before any confirmation labels are evaluated.
+
 `scripts/evaluate_objective2_locked_test.py` is the only program allowed to
 load test label values. Before doing so it verifies all five checkpoint hashes,
 model identities, label order and validation-selected thresholds. It evaluates
