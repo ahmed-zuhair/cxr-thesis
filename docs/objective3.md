@@ -73,6 +73,19 @@ least two of three seeds. Macro AUPRC and macro F1 are reported but do not
 select the model. If either primary rule fails, no further Objective 3
 architecture tuning is permitted and the negative result is reported.
 
+When both rules pass, `scripts/create_objective3_final_evaluation_cohort.py`
+selects exactly 5,000 images at seed 4042 from complete official NIH test
+patients after excluding every patient used by either earlier Objective 2
+evaluation cohort. The irreversible identity selection reads only patient and
+split columns. Labels are serialized only after selection and no label
+statistics are calculated. The private cohort and lock are stored only in the
+private recovery repository.
+
+`scripts/publish_objective3_final_protocol.py` publishes the sanitized v1.1
+validation aggregate, amendment, final-cohort hash, and protocol lock before
+any final-cohort label evaluation. It rejects private manifests, identifiers,
+images, and case-level predictions.
+
 Use `--architecture v1_1_reupload_gated` with the smoke, direct-training, and
 private-recovery scripts. Use a new output directory and private Hub path so
 the v1.0 checkpoints are never overwritten.

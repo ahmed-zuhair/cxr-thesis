@@ -222,6 +222,23 @@ class Objective3ArchitectureTests(unittest.TestCase):
                 self.assertIn("--variant", result.stdout)
                 self.assertIn("--architecture", result.stdout)
 
+    def test_final_protocol_clis_import(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        expected_options = {
+            "create_objective3_final_evaluation_cohort.py": "--excluded-manifest",
+            "publish_objective3_final_protocol.py": "--validation-summary",
+        }
+        for name, option in expected_options.items():
+            with self.subTest(script=name):
+                result = subprocess.run(
+                    [sys.executable, str(repository / "scripts" / name), "--help"],
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                )
+                self.assertEqual(result.returncode, 0, msg=result.stderr)
+                self.assertIn(option, result.stdout)
+
     def test_enhancement_protocol_lock_cli(self) -> None:
         repository = Path(__file__).resolve().parents[1]
         with tempfile.TemporaryDirectory() as directory:
