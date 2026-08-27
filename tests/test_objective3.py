@@ -2,14 +2,20 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import tempfile
 import unittest
 from importlib.util import find_spec
 from pathlib import Path
 
+import numpy as np
 import torch
 
 from cxr_thesis.objective2.data import GraphBatch
 from cxr_thesis.objective2.models import build_classifier
+from cxr_thesis.objective3.embeddings import (
+    load_embedding_shard,
+    save_embedding_shard,
+)
 from cxr_thesis.objective3.models import (
     ClassicalMatchedBottleneck,
     HybridGraphHead,
@@ -72,6 +78,32 @@ class Objective3ArchitectureTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("--batch-size", result.stdout)
+
+    def test_private_embedding_shard_round_trip(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "shard.npz"
+            values = np.random.default_rng(42).normal(size=(3, 160)).astype(np.float32)
+            save_embedding_shard(path, values, ["i1", "i2", "i3"])
+            restored, identifiers = load_embedding_shard(
+                path, expected_image_ids=["i1", "i2", "i3"]
+            )
+            self.assertTrue(np.array_equal(restored, values))
+            self.assertEqual(identifiers.tolist(), ["i1", "i2", "i3"])
+
+    def test_embedding_extraction_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "scripts" / "extract_objective3_gat_embeddings.py"),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--expected-checkpoint-sha256", result.stdout)
 
 
 if __name__ == "__main__":

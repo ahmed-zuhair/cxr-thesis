@@ -23,3 +23,12 @@ evaluated exactly once.
 forward/backward differentiation, finite gradients, output shapes, and exact
 classical-versus-quantum bottleneck parameter matching without accessing any
 medical data.
+
+`scripts/extract_objective3_gat_embeddings.py` loads the frozen, test-blind
+Objective 2 GAT checkpoint and extracts one 160-dimensional fused graph and
+clinical embedding for every training and validation case. The embeddings are
+saved in deterministic manifest order as private 1,000-case shards. Every
+completed shard is checksum-protected and uploaded to a verified private Hub
+repository, so a fresh Kaggle runtime restores completed work instead of
+repeating it. Test manifests, test labels, medical images, and predicted masks
+are not accessed or stored by this stage.
