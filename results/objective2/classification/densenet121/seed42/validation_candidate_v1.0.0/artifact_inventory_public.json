@@ -1,0 +1,28 @@
+{
+  "artifact": "Objective 2 DENSENET121 public artifact inventory",
+  "checkpoint_sha256": "2b7fa0d2f3dee3c59c538be15dd0435c71ad26b411fc1312bd7e5fe99fbac55f",
+  "files": {
+    "README.md": {
+      "bytes": 759,
+      "sha256": "1f02b908f4672cdb3bec0bbedeccb43c134f45e5741ef2f83286b312d78cc013"
+    },
+    "best.sha256": {
+      "bytes": 74,
+      "sha256": "d36356a9fabb1221ea79e9714b7094ee1ef27d51cc6fe9e9bc49732622b8b994"
+    },
+    "history.csv": {
+      "bytes": 2171,
+      "sha256": "4280812a4c7004eb17e6c60b0444820e8225c767f7df9af0c0a2f6b62f06ef36"
+    },
+    "training_history.png": {
+      "bytes": 125833,
+      "sha256": "d96cbd2e62ab80eae2bff969eb0c9d20f920619ec35f2b943588271c5e9b2fe8"
+    },
+    "validation_summary_public.json": {
+      "bytes": 5041,
+      "sha256": "4f698df62dad162c23b0cd6ab671ffe78109aac6e8f7add4a7231c26b7d3e115"
+    }
+  },
+  "locked_test_results_included": false,
+  "private_data_included": false
+}
