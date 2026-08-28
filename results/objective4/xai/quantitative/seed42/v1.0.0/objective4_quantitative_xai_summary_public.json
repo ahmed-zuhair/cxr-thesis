@@ -1,0 +1,305 @@
+{
+  "artifact": "Objective 4 quantitative explainable-AI aggregate result",
+  "bootstrap_samples": 5000,
+  "bootstrap_seed": 42,
+  "case_level_metrics_published": false,
+  "cases": 240,
+  "cases_per_disease_target": 20,
+  "classifier_sha256": "2b7fa0d2f3dee3c59c538be15dd0435c71ad26b411fc1312bd7e5fe99fbac55f",
+  "cohort_sha256": "daa7eeda7104f64dcd353f45604310748ca2ff84ea9ffa7cb4110e7c8daa0d2a",
+  "disease_targets": 12,
+  "explanation_methods": [
+    "grad_cam",
+    "integrated_gradients"
+  ],
+  "medical_images_published": false,
+  "method_agreement": {
+    "bootstrap_95_ci_high": 0.0725738104795664,
+    "bootstrap_95_ci_low": 0.011762806403658689,
+    "by_target_label": [
+      {
+        "count": 20,
+        "mean": 0.10889174150760508,
+        "median": 0.12195360560386245,
+        "std": 0.23506874567547206,
+        "target_label": "Atelectasis"
+      },
+      {
+        "count": 20,
+        "mean": 0.256300803738184,
+        "median": 0.2806049997456852,
+        "std": 0.18226345898910884,
+        "target_label": "Cardiomegaly"
+      },
+      {
+        "count": 20,
+        "mean": 0.032909436462330945,
+        "median": 0.044846019102456,
+        "std": 0.2313027808648528,
+        "target_label": "Consolidation"
+      },
+      {
+        "count": 20,
+        "mean": 0.00538489088283671,
+        "median": -0.0193976182033864,
+        "std": 0.21397638186843637,
+        "target_label": "Edema"
+      },
+      {
+        "count": 20,
+        "mean": 0.00591003425476358,
+        "median": 0.027413605184582003,
+        "std": 0.3487016524712113,
+        "target_label": "Effusion"
+      },
+      {
+        "count": 20,
+        "mean": 0.10448647436500336,
+        "median": 0.1256338948389959,
+        "std": 0.20159229704618822,
+        "target_label": "Emphysema"
+      },
+      {
+        "count": 20,
+        "mean": 0.024600612027496988,
+        "median": 0.05035597969691215,
+        "std": 0.13798049924706107,
+        "target_label": "Fibrosis"
+      },
+      {
+        "count": 20,
+        "mean": 0.00516582997407078,
+        "median": 0.04159934532317165,
+        "std": 0.18626874556247155,
+        "target_label": "Infiltration"
+      },
+      {
+        "count": 20,
+        "mean": -0.05867182602440905,
+        "median": -0.1223010452877768,
+        "std": 0.22760088438994733,
+        "target_label": "Mass"
+      },
+      {
+        "count": 20,
+        "mean": 0.18945227909129791,
+        "median": 0.15222105388129525,
+        "std": 0.15534774753583344,
+        "target_label": "Nodule"
+      },
+      {
+        "count": 20,
+        "mean": -0.1558312446578329,
+        "median": -0.1569131827851094,
+        "std": 0.1975584738374661,
+        "target_label": "Pleural_Thickening"
+      },
+      {
+        "count": 20,
+        "mean": -0.008663204195575322,
+        "median": -0.0290183399145741,
+        "std": 0.1754376864505457,
+        "target_label": "Pneumothorax"
+      }
+    ],
+    "cases": 240,
+    "mean": 0.04249465228548101,
+    "median": 0.04466983712456525
+  },
+  "method_rows": 480,
+  "metric_interpretation": {
+    "deletion_auc": "lower is better",
+    "faithfulness_gap": "insertion_auc minus deletion_auc; higher is better",
+    "insertion_auc": "higher is better",
+    "lung_roi_concentration": "fraction of nonnegative saliency inside predicted lung ROI",
+    "lung_roi_enrichment": "saliency concentration divided by lung ROI area fraction; above 1 indicates enrichment",
+    "method_agreement_spearman": "higher indicates greater spatial agreement",
+    "stability_spearman": "higher is better"
+  },
+  "model": "DenseNet-121",
+  "overall_method_metrics": [
+    {
+      "bootstrap_95_ci_high": 0.13413862567045726,
+      "bootstrap_95_ci_low": 0.1153027452388778,
+      "cases": 240,
+      "mean": 0.12442161788155012,
+      "median": 0.110845573246479,
+      "method": "grad_cam",
+      "metric": "deletion_auc",
+      "standard_deviation": 0.07501661932390785
+    },
+    {
+      "bootstrap_95_ci_high": 0.2932259692057657,
+      "bootstrap_95_ci_low": 0.24136458738784616,
+      "cases": 240,
+      "mean": 0.2668592492584139,
+      "median": 0.19700910896062845,
+      "method": "grad_cam",
+      "metric": "insertion_auc",
+      "standard_deviation": 0.20462747355425523
+    },
+    {
+      "bootstrap_95_ci_high": 0.16428392405592604,
+      "bootstrap_95_ci_low": 0.12140654811887847,
+      "cases": 240,
+      "mean": 0.14243763137686377,
+      "median": 0.08134840056300165,
+      "method": "grad_cam",
+      "metric": "faithfulness_gap",
+      "standard_deviation": 0.16677755620797238
+    },
+    {
+      "bootstrap_95_ci_high": 0.9598347394855319,
+      "bootstrap_95_ci_low": 0.9068839829070775,
+      "cases": 240,
+      "mean": 0.9353603514618061,
+      "median": 0.9943167139575559,
+      "method": "grad_cam",
+      "metric": "stability_spearman",
+      "standard_deviation": 0.20826392419258224
+    },
+    {
+      "bootstrap_95_ci_high": 0.27790116015116323,
+      "bootstrap_95_ci_low": 0.22811103248011477,
+      "cases": 240,
+      "mean": 0.252764893673383,
+      "median": 0.24941748380661005,
+      "method": "grad_cam",
+      "metric": "lung_roi_concentration",
+      "standard_deviation": 0.20229561107164484
+    },
+    {
+      "bootstrap_95_ci_high": 1.2286479637635424,
+      "bootstrap_95_ci_low": 1.0095556325912043,
+      "cases": 240,
+      "mean": 1.116927984648922,
+      "median": 1.1174367108817327,
+      "method": "grad_cam",
+      "metric": "lung_roi_enrichment",
+      "standard_deviation": 0.8709610730574742
+    },
+    {
+      "bootstrap_95_ci_high": 0.10447164512957288,
+      "bootstrap_95_ci_low": 0.08935091380650796,
+      "cases": 240,
+      "mean": 0.09689992856001478,
+      "median": 0.08218356966972346,
+      "method": "integrated_gradients",
+      "metric": "deletion_auc",
+      "standard_deviation": 0.06024496399931143
+    },
+    {
+      "bootstrap_95_ci_high": 0.12618626040309508,
+      "bootstrap_95_ci_low": 0.1081823317929714,
+      "cases": 240,
+      "mean": 0.11679977204184978,
+      "median": 0.0983789227902889,
+      "method": "integrated_gradients",
+      "metric": "insertion_auc",
+      "standard_deviation": 0.07057001458727778
+    },
+    {
+      "bootstrap_95_ci_high": 0.02644752480885168,
+      "bootstrap_95_ci_low": 0.013747188414466411,
+      "cases": 240,
+      "mean": 0.01989984348183498,
+      "median": 0.014892470091581348,
+      "method": "integrated_gradients",
+      "metric": "faithfulness_gap",
+      "standard_deviation": 0.0497914211160332
+    },
+    {
+      "bootstrap_95_ci_high": 0.9648680705171455,
+      "bootstrap_95_ci_low": 0.9632851959194118,
+      "cases": 240,
+      "mean": 0.9640845066467132,
+      "median": 0.9646853246495224,
+      "method": "integrated_gradients",
+      "metric": "stability_spearman",
+      "standard_deviation": 0.006349553965457552
+    },
+    {
+      "bootstrap_95_ci_high": 0.2069933626016912,
+      "bootstrap_95_ci_low": 0.1898304947124173,
+      "cases": 240,
+      "mean": 0.1981725936445097,
+      "median": 0.1896148547530174,
+      "method": "integrated_gradients",
+      "metric": "lung_roi_concentration",
+      "standard_deviation": 0.06572505660844018
+    },
+    {
+      "bootstrap_95_ci_high": 0.8897491297408233,
+      "bootstrap_95_ci_low": 0.8319360853728612,
+      "cases": 240,
+      "mean": 0.8608849084583728,
+      "median": 0.8389866989064125,
+      "method": "integrated_gradients",
+      "metric": "lung_roi_enrichment",
+      "standard_deviation": 0.23285108789334022
+    }
+  ],
+  "paired_method_differences": [
+    {
+      "bootstrap_95_ci_high": 0.036246370842660934,
+      "bootstrap_95_ci_low": 0.019274787954054774,
+      "difference_definition": "grad_cam_minus_integrated_gradients",
+      "mean_difference": 0.027521689321535335,
+      "metric": "deletion_auc",
+      "paired_cases": 240
+    },
+    {
+      "bootstrap_95_ci_high": 0.17367358729088056,
+      "bootstrap_95_ci_low": 0.1281287465506466,
+      "difference_definition": "grad_cam_minus_integrated_gradients",
+      "mean_difference": 0.15005947721656412,
+      "metric": "insertion_auc",
+      "paired_cases": 240
+    },
+    {
+      "bootstrap_95_ci_high": 0.1435424439938894,
+      "bootstrap_95_ci_low": 0.10254035386470302,
+      "difference_definition": "grad_cam_minus_integrated_gradients",
+      "mean_difference": 0.1225377878950288,
+      "metric": "faithfulness_gap",
+      "paired_cases": 240
+    },
+    {
+      "bootstrap_95_ci_high": -0.00407258987624524,
+      "bootstrap_95_ci_low": -0.05735477838636724,
+      "difference_definition": "grad_cam_minus_integrated_gradients",
+      "mean_difference": -0.02872415518490706,
+      "metric": "stability_spearman",
+      "paired_cases": 240
+    },
+    {
+      "bootstrap_95_ci_high": 0.07940550090605047,
+      "bootstrap_95_ci_low": 0.02975967435358531,
+      "difference_definition": "grad_cam_minus_integrated_gradients",
+      "mean_difference": 0.05459230002887328,
+      "metric": "lung_roi_concentration",
+      "paired_cases": 240
+    },
+    {
+      "bootstrap_95_ci_high": 0.36684825661858717,
+      "bootstrap_95_ci_low": 0.1513020786195967,
+      "difference_definition": "grad_cam_minus_integrated_gradients",
+      "mean_difference": 0.2560430761905491,
+      "metric": "lung_roi_enrichment",
+      "paired_cases": 240
+    }
+  ],
+  "patient_image_identifiers_published": false,
+  "predicted_masks_published": false,
+  "privacy_scan_passed": true,
+  "saliency_maps_generated": 480,
+  "saliency_maps_published": false,
+  "segmentation_sha256": "6ee1b4d351fdcfaaeec5e0487198128a5540d6dfe69a79a3158318aa22d9984c",
+  "test_evaluated": false,
+  "test_labels_accessed": false,
+  "test_manifest_opened": false,
+  "total_private_computation_seconds": 380.0105652110002,
+  "unique_patients": 240,
+  "verified_private_shards": 20,
+  "version": "v1.0.0"
+}

@@ -1,0 +1,42 @@
+{
+  "artifact": "Objective 4 public aggregate inventory",
+  "files": [
+    {
+      "filename": "objective4_quantitative_xai_summary_public.json",
+      "sha256": "147a71a14f0f9c36ab691dc655a5bad3ae0330fd8532c4bb2421e08809a7dfb9",
+      "size_bytes": 9798
+    },
+    {
+      "filename": "objective4_quantitative_xai_summary_public.sha256",
+      "sha256": "5092134a8bd34fb985a465a506d905b1f13751ecf6adba8f34c506903c5468a6",
+      "size_bytes": 114
+    },
+    {
+      "filename": "objective4_xai_disease_faithfulness.png",
+      "sha256": "b836a47cf8f9f6ff67343c3e5c48cb4cb3d62028b68b9b9749d25d313a88ceca",
+      "size_bytes": 173294
+    },
+    {
+      "filename": "objective4_xai_label_metrics_public.csv",
+      "sha256": "168052c1648c0f03fe896c78f4e7d166cfb3d6575ff2cbc4fcdd4496531d165e",
+      "size_bytes": 10135
+    },
+    {
+      "filename": "objective4_xai_method_comparison.png",
+      "sha256": "4dcbbbc6fb7f8e90fc57b286cf45f7181a6e45b62ce40e0dcc4b956564e22719",
+      "size_bytes": 164664
+    },
+    {
+      "filename": "objective4_xai_overall_metrics_public.csv",
+      "sha256": "6cb9137f75aa8570a1fc0fd40f55b4a59e1cf18e717a468e822f7a576102f173",
+      "size_bytes": 1703
+    },
+    {
+      "filename": "objective4_xai_paired_method_differences_public.csv",
+      "sha256": "e9235f7ccd0a65fcc107eb4a1de9dbc3a178c86e915887cc1ee2464c3ba7845c",
+      "size_bytes": 806
+    }
+  ],
+  "privacy_scan_passed": true,
+  "private_files_included": false
+}
