@@ -1,0 +1,154 @@
+{
+  "adaptation_training": {
+    "augmentation": {
+      "brightness_range": [
+        0.9,
+        1.1
+      ],
+      "contrast_range": [
+        0.9,
+        1.1
+      ],
+      "horizontal_flip": false,
+      "maximum_rotation_degrees": 5,
+      "maximum_translation_fraction": 0.03
+    },
+    "batch_size": 16,
+    "early_stopping_patience": 3,
+    "effective_batch_size": 32,
+    "gradient_accumulation_steps": 2,
+    "image_size": 320,
+    "independent_model_per_dataset": true,
+    "initialization": "confirmed NIH DenseNet-121 checkpoint",
+    "locked_test_access_during_training": false,
+    "loss": "class-balanced binary cross entropy",
+    "maximum_total_epochs": 12,
+    "mixed_precision": true,
+    "output_head": "new six-label linear classification head",
+    "phase_1": {
+      "description": "classification-head warm-up",
+      "encoder_frozen": true,
+      "epochs": 2,
+      "learning_rate": 0.0003
+    },
+    "phase_2": {
+      "description": "fine-tune DenseNet denseblock4, norm5 and classification head",
+      "encoder_learning_rate": 1e-05,
+      "head_learning_rate": 0.0001,
+      "maximum_epochs": 10
+    },
+    "positive_weight_rule": "sqrt(negative_count / positive_count), calculated only from the adaptation cohort and capped at 10",
+    "selection_metric": "target-validation macro AUROC",
+    "weight_decay": 0.0001
+  },
+  "artifact": "Objective 5 external-domain adaptation protocol",
+  "candidate_advancement_rule": {
+    "applied_separately_to_each_dataset": true,
+    "minimum_absolute_improvement_over_zero_shot": 0.005,
+    "primary_metric": "validation macro AUROC",
+    "rule": "Advance the adapted candidate only when its target-validation macro AUROC is at least 0.005 greater than the frozen zero-shot reference. Otherwise retain the frozen zero-shot model.",
+    "test_results_used_for_selection": false,
+    "tie_break": "retain frozen zero-shot model"
+  },
+  "datasets": [
+    "CheXpert-v1.0-small",
+    "PadChest"
+  ],
+  "final_evaluation": {
+    "confidence_intervals": "patient-level bootstrap 95% confidence intervals",
+    "locked_test_evaluations_per_dataset": 1,
+    "low_prevalence_warning": "Pneumothorax has six positives in each locked test and will be interpreted with wide confidence intervals.",
+    "model_selection_on_locked_test": false,
+    "models_evaluated": "exactly one frozen selected candidate per external dataset",
+    "primary_metric": "macro AUROC",
+    "secondary_metrics": [
+      "macro AUPRC",
+      "macro F1",
+      "macro Brier score",
+      "macro ECE"
+    ],
+    "temperature_tuning_on_locked_test": false,
+    "threshold_tuning_on_locked_test": false
+  },
+  "lock_date_utc": "2026-08-28",
+  "objective": "Assess whether conservative target-domain fine-tuning improves six-label thoracic disease classification relative to the frozen NIH-trained DenseNet-121 zero-shot baseline.",
+  "post_selection_calibration": {
+    "discrimination_model_changed": false,
+    "fitted_on": "target-validation predictions",
+    "frozen_before_locked_test": true,
+    "method": "single scalar temperature per dataset",
+    "thresholds_fitted_on": "target-validation predictions"
+  },
+  "privacy": {
+    "case_level_predictions_published": false,
+    "image_identifiers_published": false,
+    "medical_images_published": false,
+    "patient_identifiers_published": false,
+    "private_manifests_published": false
+  },
+  "protected_input_hashes": {
+    "chexpert_adaptation_manifest_sha256": "4e47671e575eea6a162ed64a581b9edb05fbb5c9234d5689bb8d5bddf5dc5e6a",
+    "chexpert_locked_test_manifest_sha256": "795d538a5bfc501049ffba7611dfb2757741866c41ccbb1586f5d035a77da665",
+    "chexpert_validation_manifest_sha256": "cae4dd0a101257b6d49b58d6401d1b94d1d5914dcc71a7629fbe3d853b0e99dd",
+    "cohort_protocol_sha256": "22917a4886087eea5dce3aa3990b957fb7d407b25a724c47b9b678131ce39db6",
+    "cohort_summary_sha256": "3ac882feadca819ff9543a73b7871fafad7fbaabe318cfcc4ad6765f58f28bcf",
+    "padchest_adaptation_manifest_sha256": "8405fdbe0d35c269b4d829c21d8c767a6c910bee6fa6ecb62a4c0d01d772f316",
+    "padchest_locked_test_manifest_sha256": "8b07c7cae5671af072ae3e39fdd5380e6e9741521e214a7ad93d9bd22a2151c6",
+    "padchest_validation_manifest_sha256": "a7958fead60706378d2e731c40fb5df812aebb4a8fd2c6820fc6a040ce12daae",
+    "zero_shot_per_label_sha256": "782cfa04941eb4fe8937a8b262c8a31476cca60bdbc2497b85ce4bbcc6638a06",
+    "zero_shot_summary_sha256": "6adeb75f9d952e7eb504cc69751ddf053ee0a7d8ded01be5f949e010586e9c5d"
+  },
+  "seed": 42,
+  "shared_labels": [
+    "Atelectasis",
+    "Cardiomegaly",
+    "Consolidation",
+    "Edema",
+    "Effusion",
+    "Pneumothorax"
+  ],
+  "source_model": {
+    "architecture": "DenseNet-121",
+    "checkpoint_sha256": "2b7fa0d2f3dee3c59c538be15dd0435c71ad26b411fc1312bd7e5fe99fbac55f",
+    "input_size": 320,
+    "source_output_labels": 12,
+    "source_training_dataset": "NIH-ChestXray14",
+    "target_output_labels": 6
+  },
+  "status": "locked before adaptation training",
+  "version": "1.0.0",
+  "zero_shot_validation_reference": {
+    "chexpert": {
+      "cases": 5000,
+      "macro_auprc": 0.36006740143513555,
+      "macro_auroc": 0.7438386410545034,
+      "macro_brier": 0.12994236635167092,
+      "macro_ece": 0.11051420269345387,
+      "macro_f1": 0.40481867987188075,
+      "thresholds": [
+        0.3,
+        0.15,
+        0.3,
+        0.05,
+        0.4,
+        0.45
+      ]
+    },
+    "padchest": {
+      "cases": 5000,
+      "macro_auprc": 0.26966557727616736,
+      "macro_auroc": 0.8737348139716848,
+      "macro_brier": 0.0359353710558148,
+      "macro_ece": 0.07743964349914846,
+      "macro_f1": 0.3106428135090044,
+      "thresholds": [
+        0.4,
+        0.35,
+        0.35,
+        0.35,
+        0.6,
+        0.6
+      ]
+    }
+  }
+}
