@@ -1,0 +1,98 @@
+{
+  "adaptation_training_performed": false,
+  "artifact": "Objective 5 harmonised external cohort aggregate summary",
+  "cohorts": {
+    "chexpert": {
+      "adaptation_positive_counts": {
+        "Atelectasis": 8996,
+        "Cardiomegaly": 3023,
+        "Consolidation": 1481,
+        "Edema": 6917,
+        "Effusion": 7899,
+        "Pneumothorax": 1630
+      },
+      "adaptation_train_cases": 30000,
+      "locked_test_cases": 200,
+      "locked_test_positive_counts": {
+        "Atelectasis": 75,
+        "Cardiomegaly": 66,
+        "Consolidation": 32,
+        "Edema": 42,
+        "Effusion": 64,
+        "Pneumothorax": 6
+      },
+      "patient_overlap": {
+        "0_vs_1": 0,
+        "0_vs_2": 0,
+        "1_vs_2": 0
+      },
+      "target_validation_cases": 5000,
+      "validation_positive_counts": {
+        "Atelectasis": 1456,
+        "Cardiomegaly": 524,
+        "Consolidation": 244,
+        "Edema": 1148,
+        "Effusion": 1289,
+        "Pneumothorax": 284
+      }
+    },
+    "padchest": {
+      "adaptation_positive_counts": {
+        "Atelectasis": 1219,
+        "Cardiomegaly": 2559,
+        "Consolidation": 322,
+        "Edema": 169,
+        "Effusion": 989,
+        "Pneumothorax": 52
+      },
+      "adaptation_train_cases": 30000,
+      "locked_test_cases": 5000,
+      "locked_test_positive_counts": {
+        "Atelectasis": 188,
+        "Cardiomegaly": 422,
+        "Consolidation": 56,
+        "Edema": 36,
+        "Effusion": 158,
+        "Pneumothorax": 6
+      },
+      "patient_overlap": {
+        "0_vs_1": 0,
+        "0_vs_2": 0,
+        "1_vs_2": 0
+      },
+      "target_validation_cases": 5000,
+      "validation_positive_counts": {
+        "Atelectasis": 198,
+        "Cardiomegaly": 435,
+        "Consolidation": 52,
+        "Edema": 38,
+        "Effusion": 162,
+        "Pneumothorax": 12
+      }
+    }
+  },
+  "eligibility_correction": {
+    "eligibility_correction_used_labels": false,
+    "eligibility_correction_used_predictions": false,
+    "locked_protocol_modified": false,
+    "padchest_explicit_pediatric_rows_excluded": 250,
+    "padchest_missing_representative_images_excluded": 4
+  },
+  "locked_test_evaluated": false,
+  "medical_images_copied": false,
+  "model_inference_performed": false,
+  "private_manifests_published_publicly": false,
+  "protocol_sha256": "22917a4886087eea5dce3aa3990b957fb7d407b25a724c47b9b678131ce39db6",
+  "selection_used_labels": false,
+  "selection_used_predictions": false,
+  "selection_used_risk_scores": false,
+  "shared_labels": [
+    "Atelectasis",
+    "Cardiomegaly",
+    "Consolidation",
+    "Edema",
+    "Effusion",
+    "Pneumothorax"
+  ],
+  "version": "v1.0.1"
+}

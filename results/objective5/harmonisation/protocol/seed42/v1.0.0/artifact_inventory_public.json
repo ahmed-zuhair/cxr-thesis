@@ -1,0 +1,21 @@
+{
+  "adaptation_training_performed": false,
+  "artifact": "Objective 5 public external-domain protocol package",
+  "case_level_predictions_included": false,
+  "files": {
+    "README.md": "f2fd2f4d398c3243c8a58b250f5373d53e0174427880cb9d3bdbf1fd9577e2ee",
+    "objective5_external_cohort_summary_public.json": "3ac882feadca819ff9543a73b7871fafad7fbaabe318cfcc4ad6765f58f28bcf",
+    "objective5_external_cohort_summary_public.json.sha256": "afa11d241ef32b859d1fc419d56eec1b0795f231141440629e43db4128190510",
+    "objective5_external_domain_protocol_public.json": "22917a4886087eea5dce3aa3990b957fb7d407b25a724c47b9b678131ce39db6",
+    "objective5_external_domain_protocol_public.json.sha256": "1328701cce88b9a7a5bb18e4c96cef05e80c743c3778bcbdc9078bd2b83ac849"
+  },
+  "image_identifiers_included": false,
+  "locked_test_evaluated": false,
+  "medical_images_included": false,
+  "model_inference_performed": false,
+  "patient_identifiers_included": false,
+  "private_manifests_included": false,
+  "protocol_sha256": "22917a4886087eea5dce3aa3990b957fb7d407b25a724c47b9b678131ce39db6",
+  "summary_sha256": "3ac882feadca819ff9543a73b7871fafad7fbaabe318cfcc4ad6765f58f28bcf",
+  "version": "v1.0.0"
+}

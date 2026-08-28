@@ -1,0 +1,130 @@
+{
+  "artifact": "Objective 5 external-domain protocol",
+  "case_level_identifiers_publication_allowed": false,
+  "chexpert": {
+    "adaptation_train_cases": 30000,
+    "column_mapping": {
+      "Atelectasis": "Atelectasis",
+      "Cardiomegaly": "Cardiomegaly",
+      "Consolidation": "Consolidation",
+      "Edema": "Edema",
+      "Effusion": "Pleural Effusion",
+      "Pneumothorax": "Pneumothorax"
+    },
+    "frontal_only": true,
+    "locked_test_cases": 200,
+    "locked_test_source": "official validation set, one frontal image per patient",
+    "missing_label_policy": "map to negative",
+    "one_image_per_patient": true,
+    "target_validation_cases": 5000,
+    "uncertainty_policy": {
+      "map_to_negative": [
+        "Cardiomegaly",
+        "Consolidation",
+        "Effusion",
+        "Pneumothorax"
+      ],
+      "map_to_positive": [
+        "Atelectasis",
+        "Edema"
+      ]
+    }
+  },
+  "confidence_intervals": "patient-level bootstrap 95% confidence intervals",
+  "experimental_comparison": [
+    "frozen NIH DenseNet-121 zero-shot baseline",
+    "harmonised preprocessing baseline",
+    "target-domain adapted DenseNet-121"
+  ],
+  "external_datasets": [
+    "CheXpert-v1.0-small",
+    "PadChest-small"
+  ],
+  "known_limitation": "CheXpert official validation has only eight Pneumothorax-positive rows before one-per-patient selection; its label-level interval may be wide.",
+  "locked_test_policy": "exactly one final evaluation after all adaptation decisions are frozen",
+  "medical_images_publication_allowed": false,
+  "model_selection": "target validation cohorts only",
+  "padchest": {
+    "absence_of_mapped_label_policy": "map to negative",
+    "adaptation_train_cases": 30000,
+    "allowed_projections": [
+      "PA",
+      "AP",
+      "AP_horizontal"
+    ],
+    "excluded_ambiguous_mapping": {
+      "Consolidation": [
+        "alveolar pattern"
+      ],
+      "Effusion": [
+        "pericardial effusion"
+      ]
+    },
+    "explicit_pediatric_cases_excluded": true,
+    "locked_test_cases": 5000,
+    "one_image_per_patient": true,
+    "positive_label_mapping": {
+      "Atelectasis": [
+        "atelectasis",
+        "atelectasis basal",
+        "laminar atelectasis",
+        "lobar atelectasis",
+        "round atelectasis",
+        "segmental atelectasis",
+        "total atelectasis"
+      ],
+      "Cardiomegaly": [
+        "cardiomegaly"
+      ],
+      "Consolidation": [
+        "consolidation"
+      ],
+      "Edema": [
+        "pulmonary edema"
+      ],
+      "Effusion": [
+        "loculated fissural effusion",
+        "loculated pleural effusion",
+        "pleural effusion"
+      ],
+      "Pneumothorax": [
+        "hydropneumothorax",
+        "pneumothorax"
+      ]
+    },
+    "target_validation_cases": 5000
+  },
+  "padchest_seed": 1042,
+  "primary_metrics": [
+    "macro AUROC",
+    "macro AUPRC",
+    "macro F1"
+  ],
+  "private_manifests_publication_allowed": false,
+  "secondary_metrics": [
+    "per-label AUROC",
+    "per-label AUPRC",
+    "calibration error",
+    "Brier score"
+  ],
+  "seed": 42,
+  "selection": {
+    "label_blind_patient_sampling": true,
+    "patient_disjoint": true,
+    "prediction_blind": true,
+    "risk_score_blind": true,
+    "view_preference": "PA before AP before AP_horizontal"
+  },
+  "shared_labels": [
+    "Atelectasis",
+    "Cardiomegaly",
+    "Consolidation",
+    "Edema",
+    "Effusion",
+    "Pneumothorax"
+  ],
+  "source_dataset": "NIH ChestX-ray14",
+  "status": "locked before cohort selection, model inference, adaptation, and test evaluation",
+  "test_evaluated": false,
+  "version": "v1.0.0"
+}
