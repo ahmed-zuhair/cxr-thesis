@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence
 
 import cv2
 import numpy as np
@@ -68,6 +68,7 @@ class ImageClassificationDataset(Dataset):
         epoch_varying_augmentation: bool = False,
         output_channels: int = 1,
         normalisation: str = "unit",
+        horizontal_flip_probability: float = 0.5,
     ) -> None:
         if image_size <= 0:
             raise ValueError("image_size must be positive")
@@ -80,8 +81,16 @@ class ImageClassificationDataset(Dataset):
         self.image_size = int(image_size)
         self.augment = bool(augment)
         self.seed = int(seed)
-        if augmentation_profile not in {"baseline", "cxr_mild"}:
-            raise ValueError("augmentation_profile must be baseline or cxr_mild")
+        if augmentation_profile not in {
+            "baseline",
+            "cxr_mild",
+            "objective5_locked",
+        }:
+            raise ValueError(
+                "augmentation_profile must be baseline, cxr_mild, or objective5_locked"
+            )
+        if not 0.0 <= horizontal_flip_probability <= 1.0:
+            raise ValueError("horizontal_flip_probability must be in [0, 1]")
         if output_channels not in {1, 3}:
             raise ValueError("output_channels must be one or three")
         if normalisation not in {"unit", "imagenet"}:
@@ -92,6 +101,7 @@ class ImageClassificationDataset(Dataset):
         self.epoch_varying_augmentation = bool(epoch_varying_augmentation)
         self.output_channels = int(output_channels)
         self.normalisation = normalisation
+        self.horizontal_flip_probability = float(horizontal_flip_probability)
         self.epoch = 0
 
     def set_epoch(self, epoch: int) -> None:
@@ -112,12 +122,13 @@ class ImageClassificationDataset(Dataset):
     def _augment(self, image: np.ndarray, index: int) -> np.ndarray:
         rng = self._rng(index)
         result = np.asarray(image, dtype=np.float32)
-        if rng.random() < 0.5:
+        if rng.random() < self.horizontal_flip_probability:
             result = np.fliplr(result).copy()
-        if self.augmentation_profile == "cxr_mild":
+        if self.augmentation_profile in {"cxr_mild", "objective5_locked"}:
             height, width = result.shape
-            angle = float(rng.uniform(-7.0, 7.0))
-            scale = float(rng.uniform(0.95, 1.05))
+            locked = self.augmentation_profile == "objective5_locked"
+            angle = float(rng.uniform(-5.0, 5.0) if locked else rng.uniform(-7.0, 7.0))
+            scale = 1.0 if locked else float(rng.uniform(0.95, 1.05))
             matrix = cv2.getRotationMatrix2D(
                 ((width - 1) / 2.0, (height - 1) / 2.0), angle, scale
             )
@@ -131,15 +142,22 @@ class ImageClassificationDataset(Dataset):
                 borderMode=cv2.BORDER_CONSTANT,
                 borderValue=0.0,
             )
-            gamma = float(rng.uniform(0.90, 1.10))
-            result = np.power(np.clip(result, 0.0, 1.0), gamma)
-            noise_sigma = float(rng.uniform(0.0, 0.015))
-            if noise_sigma > 0.0:
-                result = result + rng.normal(0.0, noise_sigma, result.shape)
-            contrast = float(rng.uniform(0.85, 1.15))
+            if locked:
+                brightness_factor = float(rng.uniform(0.90, 1.10))
+                result = np.clip(result * brightness_factor, 0.0, 1.0)
+                contrast = float(rng.uniform(0.90, 1.10))
+                brightness = 0.0
+            else:
+                gamma = float(rng.uniform(0.90, 1.10))
+                result = np.power(np.clip(result, 0.0, 1.0), gamma)
+                noise_sigma = float(rng.uniform(0.0, 0.015))
+                if noise_sigma > 0.0:
+                    result = result + rng.normal(0.0, noise_sigma, result.shape)
+                contrast = float(rng.uniform(0.85, 1.15))
+                brightness = float(rng.uniform(-0.05, 0.05))
         else:
             contrast = float(rng.uniform(0.90, 1.10))
-        brightness = float(rng.uniform(-0.05, 0.05))
+            brightness = float(rng.uniform(-0.05, 0.05))
         return np.clip((result - 0.5) * contrast + 0.5 + brightness, 0.0, 1.0).astype(
             np.float32
         )
@@ -184,7 +202,7 @@ class GraphBatch:
     clinical: torch.Tensor
     labels: torch.Tensor
 
-    def to(self, device: torch.device | str) -> "GraphBatch":
+    def to(self, device: torch.device | str) -> GraphBatch:
         return GraphBatch(
             x=self.x.to(device),
             edge_index=self.edge_index.to(device),
