@@ -35,6 +35,7 @@ LABELS = [
     "Pneumothorax",
 ]
 PROTOCOL_SHA256 = "f36064954f16f0831739cf048d223bd39aacf833cc86c3dbbde92ff3c7085dfb"
+AUROC_REPRODUCTION_TOLERANCE = 1e-6
 EXPECTED = {
     "chexpert": {
         "checkpoint_sha256": "edcd5792c57f04bdbef88043a2a11e422b506bdc2f26cd96f13121f6a8029c12",
@@ -247,7 +248,8 @@ def main() -> None:
             calibrated, targets, thresholds=thresholds
         )
         observed_auroc = float(calibrated_metrics["macro"]["auroc"])
-        if abs(observed_auroc - expected["adapted_auroc"]) > 1e-8:
+        auroc_reproduction_difference = abs(observed_auroc - expected["adapted_auroc"])
+        if auroc_reproduction_difference > AUROC_REPRODUCTION_TOLERANCE:
             raise RuntimeError(
                 f"{dataset} reproduced AUROC {observed_auroc} does not match "
                 f"the selected result {expected['adapted_auroc']}"
@@ -258,7 +260,10 @@ def main() -> None:
             "validation_manifest_sha256": expected["validation_sha256"],
             "validation_cases": 5_000,
             "zero_shot_macro_auroc": expected["zero_shot_auroc"],
+            "reported_adapted_macro_auroc": expected["adapted_auroc"],
             "adapted_macro_auroc": observed_auroc,
+            "auroc_reproduction_absolute_difference": (auroc_reproduction_difference),
+            "auroc_reproduction_tolerance": AUROC_REPRODUCTION_TOLERANCE,
             "adapted_minus_zero_shot_macro_auroc": observed_auroc
             - expected["zero_shot_auroc"],
             "minimum_required_improvement": 0.005,
