@@ -261,7 +261,15 @@ def main() -> None:
     run_git(["config", "user.email", "ahmed-zuhair@users.noreply.github.com"])
     result_prefix = str(args.result_path).replace("\\", "/").rstrip("/")
     status = run_git(["status", "--porcelain"])
-    unexpected = [line for line in status.splitlines() if result_prefix not in line]
+    unexpected = []
+    for line in status.splitlines():
+        changed_path = line[3:].strip().split(" -> ")[-1].rstrip("/")
+        inside_result = changed_path == result_prefix or changed_path.startswith(
+            f"{result_prefix}/"
+        )
+        summarized_parent = result_prefix.startswith(f"{changed_path}/")
+        if not inside_result and not summarized_parent:
+            unexpected.append(line)
     if unexpected:
         raise RuntimeError(f"Unexpected Git changes: {unexpected}")
     if status:
