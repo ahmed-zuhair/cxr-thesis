@@ -16,6 +16,9 @@ from cxr_thesis.objective5.adaptation import (
     set_adaptation_phase,
 )
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+from lock_objective5_selected_candidates import fit_temperature
+
 
 class Objective5AdaptationTests(unittest.TestCase):
     def test_shared_output_rows_are_copied_exactly(self) -> None:
@@ -107,6 +110,28 @@ class Objective5AdaptationTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("--source-checkpoint", result.stdout)
+
+    def test_temperature_scaling_reduces_nll(self) -> None:
+        logits = np.asarray([[8.0], [-8.0], [4.0], [-4.0]], dtype=np.float64)
+        targets = np.asarray([[1.0], [0.0], [0.0], [1.0]], dtype=np.float64)
+        temperature, before, after = fit_temperature(logits, targets)
+        self.assertGreater(temperature, 1.0)
+        self.assertLessEqual(after, before)
+
+    def test_selection_lock_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "scripts" / "lock_objective5_selected_candidates.py"),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--chexpert-checkpoint", result.stdout)
 
 
 if __name__ == "__main__":
