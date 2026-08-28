@@ -133,6 +133,21 @@ class Objective5AdaptationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("--chexpert-checkpoint", result.stdout)
 
+    def test_selection_publication_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "scripts" / "publish_objective5_selection_lock.py"),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--expected-summary-sha256", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
