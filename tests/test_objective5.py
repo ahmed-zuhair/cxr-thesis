@@ -184,6 +184,25 @@ class Objective5AdaptationTests(unittest.TestCase):
         self.assertEqual(result["replicates"], 10)
         self.assertEqual(set(result["macro_95_ci"]), {"auroc", "auprc", "f1", "brier", "ece"})
 
+    def test_locked_test_publication_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(
+                    repository
+                    / "scripts"
+                    / "publish_objective5_locked_test_results.py"
+                ),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--expected-lock-sha256", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
