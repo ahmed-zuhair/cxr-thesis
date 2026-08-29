@@ -1,0 +1,27 @@
+{
+  "artifact": "Final immutable Objective 5 locked-test evaluation lock",
+  "checkpoint_sha256": {
+    "chexpert": "edcd5792c57f04bdbef88043a2a11e422b506bdc2f26cd96f13121f6a8029c12",
+    "padchest": "109db89a723c6e2f24442cb5866bfcf4084e85083936cda91bce3b8ae4365d9d"
+  },
+  "completed_datasets": [
+    "chexpert",
+    "padchest"
+  ],
+  "figure_sha256": "f7ac5eaf6e5866529aabc4d3686cede85d5112846bf6ceaed6b6a119720168fc",
+  "immutable": true,
+  "manifest_sha256": {
+    "chexpert": "795d538a5bfc501049ffba7611dfb2757741866c41ccbb1586f5d035a77da665",
+    "padchest": "8b07c7cae5671af072ae3e39fdd5380e6e9741521e214a7ad93d9bd22a2151c6"
+  },
+  "protocol_sha256": "f36064954f16f0831739cf048d223bd39aacf833cc86c3dbbde92ff3c7085dfb",
+  "selection_lock_sha256": "1981344a8d1a0c40bd8b5245f3750738e88e6b6933292f4525937335511c470f",
+  "selection_summary_sha256": "aaedfd9f894c0842b87ada18653968f59ab7e1d6e932c0bd8e7a7826ef55196b",
+  "summary_sha256": "16f632ba769e47ee3e13a644077132773c3b08b1963f489c255d82b0dbade862",
+  "temperatures_reused_without_change": true,
+  "test_evaluated": true,
+  "test_evaluation_count_per_dataset": 1,
+  "test_used_for_model_selection": false,
+  "thresholds_reused_without_change": true,
+  "version": "1.0.0"
+}

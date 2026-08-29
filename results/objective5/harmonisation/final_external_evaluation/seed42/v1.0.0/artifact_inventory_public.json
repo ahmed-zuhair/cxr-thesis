@@ -1,0 +1,38 @@
+{
+  "artifact": "Objective 5 final public artifact inventory",
+  "case_level_predictions_included": false,
+  "checkpoints_included": false,
+  "figure_sha256": "f7ac5eaf6e5866529aabc4d3686cede85d5112846bf6ceaed6b6a119720168fc",
+  "files": {
+    "README.md": {
+      "bytes": 532,
+      "sha256": "446028fbc57901bc0a920d4857e7c615f22654c0432da0a74e0bcda442f466ed"
+    },
+    "locked_test_evaluation_lock_public.json": {
+      "bytes": 1230,
+      "sha256": "cb55fc9f4d2d6e4d6fb963f78a28d2b9e4a2ca390aeb408531ab8254396f4043"
+    },
+    "objective5_external_locked_test_metrics.png": {
+      "bytes": 85433,
+      "sha256": "f7ac5eaf6e5866529aabc4d3686cede85d5112846bf6ceaed6b6a119720168fc"
+    },
+    "objective5_external_locked_test_metrics.png.sha256": {
+      "bytes": 110,
+      "sha256": "27533d7eac2add54537e8c392c84a040acb8a79d57339fb0443700dbceec5ec9"
+    },
+    "objective5_external_locked_test_summary_public.json": {
+      "bytes": 15076,
+      "sha256": "16f632ba769e47ee3e13a644077132773c3b08b1963f489c255d82b0dbade862"
+    },
+    "objective5_external_locked_test_summary_public.json.sha256": {
+      "bytes": 118,
+      "sha256": "9893294ad2119d93d15b12e30ef516ba5d00bd7bce2fbe2984a05834fe70697b"
+    }
+  },
+  "final_lock_sha256": "cb55fc9f4d2d6e4d6fb963f78a28d2b9e4a2ca390aeb408531ab8254396f4043",
+  "image_identifiers_included": false,
+  "medical_images_included": false,
+  "patient_identifiers_included": false,
+  "private_manifests_included": false,
+  "summary_sha256": "16f632ba769e47ee3e13a644077132773c3b08b1963f489c255d82b0dbade862"
+}

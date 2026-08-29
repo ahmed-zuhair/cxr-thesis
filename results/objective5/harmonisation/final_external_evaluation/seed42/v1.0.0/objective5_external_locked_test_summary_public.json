@@ -1,0 +1,540 @@
+{
+  "adaptation_protocol_sha256": "f36064954f16f0831739cf048d223bd39aacf833cc86c3dbbde92ff3c7085dfb",
+  "artifact": "Objective 5 final external-domain locked-test evaluation",
+  "case_level_predictions_published": false,
+  "datasets": {
+    "chexpert": {
+      "bootstrap": {
+        "macro_95_ci": {
+          "auprc": [
+            0.5180063103891233,
+            0.623897939315949
+          ],
+          "auroc": [
+            0.7864528829567762,
+            0.8405687544142735
+          ],
+          "brier": [
+            0.11712578386068344,
+            0.14406767599284648
+          ],
+          "ece": [
+            0.1063328897590982,
+            0.13866005715956753
+          ],
+          "f1": [
+            0.4367911914833866,
+            0.5308221080444147
+          ]
+        },
+        "macro_valid_replicates": {
+          "auprc": 1000,
+          "auroc": 1000,
+          "brier": 1000,
+          "ece": 1000,
+          "f1": 1000
+        },
+        "method": "patient-cluster percentile bootstrap",
+        "per_label_95_ci": {
+          "Atelectasis": {
+            "auprc": [
+              0.4960653807571895,
+              0.7316659270026356
+            ],
+            "auroc": [
+              0.7157669955371643,
+              0.8363975386321909
+            ],
+            "f1": [
+              0.5714285714285714,
+              0.7330107496936615
+            ]
+          },
+          "Cardiomegaly": {
+            "auprc": [
+              0.5773524589105185,
+              0.7985114322191678
+            ],
+            "auroc": [
+              0.7299575048375827,
+              0.8665723483562852
+            ],
+            "f1": [
+              0.3333333333333333,
+              0.5872139063254467
+            ]
+          },
+          "Consolidation": {
+            "auprc": [
+              0.32722959170493826,
+              0.6601975169810763
+            ],
+            "auroc": [
+              0.8123719128550543,
+              0.918095710740872
+            ],
+            "f1": [
+              0.3018396226415095,
+              0.6250466417910447
+            ]
+          },
+          "Edema": {
+            "auprc": [
+              0.7053999715833857,
+              0.9080388411528766
+            ],
+            "auroc": [
+              0.8832965954101999,
+              0.9625058229813664
+            ],
+            "f1": [
+              0.529399611084103,
+              0.7285741971207087
+            ]
+          },
+          "Effusion": {
+            "auprc": [
+              0.659154287955919,
+              0.8562057775719495
+            ],
+            "auroc": [
+              0.8220278772951187,
+              0.9155832829813998
+            ],
+            "f1": [
+              0.6046292233435717,
+              0.788761983666706
+            ]
+          },
+          "Pneumothorax": {
+            "auprc": [
+              0.019273500516907693,
+              0.07997687760956394
+            ],
+            "auroc": [
+              0.5480821202231088,
+              0.7405800290774517
+            ],
+            "f1": [
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "per_label_valid_replicates": {
+          "Atelectasis": {
+            "auprc": 1000,
+            "auroc": 1000,
+            "f1": 1000
+          },
+          "Cardiomegaly": {
+            "auprc": 1000,
+            "auroc": 1000,
+            "f1": 1000
+          },
+          "Consolidation": {
+            "auprc": 1000,
+            "auroc": 1000,
+            "f1": 1000
+          },
+          "Edema": {
+            "auprc": 1000,
+            "auroc": 1000,
+            "f1": 1000
+          },
+          "Effusion": {
+            "auprc": 1000,
+            "auroc": 1000,
+            "f1": 1000
+          },
+          "Pneumothorax": {
+            "auprc": 998,
+            "auroc": 998,
+            "f1": 1000
+          }
+        },
+        "replicates": 1000,
+        "seed": 42
+      },
+      "checkpoint_sha256": "edcd5792c57f04bdbef88043a2a11e422b506bdc2f26cd96f13121f6a8029c12",
+      "frozen_temperature": 0.7923876039159978,
+      "frozen_thresholds": [
+        0.4,
+        0.45,
+        0.25,
+        0.35000000000000003,
+        0.55,
+        0.4
+      ],
+      "locked_test_manifest_sha256": "795d538a5bfc501049ffba7611dfb2757741866c41ccbb1586f5d035a77da665",
+      "low_prevalence_warning": "Pneumothorax has six positives; label-level estimates and intervals are unstable.",
+      "positive_counts": {
+        "Atelectasis": 75,
+        "Cardiomegaly": 66,
+        "Consolidation": 32,
+        "Edema": 42,
+        "Effusion": 64,
+        "Pneumothorax": 6
+      },
+      "selected_candidate": "adapted DenseNet-121",
+      "test_cases": 200,
+      "test_metrics": {
+        "macro": {
+          "auprc": 0.5679853987201314,
+          "auroc": 0.8149795272854705,
+          "brier": 0.13014821708202362,
+          "ece": 0.10677676062254858,
+          "f1": 0.48914290263679755,
+          "sensitivity": 0.5297867063492063,
+          "specificity": 0.8381345900745814
+        },
+        "micro_auprc": 0.6416539149471641,
+        "micro_auroc": 0.8398619499568594,
+        "per_label": [
+          {
+            "auprc": 0.6091558885055829,
+            "auroc": 0.7776,
+            "f1": 0.6557377049180327,
+            "label": "Atelectasis",
+            "positive_count": 75,
+            "sensitivity": 0.8,
+            "specificity": 0.616,
+            "threshold": 0.4
+          },
+          {
+            "auprc": 0.6951034028582077,
+            "auroc": 0.8018995929443691,
+            "f1": 0.46808510638297873,
+            "label": "Cardiomegaly",
+            "positive_count": 66,
+            "sensitivity": 0.3333333333333333,
+            "specificity": 0.9552238805970149,
+            "threshold": 0.45
+          },
+          {
+            "auprc": 0.4728449922786932,
+            "auroc": 0.8692336309523809,
+            "f1": 0.4745762711864407,
+            "label": "Consolidation",
+            "positive_count": 32,
+            "sensitivity": 0.4375,
+            "specificity": 0.9226190476190477,
+            "threshold": 0.25
+          },
+          {
+            "auprc": 0.8180600184163282,
+            "auroc": 0.926913803496082,
+            "f1": 0.6333333333333333,
+            "label": "Edema",
+            "positive_count": 42,
+            "sensitivity": 0.9047619047619048,
+            "specificity": 0.7468354430379747,
+            "threshold": 0.35000000000000003
+          },
+          {
+            "auprc": 0.7679926840078214,
+            "auroc": 0.8741957720588235,
+            "f1": 0.703125,
+            "label": "Effusion",
+            "positive_count": 64,
+            "sensitivity": 0.703125,
+            "specificity": 0.8602941176470589,
+            "threshold": 0.55
+          },
+          {
+            "auprc": 0.04475540625415469,
+            "auroc": 0.6400343642611683,
+            "f1": 0.0,
+            "label": "Pneumothorax",
+            "positive_count": 6,
+            "sensitivity": 0.0,
+            "specificity": 0.9278350515463918,
+            "threshold": 0.4
+          }
+        ]
+      },
+      "test_patients": 200
+    },
+    "padchest": {
+      "bootstrap": {
+        "macro_95_ci": {
+          "auprc": [
+            0.27238011112494076,
+            0.36326075038353106
+          ],
+          "auroc": [
+            0.8951025394162766,
+            0.9270881694282032
+          ],
+          "brier": [
+            0.0270134209189564,
+            0.030370247224345802
+          ],
+          "ece": [
+            0.030000862484118554,
+            0.03434579586678486
+          ],
+          "f1": [
+            0.30154839689891694,
+            0.37389701638705536
+          ]
+        },
+        "macro_valid_replicates": {
+          "auprc": 1000,
+          "auroc": 1000,
+          "brier": 1000,
+          "ece": 1000,
+          "f1": 1000
+        },
+        "method": "patient-cluster percentile bootstrap",
+        "per_label_95_ci": {
+          "Atelectasis": {
+            "auprc": [
+              0.11409363408789693,
+              0.19960275656303927
+            ],
+            "auroc": [
+              0.7576366247224279,
+              0.8204858196697388
+            ],
+            "f1": [
+              0.1821182712215321,
+              0.2773571397966179
+            ]
+          },
+          "Cardiomegaly": {
+            "auprc": [
+              0.5149975752842706,
+              0.6154302192523914
+            ],
+            "auroc": [
+              0.9146549233191622,
+              0.9357071304449441
+            ],
+            "f1": [
+              0.5128737876516029,
+              0.5910953485919207
+            ]
+          },
+          "Consolidation": {
+            "auprc": [
+              0.07577972109645388,
+              0.21347142226468974
+            ],
+            "auroc": [
+              0.8469908361527355,
+              0.9349428096349293
+            ],
+            "f1": [
+              0.11072600518392728,
+              0.22147251057285658
+            ]
+          },
+          "Edema": {
+            "auprc": [
+              0.15448019584402845,
+              0.41083738391234714
+            ],
+            "auroc": [
+              0.9600133661992094,
+              0.9872372282959142
+            ],
+            "f1": [
+              0.23759225922592261,
+              0.4647969210612512
+            ]
+          },
+          "Effusion": {
+            "auprc": [
+              0.5678144243646251,
+              0.7197282086871596
+            ],
+            "auroc": [
+              0.9610764931383816,
+              0.9810530685891407
+            ],
+            "f1": [
+              0.5694444444444444,
+              0.691318246397402
+            ]
+          },
+          "Pneumothorax": {
+            "auprc": [
+              0.00339196024265401,
+              0.3392668363609077
+            ],
+            "auroc": [
+              0.8445317482214,
+              0.9768340316656017
+            ],
+            "f1": [
+              0.0,
+              0.25
+            ]
+          }
+        },
+        "per_label_valid_replicates": {
+          "Atelectasis": {
+            "auprc": 1000,
+            "auroc": 1000,
+            "f1": 1000
+          },
+          "Cardiomegaly": {
+            "auprc": 1000,
+            "auroc": 1000,
+            "f1": 1000
+          },
+          "Consolidation": {
+            "auprc": 1000,
+            "auroc": 1000,
+            "f1": 1000
+          },
+          "Edema": {
+            "auprc": 1000,
+            "auroc": 1000,
+            "f1": 1000
+          },
+          "Effusion": {
+            "auprc": 1000,
+            "auroc": 1000,
+            "f1": 1000
+          },
+          "Pneumothorax": {
+            "auprc": 998,
+            "auroc": 998,
+            "f1": 1000
+          }
+        },
+        "replicates": 1000,
+        "seed": 1042
+      },
+      "checkpoint_sha256": "109db89a723c6e2f24442cb5866bfcf4084e85083936cda91bce3b8ae4365d9d",
+      "frozen_temperature": 0.7152522949700405,
+      "frozen_thresholds": [
+        0.45,
+        0.5,
+        0.25,
+        0.45,
+        0.8,
+        0.15000000000000002
+      ],
+      "locked_test_manifest_sha256": "8b07c7cae5671af072ae3e39fdd5380e6e9741521e214a7ad93d9bd22a2151c6",
+      "low_prevalence_warning": "Pneumothorax has six positives; label-level estimates and intervals are unstable.",
+      "positive_counts": {
+        "Atelectasis": 188,
+        "Cardiomegaly": 422,
+        "Consolidation": 56,
+        "Edema": 36,
+        "Effusion": 158,
+        "Pneumothorax": 6
+      },
+      "selected_candidate": "adapted DenseNet-121",
+      "test_cases": 5000,
+      "test_metrics": {
+        "macro": {
+          "auprc": 0.3027589099116654,
+          "auroc": 0.9131356066781783,
+          "brier": 0.028613435104489326,
+          "ece": 0.03187322948126433,
+          "f1": 0.3360419222855077,
+          "sensitivity": 0.4562541521120511,
+          "specificity": 0.9687708070918574
+        },
+        "micro_auprc": 0.44362792026691394,
+        "micro_auroc": 0.941651984435699,
+        "per_label": [
+          {
+            "auprc": 0.15223383796450038,
+            "auroc": 0.7904595780053413,
+            "f1": 0.22794117647058823,
+            "label": "Atelectasis",
+            "positive_count": 188,
+            "sensitivity": 0.32978723404255317,
+            "specificity": 0.9389027431421446,
+            "threshold": 0.45
+          },
+          {
+            "auprc": 0.5641656083161948,
+            "auroc": 0.9251716948355933,
+            "f1": 0.5518716577540107,
+            "label": "Cardiomegaly",
+            "positive_count": 422,
+            "sensitivity": 0.6113744075829384,
+            "specificity": 0.9442988204456094,
+            "threshold": 0.5
+          },
+          {
+            "auprc": 0.12615110518963582,
+            "auroc": 0.8944391470180305,
+            "f1": 0.1643835616438356,
+            "label": "Consolidation",
+            "positive_count": 56,
+            "sensitivity": 0.42857142857142855,
+            "specificity": 0.9571197411003236,
+            "threshold": 0.25
+          },
+          {
+            "auprc": 0.2638472188785913,
+            "auroc": 0.9753670874742592,
+            "f1": 0.35714285714285715,
+            "label": "Edema",
+            "positive_count": 36,
+            "sensitivity": 0.5555555555555556,
+            "specificity": 0.9887187751813054,
+            "threshold": 0.45
+          },
+          {
+            "auprc": 0.6449183181201966,
+            "auroc": 0.9715699653349646,
+            "f1": 0.631578947368421,
+            "label": "Effusion",
+            "positive_count": 158,
+            "sensitivity": 0.6455696202531646,
+            "specificity": 0.9869888475836431,
+            "threshold": 0.8
+          },
+          {
+            "auprc": 0.0652373710008733,
+            "auroc": 0.9218061674008811,
+            "f1": 0.08333333333333333,
+            "label": "Pneumothorax",
+            "positive_count": 6,
+            "sensitivity": 0.16666666666666666,
+            "specificity": 0.9965959150981177,
+            "threshold": 0.15000000000000002
+          }
+        ]
+      },
+      "test_patients": 5000
+    }
+  },
+  "image_identifiers_published": false,
+  "labels": [
+    "Atelectasis",
+    "Cardiomegaly",
+    "Consolidation",
+    "Edema",
+    "Effusion",
+    "Pneumothorax"
+  ],
+  "medical_images_published": false,
+  "patient_identifiers_published": false,
+  "primary_metric": "macro AUROC",
+  "private_manifests_published": false,
+  "secondary_metrics": [
+    "macro AUPRC",
+    "macro F1",
+    "macro Brier score",
+    "macro ECE"
+  ],
+  "selection_lock_sha256": "1981344a8d1a0c40bd8b5245f3750738e88e6b6933292f4525937335511c470f",
+  "selection_summary_sha256": "aaedfd9f894c0842b87ada18653968f59ab7e1d6e932c0bd8e7a7826ef55196b",
+  "temperatures_reused_without_change": true,
+  "test_evaluated": true,
+  "test_evaluation_count_per_dataset": 1,
+  "test_temperature_tuning": false,
+  "test_threshold_tuning": false,
+  "test_used_for_model_selection": false,
+  "thresholds_reused_without_change": true,
+  "version": "1.0.0"
+}
