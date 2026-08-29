@@ -533,6 +533,9 @@ def main() -> None:
             if str(saved["case_order_sha256"].item()) != order_hashes[dataset]:
                 raise RuntimeError(f"Restored {dataset} case order changed")
             probabilities[dataset] = restored
+            if dataset not in state["completed_datasets"]:
+                state["completed_datasets"].append(dataset)
+                atomic_json(state, state_path)
             print(json.dumps({"event": "private_predictions_restored", "dataset": dataset}))
             continue
 
