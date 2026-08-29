@@ -17,6 +17,7 @@ from cxr_thesis.objective5.adaptation import (
 )
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+from evaluate_objective5_locked_tests import patient_bootstrap
 from lock_objective5_selected_candidates import fit_temperature
 
 
@@ -147,6 +148,41 @@ class Objective5AdaptationTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("--expected-summary-sha256", result.stdout)
+
+    def test_locked_test_evaluation_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "scripts" / "evaluate_objective5_locked_tests.py"),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--chexpert-test", result.stdout)
+        self.assertIn("--private-hf-path", result.stdout)
+
+    def test_objective5_bootstrap_is_patient_clustered(self) -> None:
+        rng = np.random.default_rng(42)
+        probabilities = rng.uniform(0.05, 0.95, size=(24, 6))
+        targets = np.asarray(
+            [[(row + label) % 3 == 0 for label in range(6)] for row in range(24)],
+            dtype=np.int8,
+        )
+        result = patient_bootstrap(
+            probabilities,
+            targets,
+            np.full(6, 0.5),
+            np.asarray([f"P{row:03d}" for row in range(24)]),
+            replicates=10,
+            seed=42,
+        )
+        self.assertEqual(result["method"], "patient-cluster percentile bootstrap")
+        self.assertEqual(result["replicates"], 10)
+        self.assertEqual(set(result["macro_95_ci"]), {"auroc", "auprc", "f1", "brier", "ece"})
 
 
 if __name__ == "__main__":
