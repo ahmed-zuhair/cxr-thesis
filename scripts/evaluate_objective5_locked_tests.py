@@ -321,13 +321,24 @@ def make_figure(summary: dict[str, object], path: Path) -> None:
 
 
 def upload_private(api, repo: str, remote_root: str, paths: list[Path], token: str) -> None:
-    from huggingface_hub import CommitOperationAdd
+    from huggingface_hub import CommitOperationAdd, hf_hub_download
 
     remote_files = set(api.list_repo_files(repo, repo_type="model", token=token))
     operations = []
     for path in paths:
         remote = f"{remote_root}/{path.name}"
         if remote in remote_files:
+            downloaded = Path(
+                hf_hub_download(
+                    repo,
+                    filename=remote,
+                    repo_type="model",
+                    token=token,
+                    force_download=True,
+                )
+            )
+            if sha256_file(downloaded) != sha256_file(path):
+                raise RuntimeError(f"Existing private recovery artifact differs: {remote}")
             continue
         operations.append(CommitOperationAdd(path_in_repo=remote, path_or_fileobj=str(path)))
     if operations:
@@ -383,7 +394,44 @@ def main() -> None:
 
     final_lock_path = args.output_dir / FINAL_LOCK_NAME
     if final_lock_path.is_file():
-        raise RuntimeError("Objective 5 locked-test evaluation is already finalized locally")
+        public_root = args.output_dir / "public"
+        summary_path = public_root / SUMMARY_NAME
+        summary_checksum = public_root / f"{SUMMARY_NAME}.sha256"
+        figure_path = public_root / FIGURE_NAME
+        figure_checksum = public_root / f"{FIGURE_NAME}.sha256"
+        for path in (
+            summary_path,
+            summary_checksum,
+            figure_path,
+            figure_checksum,
+        ):
+            if not path.is_file():
+                raise RuntimeError("Local finalized Objective 5 output is incomplete")
+        local_lock = json.loads(final_lock_path.read_text(encoding="utf-8"))
+        local_checks = {
+            "evaluated": local_lock.get("test_evaluated") is True,
+            "count": local_lock.get("test_evaluation_count_per_dataset") == 1,
+            "datasets": local_lock.get("completed_datasets") == list(DATASETS),
+            "summary": local_lock.get("summary_sha256") == sha256_file(summary_path),
+            "figure": local_lock.get("figure_sha256") == sha256_file(figure_path),
+        }
+        if not all(local_checks.values()):
+            raise RuntimeError(f"Local finalized Objective 5 lock is invalid: {local_checks}")
+        upload_private(
+            api,
+            args.private_hf_repo,
+            remote_root,
+            [
+                summary_path,
+                summary_checksum,
+                figure_path,
+                figure_checksum,
+                final_lock_path,
+            ],
+            token,
+        )
+        print("OBJECTIVE 5 LOCAL FINAL EVALUATION BACKED UP WITHOUT RE-EVALUATION")
+        return
     if args.output_dir.exists() and not args.resume:
         raise FileExistsError("Output exists; use --resume only after interruption")
     if args.resume and not args.output_dir.is_dir():
