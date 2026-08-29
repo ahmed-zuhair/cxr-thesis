@@ -36,6 +36,14 @@ def column(frame: pd.DataFrame, *names: str) -> str:
     raise ValueError(f"None of the required columns exist: {names}")
 
 
+def optional_column(frame: pd.DataFrame, *names: str) -> str | None:
+    lookup = {str(name).casefold(): str(name) for name in frame.columns}
+    for name in names:
+        if name.casefold() in lookup:
+            return lookup[name.casefold()]
+    return None
+
+
 def canonical_identifier(value: object) -> str:
     text = str(value).strip()
     if text == "" or text.casefold() in {"nan", "none", "null"}:
@@ -134,36 +142,61 @@ def main() -> None:
     report_column = column(metadata, "Report")
     patient_column = column(metadata, "PatientID")
     projection_column = column(metadata, "Projection")
-    age_column = column(metadata, "PatientAge", "Age")
+    age_column = optional_column(metadata, "PatientAge", "Age")
+    birth_column = optional_column(metadata, "PatientBirth", "BirthYear")
+    study_date_column = optional_column(metadata, "StudyDate_DICOM", "StudyDate")
+    if age_column is None and (birth_column is None or study_date_column is None):
+        raise ValueError(
+            "Age cannot be derived: expected an age column or both "
+            "PatientBirth and StudyDate_DICOM"
+        )
     pediatric_column = column(metadata, "Pediatric")
 
-    frame = metadata[
-        [
-            image_column,
-            study_column,
-            report_id_column,
-            report_column,
-            patient_column,
-            projection_column,
-            age_column,
-            pediatric_column,
-        ]
-    ].copy()
-    frame.columns = [
-        "image_id",
-        "study_id",
-        "report_id",
-        "report",
-        "patient_id",
-        "projection",
-        "age",
-        "pediatric",
+    selected_columns = [
+        image_column,
+        study_column,
+        report_id_column,
+        report_column,
+        patient_column,
+        projection_column,
+        pediatric_column,
     ]
+    if age_column is not None:
+        selected_columns.append(age_column)
+    else:
+        assert birth_column is not None and study_date_column is not None
+        selected_columns.extend([birth_column, study_date_column])
+    frame = metadata[selected_columns].copy()
+    rename = {
+        image_column: "image_id",
+        study_column: "study_id",
+        report_id_column: "report_id",
+        report_column: "report",
+        patient_column: "patient_id",
+        projection_column: "projection",
+        pediatric_column: "pediatric",
+    }
+    if age_column is not None:
+        rename[age_column] = "age"
+    else:
+        assert birth_column is not None and study_date_column is not None
+        rename[birth_column] = "birth_year"
+        rename[study_date_column] = "study_date"
+    frame = frame.rename(columns=rename)
     total_rows = int(len(frame))
     frame["report_normalised"] = frame["report"].map(normalise_report)
     nonempty = frame["report_normalised"].str.len().gt(0)
     frontal = frame["projection"].astype(str).isin(FRONTAL_PROJECTIONS)
-    age = pd.to_numeric(frame["age"], errors="coerce")
+    if "age" in frame:
+        age = pd.to_numeric(frame["age"], errors="coerce")
+        age_source = "provided age column"
+    else:
+        birth_year = pd.to_numeric(frame["birth_year"], errors="coerce")
+        study_date = pd.to_numeric(frame["study_date"], errors="coerce")
+        study_year = np.floor(study_date / 10000.0)
+        age = study_year - birth_year
+        age_source = "StudyDate_DICOM year minus PatientBirth year"
+    age = age.where(age.between(0, 120))
     pediatric = frame["pediatric"].astype(str).str.strip().str.casefold()
     explicit_pediatric = pediatric.isin({"yes", "true", "1", "si", "sí", "y"})
     adult = age.ge(18) & ~explicit_pediatric
@@ -207,6 +240,8 @@ def main() -> None:
         "source_rows": total_rows,
         "nonempty_report_rows": int(nonempty.sum()),
         "frontal_rows": int(frontal.sum()),
+        "age_source": age_source,
+        "rows_with_valid_age": int(age.notna().sum()),
         "adult_nonempty_frontal_rows_before_path_check": int(
             (nonempty & frontal & adult).sum()
         ),
