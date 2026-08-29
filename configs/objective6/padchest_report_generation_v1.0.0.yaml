@@ -1,0 +1,54 @@
+seed: 42
+task: Spanish clinical report generation
+dataset: PadChest-small
+protocol_version: v1.0.0
+privacy:
+  raw_reports_public: false
+  identifiers_public: false
+  case_level_predictions_public: false
+eligibility:
+  projections: [PA, AP, AP_horizontal]
+  adult_only: true
+  nonempty_report: true
+  image_must_exist: true
+  one_image_per_study_report: true
+  exclude_all_objective5_padchest_patients: true
+selection:
+  unit: patient
+  deterministic_seed: 42
+  label_blind: true
+  report_content_blind_after_eligibility: true
+  prediction_blind: true
+  patient_disjoint: true
+model:
+  image_encoder: Objective 5 PadChest-adapted DenseNet-121
+  image_encoder_checkpoint_sha256: 109db89a723c6e2f24442cb5866bfcf4084e85083936cda91bce3b8ae4365d9d
+  decoder: Transformer
+  d_model: 256
+  heads: 8
+  layers: 4
+  feedforward_dimension: 1024
+  dropout: 0.1
+  maximum_report_tokens: 160
+  clinical_inputs: [age, sex, projection]
+  ground_truth_disease_labels_as_decoder_input: false
+text:
+  language: Spanish
+  vocabulary_fit: training reports only
+  maximum_vocabulary_size: 12000
+  minimum_token_frequency: 2
+baselines:
+  - nearest-training-image retrieval
+  - image-only DenseNet-Transformer
+  - image-plus-clinical DenseNet-Transformer
+metrics:
+  lexical: [BLEU-1, BLEU-2, BLEU-3, BLEU-4, ROUGE-L, METEOR, CIDEr]
+  clinical: [concept precision, concept recall, concept F1, negation error rate]
+  safety: [empty-report rate, repetition rate, training-report exact-match rate]
+inference:
+  validation_selection_only: true
+  locked_test_evaluations: 1
+  patient_cluster_bootstrap_replicates: 1000
+recovery:
+  epoch_boundary_checkpoint: true
+  private_hugging_face_only: true

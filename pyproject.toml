@@ -27,6 +27,7 @@ medical = [
 graph = ["torch-geometric>=2.5"]
 quantum = ["pennylane==0.45.1"]
 annotation = ["napari[all]>=0.8", "imageio>=2.37", "tifffile>=2025.1"]
+report = ["nltk>=3.9", "rouge-score>=0.1.2", "sacrebleu>=2.5"]
 dev = ["pytest>=8.0", "ruff>=0.5"]
 
 [tool.setuptools.packages.find]
