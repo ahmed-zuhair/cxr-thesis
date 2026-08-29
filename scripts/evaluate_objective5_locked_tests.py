@@ -449,8 +449,11 @@ def main() -> None:
         frame = pd.read_csv(path, dtype={"patient_id": str, "image_id": str})
         if len(frame) != expected["cases"] or frame["patient_id"].nunique() != expected["patients"]:
             raise RuntimeError(f"{dataset} locked-test size does not match")
-        if frame["patient_id"].duplicated().any() or frame["image_id"].duplicated().any():
+        if frame["patient_id"].duplicated().any():
             raise RuntimeError(f"{dataset} locked test is not one image per patient")
+        identity_column = "image_path" if "image_path" in frame.columns else "image_id"
+        if frame[identity_column].isna().any() or frame[identity_column].astype(str).duplicated().any():
+            raise RuntimeError(f"{dataset} locked-test image paths are not unique")
         if "role" in frame.columns:
             roles = set(frame["role"].astype(str).str.lower())
             if not roles <= {"locked_test", "test"}:
@@ -463,7 +466,11 @@ def main() -> None:
             raise RuntimeError(f"{dataset} locked-test labels are not binary")
         frames[dataset] = frame
         targets[dataset] = values
-        order_hashes[dataset] = sha256_text("\n".join(frame["image_id"].astype(str)))
+        # CheXpert basenames such as view1_frontal.jpg may repeat across patient
+        # directories, so the private full path is the stable case-order identity.
+        order_hashes[dataset] = sha256_text(
+            "\n".join(frame[identity_column].astype(str))
+        )
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     private_root = args.output_dir / "private"
