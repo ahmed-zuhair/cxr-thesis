@@ -8,7 +8,12 @@ from pathlib import Path
 import torch
 
 from cxr_thesis.objective6.models import DenseNetTransformerReportGenerator
+from cxr_thesis.objective6.cohorts import (
+    derive_padchest_age,
+    patient_partition,
+)
 from cxr_thesis.objective6.text import ReportVocabulary, normalise_report, tokenise_report
+import pandas as pd
 
 
 class Objective6TextTests(unittest.TestCase):
@@ -69,6 +74,32 @@ class Objective6CliTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("--objective5-private-root", result.stdout)
+
+    def test_protocol_lock_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [sys.executable, str(repository / "scripts" / "lock_objective6_report_protocol.py"), "--help"],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--audit-summary", result.stdout)
+
+
+class Objective6CohortTests(unittest.TestCase):
+    def test_patient_partition_is_deterministic_and_patient_level(self) -> None:
+        self.assertEqual(patient_partition("PadChest-001"), patient_partition("001"))
+        self.assertIn(patient_partition("90210"), {"train", "val", "test"})
+
+    def test_age_is_derived_from_study_year_and_birth_year(self) -> None:
+        age = derive_padchest_age(
+            pd.Series([20140915, 20150101, 20190101]),
+            pd.Series([1930, 2010, 1800]),
+        )
+        self.assertEqual(float(age.iloc[0]), 84.0)
+        self.assertEqual(float(age.iloc[1]), 5.0)
+        self.assertTrue(pd.isna(age.iloc[2]))
 
 
 if __name__ == "__main__":
