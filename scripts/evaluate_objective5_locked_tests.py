@@ -328,6 +328,17 @@ def upload_private(api, repo: str, remote_root: str, paths: list[Path], token: s
     for path in paths:
         remote = f"{remote_root}/{path.name}"
         if remote in remote_files:
+            # The resumable state record is deliberately mutable: it advances
+            # after each completed dataset. Immutable predictions, summaries,
+            # checksums and final locks must always match byte-for-byte.
+            if path.name == "objective5_locked_test_state_private.json":
+                operations.append(
+                    CommitOperationAdd(
+                        path_in_repo=remote,
+                        path_or_fileobj=str(path),
+                    )
+                )
+                continue
             downloaded = Path(
                 hf_hub_download(
                     repo,
