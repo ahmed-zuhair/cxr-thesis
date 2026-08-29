@@ -1,0 +1,32 @@
+{
+  "artifact": "Objective 5 pre-test selection public inventory",
+  "case_level_predictions_included": false,
+  "files": {
+    "FINAL_OBJECTIVE5_SELECTION_LOCK.json": {
+      "bytes": 458,
+      "sha256": "1981344a8d1a0c40bd8b5245f3750738e88e6b6933292f4525937335511c470f"
+    },
+    "FINAL_OBJECTIVE5_SELECTION_LOCK.json.sha256": {
+      "bytes": 103,
+      "sha256": "c44e6cdff1d4757b99ba1c2c5a0d8215927bd5a310f3b854085620e573dae9be"
+    },
+    "README.md": {
+      "bytes": 404,
+      "sha256": "97c4ccf5dfb9bbabb9fa31721e6794ad663ba6d47f8b7039f3ce364dbde0341c"
+    },
+    "objective5_selection_calibration_public.json": {
+      "bytes": 11415,
+      "sha256": "aaedfd9f894c0842b87ada18653968f59ab7e1d6e932c0bd8e7a7826ef55196b"
+    },
+    "objective5_selection_calibration_public.json.sha256": {
+      "bytes": 111,
+      "sha256": "302b6358d956ce739eab81c9818d6027c6bff45da6525aa70926f924a8c52806"
+    }
+  },
+  "final_lock_sha256": "1981344a8d1a0c40bd8b5245f3750738e88e6b6933292f4525937335511c470f",
+  "image_identifiers_included": false,
+  "medical_images_included": false,
+  "patient_identifiers_included": false,
+  "private_manifests_included": false,
+  "summary_sha256": "aaedfd9f894c0842b87ada18653968f59ab7e1d6e932c0bd8e7a7826ef55196b"
+}

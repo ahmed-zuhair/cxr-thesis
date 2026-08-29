@@ -1,0 +1,12 @@
+{
+  "artifact": "Final Objective 5 pre-test selection lock",
+  "external_test_evaluation_count": 0,
+  "immutable": true,
+  "selected_candidates": {
+    "chexpert": "edcd5792c57f04bdbef88043a2a11e422b506bdc2f26cd96f13121f6a8029c12",
+    "padchest": "109db89a723c6e2f24442cb5866bfcf4084e85083936cda91bce3b8ae4365d9d"
+  },
+  "summary_sha256": "aaedfd9f894c0842b87ada18653968f59ab7e1d6e932c0bd8e7a7826ef55196b",
+  "test_evaluated": false,
+  "version": "1.0.0"
+}
