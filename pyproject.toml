@@ -35,6 +35,11 @@ report = [
   "sacrebleu>=2.5",
   "scikit-learn>=1.4",
 ]
+translation = [
+  "huggingface-hub>=0.28",
+  "sentencepiece>=0.2",
+  "transformers>=4.48,<6",
+]
 dev = ["pytest>=8.0", "ruff>=0.5"]
 
 [tool.setuptools.packages.find]

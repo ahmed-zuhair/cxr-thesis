@@ -41,6 +41,15 @@ from cxr_thesis.objective6.text import (
     tokenise_report,
 )
 from cxr_thesis.objective6.v2 import patient_hash, select_development_patients
+from cxr_thesis.objective6.translation import (
+    concept_polarity_counts,
+    english_concept_polarity,
+    normalise_translation_text,
+    normalized_numbers,
+    numbers_preserved,
+    private_report_sha256,
+    spanish_concept_polarity,
+)
 from scripts.extract_objective6_retrieval_embedding_shard import (
     MANIFESTS as RETRIEVAL_WORKER_MANIFESTS,
 )
@@ -51,6 +60,21 @@ from scripts.train_objective6_with_private_recovery import snapshot
 
 
 class Objective6TextTests(unittest.TestCase):
+    def test_english_v2_translation_integrity_utilities(self) -> None:
+        source = "  Sin derrame pleural. Nódulo de 12,0 mm.  "
+        target = "No pleural effusion. A 12.0 mm nodule."
+        self.assertEqual(
+            normalise_translation_text(source),
+            "Sin derrame pleural. Nódulo de 12,0 mm.",
+        )
+        self.assertEqual(len(private_report_sha256(source)), 64)
+        self.assertEqual(normalized_numbers(source), ("12",))
+        self.assertTrue(numbers_preserved(source, target))
+        self.assertFalse(numbers_preserved(source, "No pleural effusion."))
+        self.assertEqual(spanish_concept_polarity(source)["Effusion"], 0)
+        self.assertEqual(english_concept_polarity(target)["Effusion"], 0)
+        self.assertEqual(concept_polarity_counts(source, target), (1, 1))
+
     def test_spanish_normalisation_and_tokenisation(self) -> None:
         self.assertEqual(normalise_report("  Sin   hallazgos ÁGUDOS. "), "sin hallazgos águdos.")
         self.assertEqual(
@@ -159,6 +183,22 @@ class Objective6ModelTests(unittest.TestCase):
 
 
 class Objective6CliTests(unittest.TestCase):
+    def test_english_v2_translation_clis_import(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        for script in (
+            "translate_objective6_english_v2_shard.py",
+            "translate_objective6_english_v2_with_recovery.py",
+        ):
+            with self.subTest(script=script):
+                result = subprocess.run(
+                    [sys.executable, str(repository / "scripts" / script), "--help"],
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                )
+                self.assertEqual(result.returncode, 0, msg=result.stderr)
+                self.assertIn("--train-manifest", result.stdout)
+
     def test_english_v2_protocol_publication_cli_imports(self) -> None:
         repository = Path(__file__).resolve().parents[1]
         result = subprocess.run(
