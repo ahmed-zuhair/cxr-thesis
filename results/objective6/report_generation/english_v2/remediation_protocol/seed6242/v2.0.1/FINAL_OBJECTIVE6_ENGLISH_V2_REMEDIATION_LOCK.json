@@ -1,0 +1,20 @@
+{
+  "aggregate_diagnostic_sha256": "708d3c3a1cbf25ac90153108d5ec639d4b543e8613067bfd8a5596bc26944b9a",
+  "artifact": "Final Objective 6 English v2 factual-remediation lock",
+  "base_v2_protocol_sha256": "a09241aff9cb998c68023c6399b6bbb33b66b96fd61475a9f0949a42f6143f62",
+  "candidate_count": 2,
+  "candidate_generation_started": false,
+  "development_evaluation_count": 0,
+  "enhancement_training_started": false,
+  "failed_translation_summary_sha256": "4336e2348f2b735909b78ac1af55235c0440f568b21de75cc062ed0f0b30cd75",
+  "immutable": true,
+  "locked_test_evaluated": false,
+  "locked_test_manifest_opened": false,
+  "locked_test_reports_accessed": false,
+  "original_validation_opened": false,
+  "protocol_sha256": "af4ed664c9fe56883105a2da78c4fcd9b98010bd323d8716fb0309e4aad21e21",
+  "remediation_attempts_allowed": 1,
+  "remediation_attempts_completed": 0,
+  "translator_revision": "f8d333a098d19b4fd9a8b18f94170487ad3f821d",
+  "version": "v2.0.1"
+}

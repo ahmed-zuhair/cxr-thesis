@@ -1,0 +1,37 @@
+{
+  "artifact": "Objective 6 English v2 remediation public inventory",
+  "case_level_outputs_included": false,
+  "enhancement_candidate_count": 2,
+  "files": {
+    "FINAL_OBJECTIVE6_ENGLISH_V2_REMEDIATION_LOCK.json": {
+      "bytes": 954,
+      "sha256": "1e0791d0144f46362762ba28bf1c317d3f317ae9c2ba96ce53728d6297fbf9b1"
+    },
+    "FINAL_OBJECTIVE6_ENGLISH_V2_REMEDIATION_LOCK.json.sha256": {
+      "bytes": 116,
+      "sha256": "2d7123ab2bdf254d3ee63d8801d4384b774005a1f642c1d4dec2e25254d3bbe6"
+    },
+    "README.md": {
+      "bytes": 448,
+      "sha256": "5408a22664d670058c209fbdecc7cdbf71c6c8df7d9d99fcf8b5ceb1489864af"
+    },
+    "objective6_english_v2_remediation_protocol_public.json": {
+      "bytes": 4552,
+      "sha256": "af4ed664c9fe56883105a2da78c4fcd9b98010bd323d8716fb0309e4aad21e21"
+    },
+    "objective6_english_v2_remediation_protocol_public.json.sha256": {
+      "bytes": 121,
+      "sha256": "564efde96928de637c200a5845d315bc162ed02138ecfcd4e394b84171ffd375"
+    }
+  },
+  "final_lock_sha256": "1e0791d0144f46362762ba28bf1c317d3f317ae9c2ba96ce53728d6297fbf9b1",
+  "locked_test_results_included": false,
+  "medical_images_included": false,
+  "patient_or_image_identifiers_included": false,
+  "private_checkpoints_included": false,
+  "private_manifests_included": false,
+  "private_reports_included": false,
+  "protocol_sha256": "af4ed664c9fe56883105a2da78c4fcd9b98010bd323d8716fb0309e4aad21e21",
+  "remediation_attempts_allowed": 1,
+  "translated_reports_included": false
+}

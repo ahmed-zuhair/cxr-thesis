@@ -1,0 +1,90 @@
+{
+  "aggregate_failure_evidence": {
+    "English_marker_dominant_reports": 12739,
+    "Spanish_marker_dominant_reports": 2070,
+    "clause_aware_concept_lexical_coverage": 0.04041204437400951,
+    "clause_aware_concept_polarity_agreement": 0.039619651347068144,
+    "marker_tied_or_free_reports": 4175,
+    "nonempty_fraction": 1.0,
+    "number_or_measurement_loss_rate": 0.019287211740041887,
+    "unique_source_reports": 18984
+  },
+  "artifact": "Objective 6 English v2 factual-translation remediation protocol",
+  "decision_rule": {
+    "if_all_gates_pass": "publish only aggregate remediation quality, freeze the English references privately, then begin both original v2 candidates",
+    "if_any_gate_fails": "publish the negative remediation result and stop Objective 6 v2 without enhancement training or locked-test evaluation"
+  },
+  "enhancement_commitment": {
+    "both_candidates_will_be_developed_if_remediation_passes": true,
+    "candidate_1": "fact_aware_retrieve_edit_english",
+    "candidate_2": "fact_aware_retrieval_augmented_english_generator",
+    "translation_is_only_input_preparation": true
+  },
+  "locked_quality_gates": {
+    "all_conditions_required": true,
+    "maximum_Spanish_marker_dominant_fraction": 0.0,
+    "maximum_number_or_measurement_loss_rate": 0.01,
+    "minimum_PadChest6_concept_polarity_agreement": 0.95,
+    "minimum_nonempty_fraction": 0.995,
+    "minimum_source_hash_alignment_fraction": 1.0
+  },
+  "locked_remediation": {
+    "English_language_enforcement": "apply one additional frozen-NLLB pass to Spanish-marker-dominant translations, then reapply numeric and terminology preservation",
+    "canonical_clinical_terminology_controller": {
+      "operation": "for concepts explicitly stated in the Spanish source only, remove contradictory translated concept clauses and append one canonical English sentence with the same positive or negative polarity; structured labels never create reference statements",
+      "targets": [
+        "Atelectasis",
+        "Cardiomegaly",
+        "Consolidation",
+        "Edema",
+        "Effusion",
+        "Pneumothorax"
+      ]
+    },
+    "external_translation_API": false,
+    "manual_report_editing": false,
+    "normalisation": "Unicode NFC and whitespace normalization only",
+    "numeric_measurement_shield": "replace every source numeric token with an indexed sentinel before translation and restore the exact normalized numeric token afterward",
+    "source_language": "Spanish",
+    "source_structured_labels_used_to_invent_report_content": false,
+    "target_language": "English",
+    "translator": "facebook/nllb-200-distilled-600M",
+    "translator_revision": "f8d333a098d19b4fd9a8b18f94170487ad3f821d"
+  },
+  "privacy_and_safety": {
+    "candidate_generation_started": false,
+    "case_level_outputs_public": false,
+    "enhancement_training_started": false,
+    "locked_test_evaluated": false,
+    "locked_test_manifest_opened": false,
+    "locked_test_reports_accessed": false,
+    "medical_images_public": false,
+    "original_validation_opened": false,
+    "patient_or_image_identifiers_public": false,
+    "private_checkpoints_public": false,
+    "private_manifests_public": false,
+    "raw_English_reports_public": false,
+    "raw_Spanish_reports_public": false
+  },
+  "protected_predecessors": {
+    "aggregate_diagnostic_sha256": "708d3c3a1cbf25ac90153108d5ec639d4b543e8613067bfd8a5596bc26944b9a",
+    "base_v2_final_lock_sha256": "28b677450562e04542d4516b2c94cd8b4fa7f9f1161ffe7b992e845391c8d6f4",
+    "base_v2_protocol_sha256": "a09241aff9cb998c68023c6399b6bbb33b66b96fd61475a9f0949a42f6143f62",
+    "failed_translation_metrics_rewritten": false,
+    "failed_translation_result_retained": true,
+    "failed_translation_summary_sha256": "4336e2348f2b735909b78ac1af55235c0440f568b21de75cc062ed0f0b30cd75"
+  },
+  "repository_commit_before_remediation": "91368ccb0ba8b34acf7ff8ca997fe73307ffd7a1",
+  "scientific_scope": {
+    "candidate_architectures_changed": false,
+    "candidate_count_changed": false,
+    "candidate_selection_thresholds_changed": false,
+    "development_patients_changed": false,
+    "locked_test_used": false,
+    "original_validation_used": false,
+    "purpose": "repair reference-language fidelity before either preregistered enhancement candidate is fitted",
+    "remediation_attempts_allowed": 1
+  },
+  "status": "locked after the failed v2.0.0 translation-quality gate and before any report correction, enhancement training, candidate generation, development evaluation, or locked-test access",
+  "version": "v2.0.1"
+}
