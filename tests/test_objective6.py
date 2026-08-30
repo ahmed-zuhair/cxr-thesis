@@ -1,33 +1,49 @@
 from __future__ import annotations
 
-import unittest
-import subprocess
-import sys
-from pathlib import Path
 import hashlib
 import os
+import subprocess
+import sys
 import tempfile
+import unittest
+from pathlib import Path
 
-import torch
 import numpy as np
+import pandas as pd
+import torch
 from PIL import Image
 
-from cxr_thesis.objective6.models import DenseNetTransformerReportGenerator
-from cxr_thesis.objective6.data import collate_reports
+from cxr_thesis.objective2.models import build_classifier
 from cxr_thesis.objective6.cohorts import (
     derive_padchest_age,
     patient_partition,
 )
-from cxr_thesis.objective6.text import ReportVocabulary, normalise_report, tokenise_report
-import pandas as pd
-from cxr_thesis.objective2.models import build_classifier
-from scripts.train_objective6_with_private_recovery import snapshot
+from cxr_thesis.objective6.data import collate_reports
+from cxr_thesis.objective6.evaluation import (
+    bleu_statistics,
+    cider_d_score,
+    cider_document_frequency,
+    clinical_scores,
+    corpus_bleu,
+    exact_token_meteor,
+    explicit_contradictions,
+    parse_padchest6_labels,
+    repeated_ngram,
+    rouge_l_f1,
+)
+from cxr_thesis.objective6.models import DenseNetTransformerReportGenerator
+from cxr_thesis.objective6.text import (
+    ReportVocabulary,
+    normalise_report,
+    tokenise_report,
+)
 from scripts.extract_objective6_retrieval_embedding_shard import (
     MANIFESTS as RETRIEVAL_WORKER_MANIFESTS,
 )
 from scripts.extract_objective6_retrieval_embeddings_with_recovery import (
     MANIFESTS as RETRIEVAL_WRAPPER_MANIFESTS,
 )
+from scripts.train_objective6_with_private_recovery import snapshot
 
 
 class Objective6TextTests(unittest.TestCase):
@@ -46,6 +62,32 @@ class Objective6TextTests(unittest.TestCase):
         encoded = first.encode("sin derrame pleural .", maximum_length=10)
         self.assertEqual(first.decode(encoded), "sin derrame pleural.")
         self.assertEqual(ReportVocabulary.from_dict(first.to_dict()), first)
+
+    def test_locked_report_metrics_reward_an_exact_match(self) -> None:
+        reference = tokenise_report("Sin derrame pleural ni neumotórax.")
+        different = tokenise_report("Cardiomegalia.")
+        exact = bleu_statistics(reference, reference)
+        mismatch = bleu_statistics(reference, different)
+        self.assertAlmostEqual(corpus_bleu(np.stack([exact]), 4), 1.0)
+        self.assertGreater(corpus_bleu(np.stack([exact]), 4), corpus_bleu(np.stack([mismatch]), 4))
+        self.assertAlmostEqual(rouge_l_f1(reference, reference), 1.0)
+        self.assertGreater(exact_token_meteor(reference, reference), 0.99)
+        frequency = cider_document_frequency([reference, different])
+        self.assertGreater(
+            cider_d_score(reference, reference, frequency, 2),
+            cider_d_score(reference, different, frequency, 2),
+        )
+
+    def test_locked_clinical_metrics_and_safety(self) -> None:
+        labels = parse_padchest6_labels("Cardiomegaly|Pleural Effusion")
+        self.assertEqual(labels.tolist(), [0, 1, 0, 0, 1, 0])
+        score = clinical_scores(np.stack([labels]), np.stack([labels]))
+        self.assertEqual(score["micro_concept_f1"], 1.0)
+        contradictions, mentions = explicit_contradictions(
+            "Sin cardiomegalia. Derrame pleural.", labels
+        )
+        self.assertEqual((contradictions, mentions), (1, 2))
+        self.assertTrue(repeated_ngram(tokenise_report("a b c d a b c d")))
 
 
 class Objective6ModelTests(unittest.TestCase):
@@ -217,6 +259,19 @@ class Objective6CliTests(unittest.TestCase):
                 text=True, capture_output=True, check=False,
             )
             self.assertEqual(result.returncode, 0, msg=result.stderr)
+
+    def test_validation_comparison_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "scripts" / "evaluate_objective6_validation.py"),
+                "--help",
+            ],
+            text=True, capture_output=True, check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--retrieval-root", result.stdout)
 
     def test_training_cli_writes_resumable_test_blind_checkpoint(self) -> None:
         repository = Path(__file__).resolve().parents[1]
