@@ -43,11 +43,15 @@ from cxr_thesis.objective6.text import (
 from cxr_thesis.objective6.v2 import patient_hash, select_development_patients
 from cxr_thesis.objective6.translation import (
     concept_polarity_counts,
+    enforce_source_concept_polarity,
     english_concept_polarity,
+    language_marker_scores,
     normalise_translation_text,
     normalized_numbers,
     numbers_preserved,
     private_report_sha256,
+    restore_numeric_tokens,
+    shield_numeric_tokens,
     spanish_concept_polarity,
 )
 from scripts.extract_objective6_retrieval_embedding_shard import (
@@ -82,6 +86,23 @@ class Objective6TextTests(unittest.TestCase):
             english_concept_polarity("Normal heart. Pleural effusion.")["Effusion"],
             1,
         )
+        shielded, mapping = shield_numeric_tokens("Nódulo de 12,0 mm a 3 cm.")
+        self.assertNotIn("12,0", shielded)
+        self.assertNotIn("3 cm", shielded)
+        restored, missing = restore_numeric_tokens(
+            shielded.replace("ZXQNUMTOKEN", "z x q num token ").replace("QXZ", " q x z"),
+            mapping,
+        )
+        self.assertFalse(missing)
+        self.assertIn("12,0", restored)
+        self.assertIn("3 cm", restored)
+        corrected = enforce_source_concept_polarity(
+            "Sin derrame pleural.",
+            "There is pleural effusion. The lungs are clear.",
+        )
+        self.assertEqual(english_concept_polarity(corrected)["Effusion"], 0)
+        self.assertIn("The lungs are clear.", corrected)
+        self.assertGreater(language_marker_scores("The lungs are clear.")[0], 0)
 
     def test_spanish_normalisation_and_tokenisation(self) -> None:
         self.assertEqual(normalise_report("  Sin   hallazgos ÁGUDOS. "), "sin hallazgos águdos.")

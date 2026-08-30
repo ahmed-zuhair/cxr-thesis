@@ -64,6 +64,25 @@ _ENGLISH_POST_NEGATIONS = (
 
 _NUMBER = re.compile(r"(?<!\w)[+-]?\d+(?:[.,]\d+)?(?!\w)")
 
+_ENGLISH_MARKERS = re.compile(
+    r"\b(the|without|with|and|of|is|are|was|were|lung|heart|pleural)\b",
+    flags=re.IGNORECASE,
+)
+
+_SPANISH_MARKERS = re.compile(
+    r"\b(el|la|los|las|sin|con|y|de|se|pulmon|pulmonar|corazon)\b",
+    flags=re.IGNORECASE,
+)
+
+_CANONICAL_ENGLISH = {
+    "Atelectasis": "atelectasis",
+    "Cardiomegaly": "cardiomegaly",
+    "Consolidation": "consolidation",
+    "Edema": "pulmonary edema",
+    "Effusion": "pleural effusion",
+    "Pneumothorax": "pneumothorax",
+}
+
 
 def normalise_translation_text(value: object) -> str:
     """Normalize Unicode and whitespace without changing clinical content."""
@@ -182,3 +201,81 @@ def concept_polarity_counts(source: object, translation: object) -> tuple[int, i
     eligible = len(source_values)
     matches = sum(target_values.get(label) == value for label, value in source_values.items())
     return matches, eligible
+
+
+def language_marker_scores(value: object) -> tuple[int, int]:
+    """Return English and Spanish marker counts without inferring clinical content."""
+
+    text = _fold(value)
+    return len(_ENGLISH_MARKERS.findall(text)), len(_SPANISH_MARKERS.findall(text))
+
+
+def shield_numeric_tokens(value: object) -> tuple[str, dict[str, str]]:
+    """Replace source numeric tokens with deterministic translation sentinels."""
+
+    text = normalise_translation_text(value)
+    mapping: dict[str, str] = {}
+    parts: list[str] = []
+    cursor = 0
+    for index, match in enumerate(_NUMBER.finditer(text)):
+        sentinel = f"ZXQNUMTOKEN{index:03d}QXZ"
+        parts.extend((text[cursor : match.start()], sentinel))
+        mapping[sentinel] = match.group(0)
+        cursor = match.end()
+    parts.append(text[cursor:])
+    return "".join(parts), mapping
+
+
+def restore_numeric_tokens(
+    value: object, mapping: Mapping[str, str]
+) -> tuple[str, tuple[str, ...]]:
+    """Restore numeric sentinels, tolerating tokenizer-inserted spaces and case."""
+
+    text = normalise_translation_text(value)
+    missing: list[str] = []
+    for sentinel, number in mapping.items():
+        index = int(re.search(r"(\d{3})", sentinel).group(1))  # type: ignore[union-attr]
+        pattern = re.compile(
+            rf"z\s*x\s*q\s*num\s*token\s*0*{index}\s*q\s*x\s*z",
+            flags=re.IGNORECASE,
+        )
+        text, replacements = pattern.subn(number, text, count=1)
+        if replacements == 0:
+            missing.append(sentinel)
+    return normalise_translation_text(text), tuple(missing)
+
+
+def enforce_source_concept_polarity(source: object, translation: object) -> str:
+    """Ensure source-explicit concepts have one consistent English polarity."""
+
+    source_values = spanish_concept_polarity(source)
+    if not source_values:
+        return normalise_translation_text(translation)
+    sentences = [
+        sentence.strip()
+        for sentence in re.split(r"(?<=[.!?;])\s+", normalise_translation_text(translation))
+        if sentence.strip()
+    ]
+    retained: list[str] = []
+    represented: set[str] = set()
+    for sentence in sentences:
+        target_values = english_concept_polarity(sentence)
+        conflicts = {
+            label
+            for label, polarity in target_values.items()
+            if label in source_values and source_values[label] != polarity
+        }
+        if conflicts:
+            continue
+        represented.update(
+            label
+            for label, polarity in target_values.items()
+            if source_values.get(label) == polarity
+        )
+        retained.append(sentence)
+    for label, polarity in source_values.items():
+        if label in represented:
+            continue
+        term = _CANONICAL_ENGLISH[label]
+        retained.append(f"There is {term}." if polarity else f"There is no {term}.")
+    return normalise_translation_text(" ".join(retained))
