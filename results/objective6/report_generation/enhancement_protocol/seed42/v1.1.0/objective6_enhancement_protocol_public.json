@@ -1,0 +1,169 @@
+{
+  "advancement_rule": {
+    "additional_enhancement_rounds_allowed": false,
+    "all_conditions_required": true,
+    "if_failed": "publish the negative v1.1 result, perform no further Objective 6 architecture tuning, and exclude v1.1 from confirmatory test claims",
+    "if_passed": "freeze v1.1 as the prospectively advanced enhancement candidate; publish its validation result and lock one final test comparison",
+    "maximum_CIDEr_D_drop_from_v1_multimodal": 0.02,
+    "maximum_explicit_negation_contradiction_rate": 0.85,
+    "maximum_repeated_4gram_report_rate": 0.03,
+    "minimum_CIDEr_D": 0.7864452646530204,
+    "minimum_absolute_macro_f1_gain_over_v1_multimodal": 0.02,
+    "minimum_macro_concept_f1": 0.22707029780859556,
+    "minimum_unique_generated_report_fraction": 0.2
+  },
+  "artifact": "Objective 6 clinical-guided report-generation enhancement protocol",
+  "decoding": {
+    "beam_width": 3,
+    "length_normalization_alpha": 0.7,
+    "maximum_tokens_including_bos_eos": 160,
+    "method": "deterministic beam search",
+    "no_repeat_ngram_size": 4,
+    "sampling": false,
+    "validation_generation_repetitions": 1
+  },
+  "enhanced_architecture": {
+    "batch_normalization_mode": "evaluation statistics remain frozen",
+    "clinical_concept_head": {
+      "concept_token": "sigmoid concept probabilities projected to one decoder-memory token",
+      "concepts": [
+        "Atelectasis",
+        "Cardiomegaly",
+        "Consolidation",
+        "Edema",
+        "Effusion",
+        "Pneumothorax"
+      ],
+      "ground_truth_labels_supplied_during_generation": false,
+      "loss": "class-weighted binary cross-entropy with logits",
+      "positive_weights": "calculated from training cases only",
+      "targets": "training-manifest PadChest labels only"
+    },
+    "clinical_context": "age, sex, and projection view token",
+    "decoder": {
+      "attention_heads": 8,
+      "d_model": 256,
+      "dropout": 0.1,
+      "feedforward_dimension": 1024,
+      "layers": 4,
+      "maximum_tokens_including_bos_eos": 160,
+      "type": "autoregressive Transformer",
+      "vocabulary": "unchanged v1 training-only vocabulary"
+    },
+    "frozen_encoder_modules": "all DenseNet modules except denseblock4 and norm5",
+    "initialization": "published v1 multimodal checkpoint",
+    "name": "clinical_guided_multimodal_v1_1",
+    "trainable_encoder_modules": [
+      "denseblock4",
+      "norm5"
+    ],
+    "visual_encoder": "Objective 5 PadChest-adapted DenseNet-121",
+    "visual_tokens": "full final spatial feature map"
+  },
+  "motivation": {
+    "interpretation": "v1 produced limited clinical efficacy, very high explicit contradiction, and low report diversity; v1.1 is one transparent validation-developed enhancement round",
+    "training_only_labeler_validation_reference_macro_f1": 0.8417787544734954,
+    "v1_image_only_macro_concept_f1": 0.21871894547689585,
+    "v1_multimodal_CIDEr_D": 0.8064452646530204,
+    "v1_multimodal_explicit_negation_contradiction_rate": 0.9696969696969697,
+    "v1_multimodal_macro_concept_f1": 0.20707029780859554,
+    "v1_multimodal_unique_generated_report_fraction": 0.13280254777070064,
+    "v1_validation_lock_sha256": "a35f55328480be74f01ed8f0879796e82792b1b8946464c4a0976892727d031f",
+    "v1_validation_summary_sha256": "0bec4540a38993e23327cde334a6a73f97c0a10d4d7d736b6e9f82afa86bcc7a"
+  },
+  "optimization": {
+    "automatic_mixed_precision": true,
+    "batch_size": 8,
+    "checkpoint_selection": "minimum validation total joint loss",
+    "early_stopping_patience": 4,
+    "gradient_accumulation_steps": 2,
+    "gradient_norm_clip": 1.0,
+    "loss": {
+      "adjacent_token_repetition_penalty_weight": 0.02,
+      "clinical_binary_cross_entropy_weight": 0.35,
+      "report_cross_entropy_weight": 1.0,
+      "report_label_smoothing": 0.05
+    },
+    "maximum_epochs": 12,
+    "new_and_decoder_parameter_learning_rate": 0.0001,
+    "optimizer": "AdamW",
+    "private_epoch_recovery_required": true,
+    "scheduler": "ReduceLROnPlateau factor 0.5 patience 2",
+    "seed": 42,
+    "unfrozen_encoder_learning_rate": 2e-05,
+    "weight_decay": 0.0001
+  },
+  "privacy": {
+    "aggregate_protocol_and_results_public": true,
+    "case_level_metrics_public": false,
+    "generated_reports_public": false,
+    "medical_images_public": false,
+    "patient_or_image_identifiers_public": false,
+    "private_checkpoints_public": false,
+    "private_manifests_public": false,
+    "raw_reports_public": false
+  },
+  "protected_inputs": {
+    "frozen_training_only_clinical_labeler_sha256": "99d6126a3ded1feb749eaf29f3c47a73c0cb323773b44068d0ddf44e4337a731",
+    "locked_test_cases_accessed": 0,
+    "training_cases": 29283,
+    "training_manifest_sha256": "278addf3c0a216bb206b4e4b79364f26bacbee977f3209e9275e2abbd8fda7d7",
+    "v1_multimodal_checkpoint_sha256": "18aa4293195b77aaf04df1ba310431df83f75e51ee6aa5837ff43a48a8ec10d3",
+    "validation_cases": 6280,
+    "validation_manifest_sha256": "829573501a62a2269269486218889e908db586da98ec2c264402c345bac5f2d6"
+  },
+  "repository_commit_before_implementation": "afe0080f51c085082e617183e0fe77e3ec6dd1fb",
+  "safety_state": {
+    "locked_test_evaluated": false,
+    "locked_test_manifest_opened": false,
+    "locked_test_reports_accessed": false,
+    "v1_1_implementation_started": false,
+    "v1_1_training_started": false,
+    "v1_1_validation_generation_started": false
+  },
+  "scientific_status": {
+    "final_claim_requires_untouched_locked_test": true,
+    "v1_1_is_validation_developed": true,
+    "v1_primary_system_rewritten": false,
+    "v1_result_retained": true
+  },
+  "status": "locked after publication of v1 validation results and before v1.1 implementation, training, generation, or locked-test access",
+  "validation_evaluation": {
+    "comparators": [
+      "v1 image_only",
+      "v1 multimodal",
+      "v1.1 enhanced"
+    ],
+    "evaluation_count": 1,
+    "primary_metric": "PadChest-6 macro concept F1",
+    "required_metrics": [
+      "BLEU-1",
+      "BLEU-2",
+      "BLEU-3",
+      "BLEU-4",
+      "ROUGE-L",
+      "Spanish exact-token METEOR",
+      "CIDEr-D",
+      "micro concept precision",
+      "micro concept recall",
+      "micro concept F1",
+      "macro concept F1",
+      "explicit-negation contradiction rate",
+      "empty-report rate",
+      "report-with-repeated-4-gram rate",
+      "training-report exact-match rate",
+      "unique-generated-report fraction"
+    ],
+    "same_6280_case_validation_cohort": true,
+    "same_frozen_training_only_labeler": true,
+    "same_tokenization_and_metric_implementations": true,
+    "secondary_metric": "CIDEr-D",
+    "uncertainty": {
+      "confidence_level": 0.95,
+      "method": "paired patient-cluster percentile bootstrap",
+      "replicates": 1000,
+      "seed": 6142
+    }
+  },
+  "version": "v1.1.0"
+}

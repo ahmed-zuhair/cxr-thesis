@@ -1,0 +1,34 @@
+{
+  "artifact": "Objective 6 enhancement-protocol public inventory",
+  "case_level_outputs_included": false,
+  "files": {
+    "FINAL_OBJECTIVE6_ENHANCEMENT_PROTOCOL_LOCK.json": {
+      "bytes": 645,
+      "sha256": "b840440da16023c0169eb3f32c0f4ce7a20ecfa34f8f6b6bfa8ef20511aa53e6"
+    },
+    "FINAL_OBJECTIVE6_ENHANCEMENT_PROTOCOL_LOCK.json.sha256": {
+      "bytes": 114,
+      "sha256": "6833c59ac5fec1be6acda40c44c86ae3b036a26d036059e56e422a9b098a01f6"
+    },
+    "README.md": {
+      "bytes": 512,
+      "sha256": "de264b5923f75c45591b8da4abc682deb31c8cb568a7390b6ad68550d4eec454"
+    },
+    "objective6_enhancement_protocol_public.json": {
+      "bytes": 6793,
+      "sha256": "279e4fe83da6d82afcbcce595b5596980ca970fae958a16264d3b3e5172eb1a1"
+    },
+    "objective6_enhancement_protocol_public.json.sha256": {
+      "bytes": 110,
+      "sha256": "c6d11a6103a270ece79d359a37632a71d57bd28ab8d1d06c13fcce7f2ba31b9b"
+    }
+  },
+  "final_lock_sha256": "b840440da16023c0169eb3f32c0f4ce7a20ecfa34f8f6b6bfa8ef20511aa53e6",
+  "locked_test_results_included": false,
+  "medical_images_included": false,
+  "patient_or_image_identifiers_included": false,
+  "private_checkpoints_included": false,
+  "private_manifests_included": false,
+  "protocol_sha256": "279e4fe83da6d82afcbcce595b5596980ca970fae958a16264d3b3e5172eb1a1",
+  "raw_or_generated_reports_included": false
+}
