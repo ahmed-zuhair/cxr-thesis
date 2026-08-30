@@ -149,6 +149,21 @@ class Objective6CliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("--expected-train-sha256", result.stdout)
 
+    def test_validation_evaluation_lock_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "scripts" / "lock_objective6_validation_evaluation.py"),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--multimodal-output", result.stdout)
+
     def test_training_cli_writes_resumable_test_blind_checkpoint(self) -> None:
         repository = Path(__file__).resolve().parents[1]
         with tempfile.TemporaryDirectory() as directory:

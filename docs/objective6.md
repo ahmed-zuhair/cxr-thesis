@@ -47,6 +47,15 @@ images, and private checkpoints remain in the private recovery repository.
 Only aggregate metrics, configuration, hashes, and non-identifying figures are
 eligible for public publication.
 
+After validation-loss training, a second immutable lock fixes full-cohort
+generation and comparison before any validation reports are decoded. The
+multimodal system remains the primary system named by the pretraining protocol;
+it is not replaced if a comparator obtains a better post-training metric. The
+primary comparison is paired PadChest-6 macro clinical-concept F1, with CIDEr-D
+secondary. Greedy decoding, the frozen image-retrieval baseline, lexical and
+safety metrics, and the 1,000-replicate patient-cluster bootstrap are all fixed
+by this lock. Raw reference and generated reports remain private.
+
 The first step is the read-only audit:
 
 ```bash
