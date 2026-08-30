@@ -18,7 +18,10 @@ from cxr_thesis.objective6.cohorts import (
     derive_padchest_age,
     patient_partition,
 )
-from cxr_thesis.objective6.data import collate_reports
+from cxr_thesis.objective6.data import (
+    collate_reports,
+    select_label_complete_subset,
+)
 from cxr_thesis.objective6.evaluation import (
     bleu_statistics,
     cider_d_score,
@@ -430,6 +433,22 @@ class Objective6CliTests(unittest.TestCase):
 
 
 class Objective6CohortTests(unittest.TestCase):
+    def test_smoke_subset_is_deterministic_and_label_complete(self) -> None:
+        labels = [
+            "atelectasis", "cardiomegalia", "consolidacion", "edema",
+            "derrame pleural", "neumotorax", "sin hallazgos",
+        ]
+        frame = pd.DataFrame({
+            "case": list(range(70)),
+            "labels": [labels[index % len(labels)] for index in range(70)],
+        })
+        first = select_label_complete_subset(frame, 20, seed=42)
+        second = select_label_complete_subset(frame, 20, seed=42)
+        pd.testing.assert_frame_equal(first, second)
+        targets = np.stack(first["labels"].map(parse_padchest6_labels))
+        self.assertTrue(np.all(targets.sum(axis=0) > 0))
+        self.assertTrue(np.all(targets.sum(axis=0) < len(first)))
+
     def test_patient_partition_is_deterministic_and_patient_level(self) -> None:
         self.assertEqual(patient_partition("PadChest-001"), patient_partition("001"))
         self.assertIn(patient_partition("90210"), {"train", "val", "test"})

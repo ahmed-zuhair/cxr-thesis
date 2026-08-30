@@ -22,6 +22,60 @@ REQUIRED_COLUMNS = {
 }
 
 
+def select_label_complete_subset(
+    manifest: pd.DataFrame,
+    size: int,
+    *,
+    seed: int,
+) -> pd.DataFrame:
+    """Select a deterministic smoke subset containing both classes per target.
+
+    This helper is only for non-research smoke runs. It prevents an arbitrary
+    manifest prefix from omitting a rare PadChest target while leaving the full
+    locked training and validation cohorts untouched.
+    """
+
+    if "labels" not in manifest.columns:
+        raise ValueError("A label-complete smoke subset requires labels")
+    if size <= 0 or size > len(manifest):
+        raise ValueError("Smoke subset size must be in [1, len(manifest)]")
+    targets = np.stack(
+        manifest["labels"].map(parse_padchest6_labels).to_numpy()
+    ).astype(np.int8)
+    permutation = np.random.default_rng(seed).permutation(len(manifest))
+    selected: list[int] = []
+    selected_set: set[int] = set()
+    for target in range(targets.shape[1]):
+        for value in (1, 0):
+            candidates = permutation[targets[permutation, target] == value]
+            if not len(candidates):
+                raise ValueError(
+                    f"The complete manifest is degenerate for target {target}"
+                )
+            index = int(candidates[0])
+            if index not in selected_set:
+                selected.append(index)
+                selected_set.add(index)
+    if len(selected) > size:
+        raise ValueError("Smoke subset is too small for label-complete sampling")
+    for index_value in permutation:
+        index = int(index_value)
+        if index not in selected_set:
+            selected.append(index)
+            selected_set.add(index)
+        if len(selected) == size:
+            break
+    subset = manifest.iloc[selected].copy().reset_index(drop=True)
+    subset_targets = np.stack(
+        subset["labels"].map(parse_padchest6_labels).to_numpy()
+    ).astype(np.int8)
+    if (subset_targets.sum(axis=0) <= 0).any() or (
+        subset_targets.sum(axis=0) >= len(subset_targets)
+    ).any():
+        raise RuntimeError("Label-complete smoke subset construction failed")
+    return subset
+
+
 def _normalise_image(image: np.ndarray) -> np.ndarray:
     array = np.asarray(image, dtype=np.float32)
     finite = array[np.isfinite(array)]

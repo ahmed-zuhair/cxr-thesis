@@ -17,7 +17,11 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
-from cxr_thesis.objective6.data import ReportGenerationDataset, collate_reports
+from cxr_thesis.objective6.data import (
+    ReportGenerationDataset,
+    collate_reports,
+    select_label_complete_subset,
+)
 from cxr_thesis.objective6.evaluation import parse_padchest6_labels
 from cxr_thesis.objective6.models import DenseNetTransformerReportGenerator
 from cxr_thesis.objective6.text import ReportVocabulary
@@ -248,9 +252,13 @@ def main() -> None:
     train = pd.read_csv(args.train_manifest, low_memory=False)
     validation = pd.read_csv(args.val_manifest, low_memory=False)
     if args.train_cases:
-        train = train.iloc[: args.train_cases].copy()
+        train = select_label_complete_subset(
+            train, args.train_cases, seed=args.seed
+        )
     if args.validation_cases:
-        validation = validation.iloc[: args.validation_cases].copy()
+        validation = select_label_complete_subset(
+            validation, args.validation_cases, seed=args.seed + 1
+        )
     if set(train["patient_id"].astype(str)) & set(validation["patient_id"].astype(str)):
         raise RuntimeError("Objective 6 v1.1 patient leakage")
     v1 = torch.load(args.v1_checkpoint, map_location="cpu", weights_only=False)
