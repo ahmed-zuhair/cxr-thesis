@@ -1,0 +1,13 @@
+{
+  "artifact": "Final Objective 6 validation comparison lock",
+  "figure_sha256": "056d10d1e065c3a7a0209da4974f7ddff439d0b21fa92875c73a465d4e0dc433",
+  "immutable": true,
+  "locked_test_evaluated": false,
+  "locked_test_evaluation_count": 0,
+  "primary_system": "multimodal",
+  "primary_system_changed": false,
+  "summary_sha256": "0bec4540a38993e23327cde334a6a73f97c0a10d4d7d736b6e9f82afa86bcc7a",
+  "validation_evaluation_count": 1,
+  "validation_lock_sha256": "e48b11cc0af8be0866b873ae91dd5f4c55738b39927d6dec52d2f29cf5f8275a",
+  "validation_protocol_sha256": "81424c30f1619707325f0a83ef9a6fba3a859743e3b4ee0c33ac68dba6161438"
+}

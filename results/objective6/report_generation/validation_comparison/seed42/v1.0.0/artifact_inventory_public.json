@@ -1,0 +1,43 @@
+{
+  "artifact": "Objective 6 validation-results public inventory",
+  "case_level_outputs_included": false,
+  "figure_sha256": "056d10d1e065c3a7a0209da4974f7ddff439d0b21fa92875c73a465d4e0dc433",
+  "files": {
+    "FINAL_OBJECTIVE6_VALIDATION_COMPARISON.json": {
+      "bytes": 633,
+      "sha256": "a35f55328480be74f01ed8f0879796e82792b1b8946464c4a0976892727d031f"
+    },
+    "FINAL_OBJECTIVE6_VALIDATION_COMPARISON.json.sha256": {
+      "bytes": 110,
+      "sha256": "53850d1732343f96ef82a9505fdbe03c58e268abfa269382b6f176e77440f189"
+    },
+    "README.md": {
+      "bytes": 670,
+      "sha256": "e5cab8860f447976606163a4af80ce40763d4032f07c5c76abacd0af2141e1b1"
+    },
+    "objective6_validation_comparison.png": {
+      "bytes": 73868,
+      "sha256": "056d10d1e065c3a7a0209da4974f7ddff439d0b21fa92875c73a465d4e0dc433"
+    },
+    "objective6_validation_comparison.png.sha256": {
+      "bytes": 103,
+      "sha256": "e8386e7ee365812500d589dce0623391c843ab07d4f15843ddcda441512de85d"
+    },
+    "objective6_validation_comparison_summary_public.json": {
+      "bytes": 9849,
+      "sha256": "0bec4540a38993e23327cde334a6a73f97c0a10d4d7d736b6e9f82afa86bcc7a"
+    },
+    "objective6_validation_comparison_summary_public.json.sha256": {
+      "bytes": 119,
+      "sha256": "970da2d0d29bd47a2860829785b237129eb95b1058995eebae58d858c95328d3"
+    }
+  },
+  "final_lock_sha256": "a35f55328480be74f01ed8f0879796e82792b1b8946464c4a0976892727d031f",
+  "locked_test_results_included": false,
+  "medical_images_included": false,
+  "patient_or_image_identifiers_included": false,
+  "private_checkpoints_included": false,
+  "private_manifests_included": false,
+  "raw_or_generated_reports_included": false,
+  "summary_sha256": "0bec4540a38993e23327cde334a6a73f97c0a10d4d7d736b6e9f82afa86bcc7a"
+}

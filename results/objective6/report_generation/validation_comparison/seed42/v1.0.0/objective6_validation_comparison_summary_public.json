@@ -1,0 +1,329 @@
+{
+  "artifact": "Objective 6 locked validation report-generation comparison",
+  "bleu_smoothing": "deterministic add-one smoothing",
+  "bootstrap": {
+    "method": "paired patient-cluster percentile bootstrap",
+    "replicates": 1000,
+    "seed": 6042
+  },
+  "clinical_labeler": {
+    "bundle_sha256": "99d6126a3ded1feb749eaf29f3c47a73c0cb323773b44068d0ddf44e4337a731",
+    "recovery_action": "fitted",
+    "threshold": 0.5,
+    "training_cases": 29283,
+    "training_manifest_sha256": "278addf3c0a216bb206b4e4b79364f26bacbee977f3209e9275e2abbd8fda7d7",
+    "validation_or_test_outputs_used_to_fit": false,
+    "validation_reference_report_performance": {
+      "Atelectasis_f1": 0.9729032258064515,
+      "Cardiomegaly_f1": 0.9449081803005007,
+      "Consolidation_f1": 0.6018808777429467,
+      "Edema_f1": 0.9181818181818181,
+      "Effusion_f1": 0.9539748953974896,
+      "Pneumothorax_f1": 0.6588235294117647,
+      "macro_concept_f1": 0.8417787544734954,
+      "micro_concept_f1": 0.9141570503799606,
+      "micro_concept_precision": 0.8493723849372385,
+      "micro_concept_recall": 0.9896404631322364
+    }
+  },
+  "locked_test_evaluated": false,
+  "locked_test_manifest_opened": false,
+  "locked_test_reports_accessed": false,
+  "meteor_variant": "Spanish exact-token METEOR; no English stemming or synonym resources",
+  "paired_primary_comparisons": {
+    "multimodal_minus_image_only": {
+      "CIDEr-D": {
+        "bootstrap_95_ci": [
+          -0.024488604660633143,
+          0.026387607175061598
+        ],
+        "point_difference": 0.0008308475603642229,
+        "two_sided_bootstrap_p": 0.91
+      },
+      "macro_concept_f1": {
+        "bootstrap_95_ci": [
+          -0.02928223585763632,
+          0.004623282347558387
+        ],
+        "point_difference": -0.011648647668300316,
+        "two_sided_bootstrap_p": 0.168
+      }
+    },
+    "multimodal_minus_nearest_training_image_retrieval": {
+      "CIDEr-D": {
+        "bootstrap_95_ci": [
+          0.3328011869107832,
+          0.45594307766131836
+        ],
+        "point_difference": 0.39335136775660856,
+        "two_sided_bootstrap_p": 0.0
+      },
+      "macro_concept_f1": {
+        "bootstrap_95_ci": [
+          -0.02052680264630201,
+          0.028206724844001347
+        ],
+        "point_difference": 0.0022677260605139526,
+        "two_sided_bootstrap_p": 0.846
+      }
+    }
+  },
+  "patient_cluster_bootstrap_95_ci": {
+    "image_only": {
+      "BLEU-1": [
+        0.17762921034602144,
+        0.2029141458468389
+      ],
+      "BLEU-2": [
+        0.11131864220757529,
+        0.1298182797844727
+      ],
+      "BLEU-3": [
+        0.07929797521533845,
+        0.09394727078079487
+      ],
+      "BLEU-4": [
+        0.05943241342284857,
+        0.07185501340268757
+      ],
+      "CIDEr-D": [
+        0.7498920108962797,
+        0.8653491936365584
+      ],
+      "METEOR_exact_token": [
+        0.2397388414136068,
+        0.2538682092742256
+      ],
+      "ROUGE-L": [
+        0.31100971541511135,
+        0.32491888233873556
+      ],
+      "empty_report_rate": [
+        0.0,
+        0.0
+      ],
+      "explicit_negation_contradiction_rate": [
+        0.8773939833272926,
+        0.9575837320574162
+      ],
+      "macro_concept_f1": [
+        0.2008668870000156,
+        0.23747963206923908
+      ],
+      "micro_concept_f1": [
+        0.3267278129788938,
+        0.3798928843665243
+      ],
+      "repeated_4gram_report_rate": [
+        0.009442986089690035,
+        0.015664177453920913
+      ],
+      "training_report_exact_match_rate": [
+        0.007262754227893007,
+        0.012292782460970772
+      ]
+    },
+    "multimodal": {
+      "BLEU-1": [
+        0.17330233743662832,
+        0.19907095355163323
+      ],
+      "BLEU-2": [
+        0.10975411041472495,
+        0.12870645338649098
+      ],
+      "BLEU-3": [
+        0.07898461068092771,
+        0.0943852045421408
+      ],
+      "BLEU-4": [
+        0.060360773608313975,
+        0.07325167232411633
+      ],
+      "CIDEr-D": [
+        0.7486734089874154,
+        0.8647856666528948
+      ],
+      "METEOR_exact_token": [
+        0.2400873387302742,
+        0.2542390602480105
+      ],
+      "ROUGE-L": [
+        0.31195516918688204,
+        0.3255303207397744
+      ],
+      "empty_report_rate": [
+        0.0,
+        0.0
+      ],
+      "explicit_negation_contradiction_rate": [
+        0.9411764705882353,
+        0.9936315810690962
+      ],
+      "macro_concept_f1": [
+        0.18734912772700446,
+        0.22553658418300937
+      ],
+      "micro_concept_f1": [
+        0.31056205404140835,
+        0.36353662854930546
+      ],
+      "repeated_4gram_report_rate": [
+        0.01180649193919726,
+        0.018172351816384828
+      ],
+      "training_report_exact_match_rate": [
+        0.007334186892101424,
+        0.012391209863507639
+      ]
+    },
+    "nearest_training_image_retrieval": {
+      "BLEU-1": [
+        0.22716990062485676,
+        0.24046943792624514
+      ],
+      "BLEU-2": [
+        0.12084539764805287,
+        0.1326255852924723
+      ],
+      "BLEU-3": [
+        0.0770025157300657,
+        0.08801396908871345
+      ],
+      "BLEU-4": [
+        0.05336542624750405,
+        0.06411102489924562
+      ],
+      "CIDEr-D": [
+        0.37090640667710517,
+        0.4544304959201506
+      ],
+      "METEOR_exact_token": [
+        0.19336506037542123,
+        0.20484166578876103
+      ],
+      "ROUGE-L": [
+        0.2352777417369891,
+        0.24548660933557956
+      ],
+      "empty_report_rate": [
+        0.0,
+        0.0
+      ],
+      "explicit_negation_contradiction_rate": [
+        0.9084435182523714,
+        0.9635069674850697
+      ],
+      "macro_concept_f1": [
+        0.1826633883754448,
+        0.2253646112491633
+      ],
+      "micro_concept_f1": [
+        0.27860751779066545,
+        0.3249811095324206
+      ],
+      "repeated_4gram_report_rate": [
+        0.007204135253617049,
+        0.01196295238934156
+      ],
+      "training_report_exact_match_rate": [
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "primary_metric": "macro_concept_f1",
+  "primary_system": "multimodal",
+  "primary_system_changed_after_validation": false,
+  "privacy": {
+    "case_level_metrics_public": false,
+    "generated_reports_public": false,
+    "patient_or_image_identifiers_public": false,
+    "raw_reports_public": false
+  },
+  "private_artifact_sha256": {
+    "bootstrap": "b6dd1c2454724dab1c8b2eb4c853abb84bb5cf9857a02cb7472e4ee88f082559",
+    "case_metrics": "d262ea48311ad68e469cfdc9f1eef97e0514efdabe161af8b9142b6d5c43fd69"
+  },
+  "secondary_metric": "CIDEr-D",
+  "systems": {
+    "image_only": {
+      "Atelectasis_f1": 0.206794682422452,
+      "BLEU-1": 0.18996955962403217,
+      "BLEU-2": 0.12049541025119095,
+      "BLEU-3": 0.08652496435649358,
+      "BLEU-4": 0.0655225590103943,
+      "CIDEr-D": 0.8056144170926561,
+      "Cardiomegaly_f1": 0.45115810674723067,
+      "Consolidation_f1": 0.104,
+      "Edema_f1": 0.05095541401273885,
+      "Effusion_f1": 0.49940546967895366,
+      "METEOR_exact_token": 0.2466779308409657,
+      "Pneumothorax_f1": 0.0,
+      "ROUGE-L": 0.3181037591678496,
+      "empty_report_rate": 0.0,
+      "explicit_clinical_mentions": 164,
+      "explicit_negation_contradiction_rate": 0.9207317073170732,
+      "macro_concept_f1": 0.21871894547689585,
+      "micro_concept_f1": 0.35262267343485615,
+      "micro_concept_precision": 0.3964992389649924,
+      "micro_concept_recall": 0.3174893357708714,
+      "repeated_4gram_report_rate": 0.012579617834394905,
+      "training_report_exact_match_rate": 0.009713375796178344,
+      "unique_generated_report_fraction": 0.1464968152866242
+    },
+    "multimodal": {
+      "Atelectasis_f1": 0.20588235294117646,
+      "BLEU-1": 0.18619917692959448,
+      "BLEU-2": 0.11924308015803246,
+      "BLEU-3": 0.08670832102892655,
+      "BLEU-4": 0.06676294619012657,
+      "CIDEr-D": 0.8064452646530204,
+      "Cardiomegaly_f1": 0.4439746300211417,
+      "Consolidation_f1": 0.04048582995951417,
+      "Edema_f1": 0.08163265306122448,
+      "Effusion_f1": 0.4704463208685163,
+      "METEOR_exact_token": 0.24703144536402705,
+      "Pneumothorax_f1": 0.0,
+      "ROUGE-L": 0.31879709265902445,
+      "empty_report_rate": 0.0,
+      "explicit_clinical_mentions": 165,
+      "explicit_negation_contradiction_rate": 0.9696969696969697,
+      "macro_concept_f1": 0.20707029780859554,
+      "micro_concept_f1": 0.3367983367983368,
+      "micro_concept_precision": 0.39036144578313253,
+      "micro_concept_recall": 0.2961608775137112,
+      "repeated_4gram_report_rate": 0.01480891719745223,
+      "training_report_exact_match_rate": 0.009713375796178344,
+      "unique_generated_report_fraction": 0.13280254777070064
+    },
+    "nearest_training_image_retrieval": {
+      "Atelectasis_f1": 0.1311018131101813,
+      "BLEU-1": 0.2340742141395504,
+      "BLEU-2": 0.12683092773596955,
+      "BLEU-3": 0.08245426863935702,
+      "BLEU-4": 0.05853716906363081,
+      "CIDEr-D": 0.4130938968964118,
+      "Cardiomegaly_f1": 0.36695790309769655,
+      "Consolidation_f1": 0.07357859531772575,
+      "Edema_f1": 0.1359223300970874,
+      "Effusion_f1": 0.4664602683178534,
+      "METEOR_exact_token": 0.19918405896405328,
+      "Pneumothorax_f1": 0.0547945205479452,
+      "ROUGE-L": 0.24030687496469083,
+      "empty_report_rate": 0.0,
+      "explicit_clinical_mentions": 274,
+      "explicit_negation_contradiction_rate": 0.9379562043795621,
+      "macro_concept_f1": 0.20480257174808159,
+      "micro_concept_f1": 0.30144762986091395,
+      "micro_concept_precision": 0.2821466524973433,
+      "micro_concept_recall": 0.3235831809872029,
+      "repeated_4gram_report_rate": 0.009554140127388535,
+      "training_report_exact_match_rate": 1.0,
+      "unique_generated_report_fraction": 0.5335987261146496
+    }
+  },
+  "validation_cases": 6280,
+  "validation_patients": 3819,
+  "version": "v1.0.0"
+}
