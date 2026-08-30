@@ -299,6 +299,13 @@ def main() -> None:
     number_eligible = sum(int(item["number_eligible_reports"]) for item in summaries)
     concept_matches = sum(int(item["concept_polarity_matches"]) for item in summaries)
     concept_eligible = sum(int(item["concept_polarity_eligible"]) for item in summaries)
+    software_versions = {
+        json.dumps(item.get("software_versions", {}), sort_keys=True)
+        for item in summaries
+    }
+    if len(software_versions) != 1:
+        raise RuntimeError("Translation shards used inconsistent software versions")
+    locked_software_versions = json.loads(software_versions.pop())
     nonempty_fraction = nonempty / unique_reports if unique_reports else 0.0
     number_loss_rate = number_failures / number_eligible if number_eligible else 0.0
     concept_agreement = concept_matches / concept_eligible if concept_eligible else 0.0
@@ -317,6 +324,7 @@ def main() -> None:
         "version": "v2.0.0",
         "model": MODEL_ID,
         "model_revision": MODEL_REVISION,
+        "software_versions": locked_software_versions,
         "v2_training_cases": len(train),
         "v2_development_cases": len(development),
         "unique_source_reports": unique_reports,

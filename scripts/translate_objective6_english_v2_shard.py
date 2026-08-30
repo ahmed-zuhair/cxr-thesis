@@ -115,6 +115,8 @@ def main() -> None:
     shard_reports = [reports[key] for key in shard_keys]
 
     import torch
+    import sentencepiece
+    import transformers
     from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
     if not torch.cuda.is_available():
@@ -210,6 +212,11 @@ def main() -> None:
         "unique_reports": len(shard_reports),
         "model": MODEL_ID,
         "model_revision": MODEL_REVISION,
+        "software_versions": {
+            "torch": torch.__version__,
+            "transformers": transformers.__version__,
+            "sentencepiece": sentencepiece.__version__,
+        },
         "source_language": SOURCE_LANGUAGE,
         "target_language": TARGET_LANGUAGE,
         "beam_width": args.beam_width,
