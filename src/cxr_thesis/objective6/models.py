@@ -28,6 +28,7 @@ class DenseNetTransformerReportGenerator(nn.Module):
         maximum_length: int = 160,
         pretrained: bool = False,
         freeze_image_encoder: bool = True,
+        use_clinical: bool = True,
     ) -> None:
         super().__init__()
         if vocabulary_size < 5:
@@ -67,6 +68,7 @@ class DenseNetTransformerReportGenerator(nn.Module):
         self.auxiliary_labels = nn.Linear(d_model * 2, label_count)
         self.maximum_length = int(maximum_length)
         self.vocabulary_size = int(vocabulary_size)
+        self.use_clinical = bool(use_clinical)
         self.set_image_encoder_trainable(not freeze_image_encoder)
 
     def set_image_encoder_trainable(self, trainable: bool) -> None:
@@ -98,10 +100,12 @@ class DenseNetTransformerReportGenerator(nn.Module):
             raise ValueError("Objective 6 expects three-channel CXR tensors")
         if clinical.ndim != 2 or clinical.shape[0] != image.shape[0]:
             raise ValueError("Clinical tensor must be [batch, clinical features]")
-        feature_map = self.image_encoder(image)
+        feature_map = torch.relu(self.image_encoder(image))
         spatial = feature_map.flatten(2).transpose(1, 2)
         image_tokens = self.image_projection(spatial)
         clinical_token = self.clinical_projection(clinical).unsqueeze(1)
+        if not self.use_clinical:
+            clinical_token = torch.zeros_like(clinical_token)
         memory = self.memory_normalisation(
             torch.cat([image_tokens, clinical_token], dim=1)
         )

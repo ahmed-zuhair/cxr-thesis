@@ -8,6 +8,7 @@ from pathlib import Path
 import torch
 
 from cxr_thesis.objective6.models import DenseNetTransformerReportGenerator
+from cxr_thesis.objective6.data import collate_reports
 from cxr_thesis.objective6.cohorts import (
     derive_padchest_age,
     patient_partition,
@@ -97,6 +98,17 @@ class Objective6CliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("--private-hf-repo", result.stdout)
 
+    def test_training_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [sys.executable, str(repository / "scripts" / "train_objective6_report_generator.py"), "--help"],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--source-checkpoint", result.stdout)
+
 
 class Objective6CohortTests(unittest.TestCase):
     def test_patient_partition_is_deterministic_and_patient_level(self) -> None:
@@ -111,6 +123,18 @@ class Objective6CohortTests(unittest.TestCase):
         self.assertEqual(float(age.iloc[0]), 84.0)
         self.assertEqual(float(age.iloc[1]), 5.0)
         self.assertTrue(pd.isna(age.iloc[2]))
+
+    def test_report_collation_pads_only_to_batch_maximum(self) -> None:
+        sample = {
+            "image": torch.zeros(3, 8, 8),
+            "clinical": torch.zeros(9),
+            "report_ids": torch.tensor([1, 4, 2]),
+        }
+        longer = dict(sample)
+        longer["report_ids"] = torch.tensor([1, 5, 6, 2])
+        batch = collate_reports([sample, longer])
+        self.assertEqual(batch["report_ids"].shape, (2, 4))
+        self.assertEqual(int(batch["report_ids"][0, -1]), 0)
 
 
 if __name__ == "__main__":
