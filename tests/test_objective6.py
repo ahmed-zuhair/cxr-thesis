@@ -4,8 +4,13 @@ import unittest
 import subprocess
 import sys
 from pathlib import Path
+import hashlib
+import os
+import tempfile
 
 import torch
+import numpy as np
+from PIL import Image
 
 from cxr_thesis.objective6.models import DenseNetTransformerReportGenerator
 from cxr_thesis.objective6.data import collate_reports
@@ -15,6 +20,7 @@ from cxr_thesis.objective6.cohorts import (
 )
 from cxr_thesis.objective6.text import ReportVocabulary, normalise_report, tokenise_report
 import pandas as pd
+from cxr_thesis.objective2.models import build_classifier
 
 
 class Objective6TextTests(unittest.TestCase):
@@ -108,6 +114,84 @@ class Objective6CliTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("--source-checkpoint", result.stdout)
+
+    def test_private_recovery_training_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [sys.executable, str(repository / "scripts" / "train_objective6_with_private_recovery.py"), "--help"],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--expected-train-sha256", result.stdout)
+
+    def test_training_cli_writes_resumable_test_blind_checkpoint(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            rows = []
+            for index in range(4):
+                image_path = root / f"image_{index}.png"
+                Image.fromarray(
+                    np.full((64, 64), 32 + index * 20, dtype=np.uint8)
+                ).save(image_path)
+                rows.append({
+                    "image_path": str(image_path),
+                    "patient_id": f"P{index}",
+                    "study_id": f"S{index}",
+                    "report": "sin hallazgos ." if index % 2 == 0 else "derrame pleural .",
+                    "age": 40 + index,
+                    "sex": "F" if index % 2 == 0 else "M",
+                    "view": "PA",
+                    "split": "train" if index < 2 else "val",
+                })
+            train_path = root / "train.csv"
+            val_path = root / "val.csv"
+            pd.DataFrame(rows[:2]).to_csv(train_path, index=False)
+            pd.DataFrame(rows[2:]).to_csv(val_path, index=False)
+            source = build_classifier("densenet121", 6, pretrained=False)
+            checkpoint_path = root / "source.pt"
+            torch.save({"model_state": source.state_dict()}, checkpoint_path)
+            source_hash = hashlib.sha256(checkpoint_path.read_bytes()).hexdigest()
+            output = root / "output"
+            base = [
+                sys.executable,
+                str(repository / "scripts" / "train_objective6_report_generator.py"),
+                "--variant", "multimodal",
+                "--train-manifest", str(train_path),
+                "--val-manifest", str(val_path),
+                "--source-checkpoint", str(checkpoint_path),
+                "--expected-source-sha256", source_hash,
+                "--output-dir", str(output),
+                "--batch-size", "2",
+                "--workers", "0",
+                "--image-size", "64",
+                "--maximum-length", "12",
+                "--maximum-vocabulary-size", "64",
+                "--minimum-token-frequency", "1",
+                "--patience", "4",
+                "--no-amp",
+            ]
+            environment = dict(os.environ)
+            environment["PYTHONPATH"] = str(repository / "src")
+            first = subprocess.run(
+                [*base, "--epochs", "1"], cwd=repository, env=environment,
+                text=True, capture_output=True, check=False,
+            )
+            self.assertEqual(first.returncode, 0, msg=first.stdout + first.stderr)
+            recovery = torch.load(output / "last.pt", map_location="cpu", weights_only=False)
+            self.assertEqual(recovery["epoch_completed"], 1)
+            self.assertFalse(recovery["test_evaluated"])
+            resumed = subprocess.run(
+                [*base, "--epochs", "2", "--resume"], cwd=repository, env=environment,
+                text=True, capture_output=True, check=False,
+            )
+            self.assertEqual(resumed.returncode, 0, msg=resumed.stdout + resumed.stderr)
+            final = torch.load(output / "last.pt", map_location="cpu", weights_only=False)
+            self.assertEqual(final["epoch_completed"], 2)
+            self.assertEqual(final["resume_count"], 1)
+            self.assertFalse(final["test_evaluated"])
 
 
 class Objective6CohortTests(unittest.TestCase):
