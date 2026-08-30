@@ -1,0 +1,24 @@
+{
+  "artifact": "Objective 6 English v2 private development-cohort summary",
+  "locked_test_evaluated": false,
+  "locked_test_manifest_opened": false,
+  "locked_test_reports_accessed": false,
+  "original_validation_opened": false,
+  "patient_or_image_identifiers_public": false,
+  "patient_overlap": 0,
+  "private_manifest_sha256": {
+    "v2_development": "bf81df9ac5ed7b1eb9f474bda3feb5be72e46afe3707d0b54cbf9d82ce65eaf7",
+    "v2_train": "66e40de90481c004d5a6f70de23500ca6ca911e02a6dca3747ec0ac2e2c9e872"
+  },
+  "report_content_public": false,
+  "source_cases": 29283,
+  "source_patients": 17583,
+  "source_training_manifest_sha256": "278addf3c0a216bb206b4e4b79364f26bacbee977f3209e9275e2abbd8fda7d7",
+  "training_performed": false,
+  "translation_performed": false,
+  "v2_development_cases": 5713,
+  "v2_development_patients": 3517,
+  "v2_training_cases": 23570,
+  "v2_training_patients": 14066,
+  "version": "v2.0.0"
+}

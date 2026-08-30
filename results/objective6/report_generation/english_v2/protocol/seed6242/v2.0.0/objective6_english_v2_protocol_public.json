@@ -1,0 +1,165 @@
+{
+  "artifact": "Objective 6 English fact-aware report-generation v2 protocol",
+  "development_evaluation": {
+    "all_conditions_required": true,
+    "candidate_selection_primary_metric": "English PadChest-6 macro concept F1",
+    "evaluation_repetitions": 1,
+    "if_no_candidate_passes": "publish the negative v2 development result and do not evaluate the original Objective 6 locked test",
+    "if_one_candidate_passes": "freeze every parameter, threshold, translator, retriever, prompt, controller, and metric before one original locked-test evaluation",
+    "maximum_candidates_advanced": 1,
+    "required_metrics": [
+      "macro and micro concept F1",
+      "CIDEr-D",
+      "BLEU-4",
+      "ROUGE-L",
+      "METEOR",
+      "BERTScore",
+      "validated English contradiction rate",
+      "unique generated report fraction",
+      "repeated 4-gram report rate",
+      "training-report exact-match rate"
+    ],
+    "selection_rule": [
+      "macro concept F1 at least 0.30",
+      "macro concept F1 gain over the frozen v1.1 reference at least 0.05",
+      "CIDEr-D at least 0.90",
+      "validated contradiction rate at most 0.20",
+      "unique generated report fraction at least 0.25",
+      "repeated 4-gram report rate at most 0.03",
+      "training-report exact-match rate at most 0.05"
+    ]
+  },
+  "english_reference_pipeline": {
+    "English_reports_public": false,
+    "PadChest_GR_if_licensed_and_available": "may be used only as external bilingual training supervision and translation validation after patient de-duplication; absence does not change the locked primary pipeline",
+    "Spanish_reports_public": false,
+    "decoding": {
+      "beam_width": 5,
+      "maximum_new_tokens": 256,
+      "method": "deterministic beam search",
+      "sampling": false
+    },
+    "execution": "local private Kaggle inference; no translation API",
+    "immutable_model_revision": "f8d333a098d19b4fd9a8b18f94170487ad3f821d",
+    "model": "facebook/nllb-200-distilled-600M",
+    "normalisation": "Unicode NFC, whitespace normalization, preserve measurements and remove neither negations nor uncertainty expressions",
+    "source_language": "Spanish",
+    "source_token": "spa_Latn",
+    "target_language": "English",
+    "target_token": "eng_Latn",
+    "translation_quality_gate": {
+      "development_only": true,
+      "manual_or_locked_test_feedback_used": false,
+      "maximum_number_or_measurement_loss_rate": 0.01,
+      "minimum_PadChest6_concept_polarity_agreement": 0.95,
+      "minimum_nonempty_fraction": 0.995
+    }
+  },
+  "evidence_basis": [
+    {
+      "method": "fact-aware multimodal retrieval augmentation",
+      "source": "https://aclanthology.org/2025.naacl-long.28/"
+    },
+    {
+      "method": "classifier-plan and template replacement",
+      "source": "https://aclanthology.org/2023.findings-acl.683/"
+    },
+    {
+      "method": "reinforcement learning with factual rewards",
+      "source": "https://aclanthology.org/2021.naacl-main.416/"
+    },
+    {
+      "method": "bilingual grounded PadChest supervision",
+      "source": "https://arxiv.org/abs/2411.05085"
+    }
+  ],
+  "privacy_and_safety": {
+    "aggregate_protocol_and_results_public": true,
+    "case_level_outputs_public": false,
+    "locked_test_evaluated": false,
+    "locked_test_manifest_opened": false,
+    "locked_test_reports_accessed": false,
+    "medical_images_public": false,
+    "original_validation_opened_for_v2": false,
+    "patient_or_image_identifiers_public": false,
+    "private_checkpoints_public": false,
+    "private_manifests_public": false,
+    "private_reports_public": false
+  },
+  "private_v2_development_partition": {
+    "algorithm": "rank unique private patient identifiers by SHA-256 of objective6-v2|seed|patient and assign the first rounded 20 percent to development",
+    "development_cases": 5713,
+    "development_patients": 3517,
+    "patient_overlap": 0,
+    "private_columns_copied_without_content_statistics": true,
+    "private_manifest_sha256": {
+      "v2_development": "bf81df9ac5ed7b1eb9f474bda3feb5be72e46afe3707d0b54cbf9d82ce65eaf7",
+      "v2_train": "66e40de90481c004d5a6f70de23500ca6ca911e02a6dca3747ec0ac2e2c9e872"
+    },
+    "requested_development_fraction": 0.2,
+    "seed": 6242,
+    "selection_used_images": false,
+    "selection_used_labels": false,
+    "selection_used_predictions": false,
+    "selection_used_report_content": false,
+    "source": "the original Objective 6 training cohort only",
+    "source_cases": 29283,
+    "source_patients": 17583,
+    "training_cases": 23570,
+    "training_patients": 14066
+  },
+  "repository_commit_before_v2_implementation": "993c2ce91d95abdff82dc16616ad38649f7d3104",
+  "scientific_separation": {
+    "rationale": "v2 changes the report language, cohort-development boundary, clinical planner, retrieval mechanism, decoder pretraining, and factual objective; it is not represented as a continuation of v1.1",
+    "v1_1_additional_round_prohibition_respected": true,
+    "v1_1_negative_result_rewritten": false,
+    "v1_and_v1_1_results_retained": true,
+    "v2_is_a_separate_exploratory_remedial_extension": true,
+    "v2_uses_the_original_locked_test_for_tuning": false,
+    "v2_uses_the_previous_6280_case_validation_for_tuning": false
+  },
+  "status": "locked after the immutable negative v1.1 decision and before v2 translation, model fitting, generation, or locked-test access",
+  "v2_candidates": {
+    "candidate_1": {
+      "final_fact_reranked_neighbors": 8,
+      "initial_image_neighbors": 32,
+      "name": "fact_aware_retrieve_edit_english",
+      "query_information": [
+        "frozen image embedding",
+        "predicted clinical probabilities",
+        "age",
+        "sex",
+        "projection"
+      ],
+      "report_controller": "sentence-level English retrieve-and-edit with predicted-positive insertion, predicted-negative contradiction removal, and an uncertainty-preserving abstention rule",
+      "reranking_score": {
+        "image_cosine_similarity": 0.45,
+        "non_diagnostic_metadata_similarity": 0.1,
+        "predicted_concept_agreement": 0.45
+      },
+      "retrieval_bank": "v2 training patients only"
+    },
+    "candidate_2": {
+      "decoder_inputs": [
+        "visual tokens",
+        "clinical-plan graph token",
+        "non-diagnostic clinical token",
+        "retrieved English exemplars"
+      ],
+      "final_stage": "one short self-critical sequence-training stage using a locked clinical factuality, semantic similarity, CIDEr-D, contradiction, and diversity reward",
+      "name": "fact_aware_retrieval_augmented_english_generator",
+      "objective": {
+        "clinical_plan_binary_cross_entropy": 0.4,
+        "contradiction_and_repetition_unlikelihood": 0.05,
+        "factual_consistency_loss": 0.2,
+        "image_report_contrastive_alignment": 0.2,
+        "report_cross_entropy": 1.0
+      },
+      "planner": "multi-label clinical plan trained on v2-training PadChest/UMLS labels; ground-truth labels are never decoder inputs at inference",
+      "text_backbone": "English-capable pretrained encoder-decoder with LoRA",
+      "visual_encoder": "Objective 5 PadChest-adapted DenseNet-121 initialized from SHA-256 109db89a723c6e2f24442cb5866bfcf4084e85083936cda91bce3b8ae4365d9d"
+    },
+    "candidate_count": 2
+  },
+  "version": "v2.0.0"
+}

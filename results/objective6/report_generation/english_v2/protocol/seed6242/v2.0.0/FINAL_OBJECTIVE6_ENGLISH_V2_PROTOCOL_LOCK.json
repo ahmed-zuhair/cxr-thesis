@@ -1,0 +1,19 @@
+{
+  "artifact": "Final Objective 6 English v2 pre-translation protocol lock",
+  "candidate_count": 2,
+  "cohort_summary_sha256": "6e4e7fe322376386cd425f6ec1eb50a5436b11c8cb772f16dca82f3be37def0e",
+  "development_evaluation_count": 0,
+  "immutable": true,
+  "locked_test_evaluated": false,
+  "locked_test_evaluation_count": 0,
+  "locked_test_manifest_opened": false,
+  "locked_test_reports_accessed": false,
+  "original_validation_opened": false,
+  "protocol_sha256": "a09241aff9cb998c68023c6399b6bbb33b66b96fd61475a9f0949a42f6143f62",
+  "translation_performed": false,
+  "translator_revision": "f8d333a098d19b4fd9a8b18f94170487ad3f821d",
+  "v1_1_final_lock_sha256": "5fb7694f578649dfc08912f0e2b1af6e2ac972e4eff87fa7c9b3232e433ab852",
+  "v1_1_summary_sha256": "7e63d60beeeba2c4a4876cd2f0df9d8f82c444b1b7fa993ee1f842a24c067a14",
+  "v2_training_started": false,
+  "version": "v2.0.0"
+}

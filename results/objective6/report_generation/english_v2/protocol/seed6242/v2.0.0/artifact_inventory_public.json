@@ -1,0 +1,45 @@
+{
+  "artifact": "Objective 6 English v2 public protocol inventory",
+  "case_level_outputs_included": false,
+  "cohort_summary_sha256": "6e4e7fe322376386cd425f6ec1eb50a5436b11c8cb772f16dca82f3be37def0e",
+  "files": {
+    "FINAL_OBJECTIVE6_ENGLISH_V2_PROTOCOL_LOCK.json": {
+      "bytes": 883,
+      "sha256": "28b677450562e04542d4516b2c94cd8b4fa7f9f1161ffe7b992e845391c8d6f4"
+    },
+    "FINAL_OBJECTIVE6_ENGLISH_V2_PROTOCOL_LOCK.json.sha256": {
+      "bytes": 113,
+      "sha256": "8cb6a66e593e0f34260035f2b037f37c516eb7e7208afa39483c83b297bfe460"
+    },
+    "README.md": {
+      "bytes": 517,
+      "sha256": "ea807d8654cb76002f20628afa8c993d08e88708ff135d736d4024cbbaecca24"
+    },
+    "objective6_english_v2_cohort_summary_public.json": {
+      "bytes": 923,
+      "sha256": "6e4e7fe322376386cd425f6ec1eb50a5436b11c8cb772f16dca82f3be37def0e"
+    },
+    "objective6_english_v2_cohort_summary_public.json.sha256": {
+      "bytes": 115,
+      "sha256": "e1424d631a6f3f350ec4ad71d4e27259eb8fd209099c881ffd1888f0a870c726"
+    },
+    "objective6_english_v2_protocol_public.json": {
+      "bytes": 7295,
+      "sha256": "a09241aff9cb998c68023c6399b6bbb33b66b96fd61475a9f0949a42f6143f62"
+    },
+    "objective6_english_v2_protocol_public.json.sha256": {
+      "bytes": 109,
+      "sha256": "9d2de026a8d482296244e96c6e04ffa159a7a8f386ea5e11bd1f97c130d27695"
+    }
+  },
+  "final_lock_sha256": "28b677450562e04542d4516b2c94cd8b4fa7f9f1161ffe7b992e845391c8d6f4",
+  "locked_test_results_included": false,
+  "medical_images_included": false,
+  "patient_or_image_identifiers_included": false,
+  "private_checkpoints_included": false,
+  "private_manifests_included": false,
+  "private_reports_included": false,
+  "protocol_sha256": "a09241aff9cb998c68023c6399b6bbb33b66b96fd61475a9f0949a42f6143f62",
+  "translated_reports_included": false,
+  "translator_revision": "f8d333a098d19b4fd9a8b18f94170487ad3f821d"
+}
