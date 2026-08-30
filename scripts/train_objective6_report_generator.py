@@ -250,6 +250,7 @@ def main() -> None:
         "vocabulary_size": len(vocabulary.tokens),
         "learning_rate": args.learning_rate,
         "weight_decay": args.weight_decay,
+        "patience": args.patience,
         "seed": args.seed,
         "amp": not args.no_amp,
     }
