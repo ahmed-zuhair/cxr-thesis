@@ -192,6 +192,20 @@ class Objective6CliTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, msg=result.stderr)
             self.assertIn("--shard-count", result.stdout)
 
+    def test_retrieval_baseline_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        scripts = (
+            "extract_objective6_retrieval_embedding_shard.py",
+            "extract_objective6_retrieval_embeddings_with_recovery.py",
+            "build_objective6_validation_retrieval.py",
+        )
+        for script in scripts:
+            result = subprocess.run(
+                [sys.executable, str(repository / "scripts" / script), "--help"],
+                text=True, capture_output=True, check=False,
+            )
+            self.assertEqual(result.returncode, 0, msg=result.stderr)
+
     def test_training_cli_writes_resumable_test_blind_checkpoint(self) -> None:
         repository = Path(__file__).resolve().parents[1]
         with tempfile.TemporaryDirectory() as directory:
