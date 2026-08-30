@@ -40,6 +40,7 @@ from cxr_thesis.objective6.text import (
     normalise_report,
     tokenise_report,
 )
+from cxr_thesis.objective6.v2 import patient_hash, select_development_patients
 from scripts.extract_objective6_retrieval_embedding_shard import (
     MANIFESTS as RETRIEVAL_WORKER_MANIFESTS,
 )
@@ -158,6 +159,21 @@ class Objective6ModelTests(unittest.TestCase):
 
 
 class Objective6CliTests(unittest.TestCase):
+    def test_english_v2_protocol_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "scripts" / "lock_objective6_english_v2_protocol.py"),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--translator-revision", result.stdout)
+
     def test_retrieval_manifest_hashes_are_complete_and_consistent(self) -> None:
         self.assertEqual(RETRIEVAL_WORKER_MANIFESTS, RETRIEVAL_WRAPPER_MANIFESTS)
         for _, digest in RETRIEVAL_WRAPPER_MANIFESTS.values():
@@ -480,6 +496,25 @@ class Objective6CliTests(unittest.TestCase):
 
 
 class Objective6CohortTests(unittest.TestCase):
+    def test_v2_patient_partition_is_exact_deterministic_and_disjoint(self) -> None:
+        patients = [
+            "p1", "p1", "p2", "p3", "p4", "p5",
+            "p6", "p7", "p8", "p9", "p10",
+        ]
+        first = select_development_patients(patients, seed=6242, fraction=0.20)
+        second = select_development_patients(
+            reversed(patients), seed=6242, fraction=0.20
+        )
+        self.assertEqual(first, second)
+        self.assertEqual(len(first), 2)
+        self.assertFalse(first & (set(patients) - first))
+        self.assertEqual(
+            patient_hash("p1", seed=6242), patient_hash("p1", seed=6242)
+        )
+        self.assertNotEqual(
+            patient_hash("p1", seed=6242), patient_hash("p1", seed=6243)
+        )
+
     def test_smoke_subset_is_deterministic_and_label_complete(self) -> None:
         labels = [
             "atelectasis", "cardiomegalia", "consolidacion", "edema",
