@@ -16,7 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFESTS = {
-    "train": (29283, "278addf3c0a216bb206b4e79364f26bacbee977f3209e9275e2abbd8fda7d7"),
+    "train": (29283, "278addf3c0a216bb206b4e4b79364f26bacbee977f3209e9275e2abbd8fda7d7"),
     "val": (6280, "829573501a62a2269269486218889e908db586da98ec2c264402c345bac5f2d6"),
 }
 PROTOCOL_SHA256 = "81424c30f1619707325f0a83ef9a6fba3a859743e3b4ee0c33ac68dba6161438"

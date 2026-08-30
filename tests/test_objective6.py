@@ -22,6 +22,12 @@ from cxr_thesis.objective6.text import ReportVocabulary, normalise_report, token
 import pandas as pd
 from cxr_thesis.objective2.models import build_classifier
 from scripts.train_objective6_with_private_recovery import snapshot
+from scripts.extract_objective6_retrieval_embedding_shard import (
+    MANIFESTS as RETRIEVAL_WORKER_MANIFESTS,
+)
+from scripts.extract_objective6_retrieval_embeddings_with_recovery import (
+    MANIFESTS as RETRIEVAL_WRAPPER_MANIFESTS,
+)
 
 
 class Objective6TextTests(unittest.TestCase):
@@ -68,6 +74,12 @@ class Objective6ModelTests(unittest.TestCase):
 
 
 class Objective6CliTests(unittest.TestCase):
+    def test_retrieval_manifest_hashes_are_complete_and_consistent(self) -> None:
+        self.assertEqual(RETRIEVAL_WORKER_MANIFESTS, RETRIEVAL_WRAPPER_MANIFESTS)
+        for _, digest in RETRIEVAL_WRAPPER_MANIFESTS.values():
+            self.assertEqual(len(digest), 64)
+            self.assertTrue(all(character in "0123456789abcdef" for character in digest))
+
     def test_private_recovery_snapshot_accepts_existing_temporary_directory(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
