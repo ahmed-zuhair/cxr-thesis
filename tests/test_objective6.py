@@ -292,6 +292,21 @@ class Objective6CliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stderr)
         self.assertIn("--expected-summary-sha256", result.stdout)
 
+    def test_enhancement_protocol_clis_import(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        for script, expected in (
+            ("lock_objective6_enhancement_protocol.py", "--v1-summary"),
+            ("publish_objective6_enhancement_protocol.py", "--lock-directory"),
+        ):
+            result = subprocess.run(
+                [sys.executable, str(repository / "scripts" / script), "--help"],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, msg=result.stderr)
+            self.assertIn(expected, result.stdout)
+
     def test_training_cli_writes_resumable_test_blind_checkpoint(self) -> None:
         repository = Path(__file__).resolve().parents[1]
         with tempfile.TemporaryDirectory() as directory:
