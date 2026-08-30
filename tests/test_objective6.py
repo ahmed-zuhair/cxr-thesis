@@ -159,6 +159,25 @@ class Objective6ModelTests(unittest.TestCase):
 
 
 class Objective6CliTests(unittest.TestCase):
+    def test_english_v2_protocol_publication_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(
+                    repository
+                    / "scripts"
+                    / "publish_objective6_english_v2_protocol.py"
+                ),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--expected-protocol-sha256", result.stdout)
+
     def test_english_v2_protocol_cli_imports(self) -> None:
         repository = Path(__file__).resolve().parents[1]
         result = subprocess.run(
