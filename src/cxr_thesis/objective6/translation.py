@@ -27,12 +27,17 @@ _SPANISH_TERMS: Mapping[str, tuple[str, ...]] = {
 }
 
 _ENGLISH_TERMS: Mapping[str, tuple[str, ...]] = {
-    "Atelectasis": ("atelectasis", "atelectatic"),
-    "Cardiomegaly": ("cardiomegaly", "enlarged cardiac silhouette"),
-    "Consolidation": ("consolidation", "airspace opacity"),
+    "Atelectasis": ("atelectasis", "atelectatic", "subsegmental collapse"),
+    "Cardiomegaly": (
+        "cardiomegaly",
+        "enlarged cardiac silhouette",
+        "cardiac enlargement",
+        "enlarged heart",
+    ),
+    "Consolidation": ("consolidation", "airspace opacity", "air-space opacity"),
     "Edema": ("pulmonary edema", "oedema", "edema"),
     "Effusion": ("pleural effusion", "pleural fluid"),
-    "Pneumothorax": ("pneumothorax",),
+    "Pneumothorax": ("pneumothorax", "pneumothoraces"),
 }
 
 _SPANISH_NEGATIONS = (
@@ -44,6 +49,17 @@ _SPANISH_NEGATIONS = (
 _ENGLISH_NEGATIONS = (
     "no", "not", "without", "neither", "absence of", "absent",
     "negative for", "free of", "no evidence of", "no sign of",
+)
+
+_SPANISH_POST_NEGATIONS = (
+    "ausente", "ausentes", "no observado", "no observada", "no observados",
+    "no observadas", "descartado", "descartada", "descartados", "descartadas",
+)
+
+_ENGLISH_POST_NEGATIONS = (
+    "is absent", "are absent", "is not seen", "are not seen", "not seen",
+    "is not identified", "are not identified", "not identified", "is not present",
+    "are not present", "not present", "is excluded", "are excluded",
 )
 
 _NUMBER = re.compile(r"(?<!\w)[+-]?\d+(?:[.,]\d+)?(?!\w)")
@@ -78,37 +94,58 @@ def _polarity(
     value: object,
     terms: Mapping[str, tuple[str, ...]],
     negations: tuple[str, ...],
+    post_negations: tuple[str, ...],
 ) -> dict[str, int]:
     text = _fold(value)
     output: dict[str, int] = {}
     for label in PAD_CHEST_6:
-        best: tuple[int, str] | None = None
+        best: tuple[int, int] | None = None
         for term in terms[label]:
             folded_term = _fold(term)
-            index = text.find(folded_term)
-            if index >= 0 and (best is None or index < best[0]):
-                best = (index, folded_term)
+            pattern = re.compile(rf"(?<!\w){re.escape(folded_term)}(?!\w)")
+            match = pattern.search(text)
+            if match is not None and (best is None or match.start() < best[0]):
+                best = (match.start(), match.end())
         if best is None:
             continue
-        index, _ = best
+        index, end = best
         # A generous character window handles multiword radiology negations
         # while remaining inside the current sentence/clause.
         boundary = max(text.rfind(".", 0, index), text.rfind(";", 0, index))
         prefix = text[max(boundary + 1, index - 64) : index].strip()
-        output[label] = 0 if any(cue in prefix for cue in negations) else 1
+        next_periods = [
+            boundary
+            for boundary in (text.find(".", end), text.find(";", end))
+            if boundary >= 0
+        ]
+        clause_end = min(next_periods) if next_periods else len(text)
+        suffix = text[end : min(clause_end, end + 48)].strip()
+
+        def contains_phrase(window: str, phrase: str) -> bool:
+            return re.search(
+                rf"(?<!\w){re.escape(_fold(phrase))}(?!\w)", window
+            ) is not None
+
+        negated_before = any(contains_phrase(prefix, cue) for cue in negations)
+        negated_after = any(contains_phrase(suffix, cue) for cue in post_negations)
+        output[label] = 0 if negated_before or negated_after else 1
     return output
 
 
 def spanish_concept_polarity(value: object) -> dict[str, int]:
     """Extract explicitly mentioned PadChest-6 concept polarity in Spanish."""
 
-    return _polarity(value, _SPANISH_TERMS, _SPANISH_NEGATIONS)
+    return _polarity(
+        value, _SPANISH_TERMS, _SPANISH_NEGATIONS, _SPANISH_POST_NEGATIONS
+    )
 
 
 def english_concept_polarity(value: object) -> dict[str, int]:
     """Extract explicitly mentioned PadChest-6 concept polarity in English."""
 
-    return _polarity(value, _ENGLISH_TERMS, _ENGLISH_NEGATIONS)
+    return _polarity(
+        value, _ENGLISH_TERMS, _ENGLISH_NEGATIONS, _ENGLISH_POST_NEGATIONS
+    )
 
 
 def normalized_numbers(value: object) -> tuple[str, ...]:

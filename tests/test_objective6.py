@@ -74,6 +74,14 @@ class Objective6TextTests(unittest.TestCase):
         self.assertEqual(spanish_concept_polarity(source)["Effusion"], 0)
         self.assertEqual(english_concept_polarity(target)["Effusion"], 0)
         self.assertEqual(concept_polarity_counts(source, target), (1, 1))
+        self.assertEqual(
+            english_concept_polarity("Pleural effusion is not seen.")["Effusion"],
+            0,
+        )
+        self.assertEqual(
+            english_concept_polarity("Normal heart. Pleural effusion.")["Effusion"],
+            1,
+        )
 
     def test_spanish_normalisation_and_tokenisation(self) -> None:
         self.assertEqual(normalise_report("  Sin   hallazgos ÁGUDOS. "), "sin hallazgos águdos.")
@@ -198,6 +206,25 @@ class Objective6CliTests(unittest.TestCase):
                 )
                 self.assertEqual(result.returncode, 0, msg=result.stderr)
                 self.assertIn("--train-manifest", result.stdout)
+
+    def test_english_v2_translation_diagnostic_cli_imports(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(
+                    repository
+                    / "scripts"
+                    / "audit_objective6_english_v2_translation.py"
+                ),
+                "--help",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, msg=result.stderr)
+        self.assertIn("--expected-train-english-sha256", result.stdout)
 
     def test_english_v2_protocol_publication_cli_imports(self) -> None:
         repository = Path(__file__).resolve().parents[1]
