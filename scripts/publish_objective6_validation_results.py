@@ -352,6 +352,14 @@ def main() -> None:
             )
         uploaded.raise_for_status()
 
+    print("\n--- OBJECTIVE 6 PUBLISHED VALIDATION INTERPRETATION ---")
+    print(json.dumps({
+        "paired_primary_comparisons": summary["paired_primary_comparisons"],
+        "clinical_labeler_validation_reference_performance": summary[
+            "clinical_labeler"
+        ]["validation_reference_report_performance"],
+    }, indent=2, sort_keys=True))
+    print("\n--- OBJECTIVE 6 VALIDATION PUBLICATION RECORD ---")
     print(json.dumps({
         "summary_sha256": actual["summary"],
         "figure_sha256": actual["figure"],
