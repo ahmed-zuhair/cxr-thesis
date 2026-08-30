@@ -1,0 +1,14 @@
+{
+  "artifact": "Final Objective 6 pre-training protocol lock",
+  "cohort_summary_sha256": "06852b2da8fb48710e1ebda317b232df92f9671195166852cb48d3b7ea8d57a3",
+  "immutable": true,
+  "locked_test_evaluated": false,
+  "locked_test_evaluation_count": 0,
+  "private_manifest_sha256": {
+    "test_report_cohort_private.csv": "d7b133cb60cb304a414c0c5e5fd487ab9d1b18d314a1fee5d3f8db48ca348052",
+    "train_report_cohort_private.csv": "278addf3c0a216bb206b4e4b79364f26bacbee977f3209e9275e2abbd8fda7d7",
+    "val_report_cohort_private.csv": "829573501a62a2269269486218889e908db586da98ec2c264402c345bac5f2d6"
+  },
+  "protocol_sha256": "1afed66a5d1cde28acd4271e3a102bdaea38228bb96dbe826395c0a3030b83f3",
+  "training_started": false
+}

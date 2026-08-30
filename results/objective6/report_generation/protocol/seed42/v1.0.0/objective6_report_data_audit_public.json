@@ -1,0 +1,77 @@
+{
+  "adult_nonempty_frontal_rows_before_path_check": 105007,
+  "age_source": "StudyDate_DICOM year minus PatientBirth year",
+  "artifact": "Objective 6 PadChest report-data feasibility audit",
+  "candidate_pool_after_objective5_exclusion": {
+    "patients": 25342,
+    "studies": 42066
+  },
+  "frontal_rows": 110633,
+  "medical_images_copied": false,
+  "missing_image_rows_after_eligibility": 8,
+  "model_inference_performed": false,
+  "nonempty_report_rows": 160722,
+  "objective5_exclusion": {
+    "eligible_studies_removed": 61367,
+    "expected_patients": 40000,
+    "manifests": [
+      {
+        "file": "padchest_adaptation_train_private.csv",
+        "patients": 30000,
+        "rows": 30000,
+        "sha256": "8405fdbe0d35c269b4d829c21d8c767a6c910bee6fa6ecb62a4c0d01d772f316"
+      },
+      {
+        "file": "padchest_locked_test_private.csv",
+        "patients": 5000,
+        "rows": 5000,
+        "sha256": "8b07c7cae5671af072ae3e39fdd5380e6e9741521e214a7ad93d9bd22a2151c6"
+      },
+      {
+        "file": "padchest_target_validation_private.csv",
+        "patients": 5000,
+        "rows": 5000,
+        "sha256": "a7958fead60706378d2e731c40fb5df812aebb4a8fd2c6820fc6a040ce12daae"
+      }
+    ],
+    "verified_unique_patients": 40000
+  },
+  "objective5_locked_test_labels_accessed": false,
+  "patient_or_image_identifiers_written": false,
+  "patients_before_objective5_exclusion": 62866,
+  "raw_reports_written": false,
+  "report_statistics_before_objective5_exclusion": {
+    "character_length": {
+      "maximum": 824.0,
+      "median": 69.0,
+      "minimum": 1.0,
+      "p05": 14.0,
+      "p25": 33.0,
+      "p75": 131.0,
+      "p95": 242.0,
+      "p99": 332.0
+    },
+    "rows_belonging_to_repeated_exact_reports": 45108,
+    "token_length": {
+      "maximum": 123.0,
+      "median": 11.0,
+      "minimum": 1.0,
+      "p05": 3.0,
+      "p25": 5.0,
+      "p75": 21.0,
+      "p95": 38.0,
+      "p99": 53.0
+    },
+    "unique_normalised_reports": 62578,
+    "unique_tokens": 6108
+  },
+  "representative_studies_before_objective5_exclusion": 103433,
+  "rows_with_valid_age": 160855,
+  "selection_read_labels": false,
+  "selection_read_predictions": false,
+  "selection_read_report_content": false,
+  "source_metadata_sha256": "b02e42e5f1c53609298b47b1246a5dbed725fcae88e2cff407b772dfe10d2ddc",
+  "source_rows": 160861,
+  "training_performed": false,
+  "version": "v1.0.0"
+}

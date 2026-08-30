@@ -1,0 +1,50 @@
+{
+  "artifact": "Objective 6 public pre-training artifact inventory",
+  "audit_sha256": "f69eab8e5b9d8a9608d71ecd1c0dfef3dde83791e86c1b4bb36e4ce410ed4be0",
+  "case_level_predictions_included": false,
+  "cohort_summary_sha256": "06852b2da8fb48710e1ebda317b232df92f9671195166852cb48d3b7ea8d57a3",
+  "files": {
+    "FINAL_OBJECTIVE6_PRETRAINING_LOCK.json": {
+      "bytes": 723,
+      "sha256": "9c66e494f3247aa00782133d671e004ded0a28d4a9626491279ff65d36b0aa6d"
+    },
+    "FINAL_OBJECTIVE6_PRETRAINING_LOCK.json.sha256": {
+      "bytes": 105,
+      "sha256": "4d7889c42451c11f912a0350fb71d984ff0353f6e4caa77899f5355b13f8e180"
+    },
+    "README.md": {
+      "bytes": 429,
+      "sha256": "39588a62d92700b6961c143cf819bbdf988c444f7c4daec0bc4ca38589200f9e"
+    },
+    "objective6_report_cohort_summary_public.json": {
+      "bytes": 2484,
+      "sha256": "06852b2da8fb48710e1ebda317b232df92f9671195166852cb48d3b7ea8d57a3"
+    },
+    "objective6_report_cohort_summary_public.json.sha256": {
+      "bytes": 111,
+      "sha256": "fdf2c18bb87d8c473bcb6e3dca9799d50c0f2cda5fd67c81443f8f1b89ffa478"
+    },
+    "objective6_report_data_audit_public.json": {
+      "bytes": 2389,
+      "sha256": "f69eab8e5b9d8a9608d71ecd1c0dfef3dde83791e86c1b4bb36e4ce410ed4be0"
+    },
+    "objective6_report_data_audit_public.json.sha256": {
+      "bytes": 107,
+      "sha256": "cb24bf23dc0cd823da90834cbc07c43765e2634654831c9963690ac21bf3fdca"
+    },
+    "objective6_report_generation_protocol_public.json": {
+      "bytes": 2650,
+      "sha256": "1afed66a5d1cde28acd4271e3a102bdaea38228bb96dbe826395c0a3030b83f3"
+    },
+    "objective6_report_generation_protocol_public.json.sha256": {
+      "bytes": 116,
+      "sha256": "76075cf192e0371950f1fc826dadd4edf7d3844f567e3c645e555ffb455ce660"
+    }
+  },
+  "final_lock_sha256": "9c66e494f3247aa00782133d671e004ded0a28d4a9626491279ff65d36b0aa6d",
+  "medical_images_included": false,
+  "patient_or_image_identifiers_included": false,
+  "private_manifests_included": false,
+  "protocol_sha256": "1afed66a5d1cde28acd4271e3a102bdaea38228bb96dbe826395c0a3030b83f3",
+  "raw_reports_included": false
+}

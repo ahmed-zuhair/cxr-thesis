@@ -1,0 +1,71 @@
+{
+  "artifact": "Objective 6 locked report-generation cohort summary",
+  "candidate_patients": 25342,
+  "candidate_studies": 42066,
+  "identifiers_public": false,
+  "locked_test_evaluated": false,
+  "locked_test_novel_reference_cases": 4054,
+  "locked_test_reference_aggregated_only_after_membership_lock": true,
+  "locked_test_reference_content_used_for_selection": false,
+  "locked_test_reference_seen_exactly_in_training_fraction": 0.37659541749961556,
+  "model_inference_performed": false,
+  "model_training_performed": false,
+  "objective5_manifest_sha256": {
+    "padchest_adaptation_train_private.csv": "8405fdbe0d35c269b4d829c21d8c767a6c910bee6fa6ecb62a4c0d01d772f316",
+    "padchest_locked_test_private.csv": "8b07c7cae5671af072ae3e39fdd5380e6e9741521e214a7ad93d9bd22a2151c6",
+    "padchest_target_validation_private.csv": "a7958fead60706378d2e731c40fb5df812aebb4a8fd2c6820fc6a040ce12daae"
+  },
+  "objective5_patients_excluded": 40000,
+  "patient_overlap": {
+    "train_vs_test": 0,
+    "train_vs_val": 0,
+    "val_vs_test": 0
+  },
+  "private_manifest_sha256": {
+    "test_report_cohort_private.csv": "d7b133cb60cb304a414c0c5e5fd487ab9d1b18d314a1fee5d3f8db48ca348052",
+    "train_report_cohort_private.csv": "278addf3c0a216bb206b4e4b79364f26bacbee977f3209e9275e2abbd8fda7d7",
+    "val_report_cohort_private.csv": "829573501a62a2269269486218889e908db586da98ec2c264402c345bac5f2d6"
+  },
+  "protocol_sha256": "1afed66a5d1cde28acd4271e3a102bdaea38228bb96dbe826395c0a3030b83f3",
+  "raw_reports_public": false,
+  "report_token_length": {
+    "test": {
+      "maximum": 100.0,
+      "median": 11.0,
+      "minimum": 1.0,
+      "p95": 38.0,
+      "p99": 54.0
+    },
+    "train": {
+      "maximum": 97.0,
+      "median": 12.0,
+      "minimum": 1.0,
+      "p95": 39.0,
+      "p99": 53.0
+    },
+    "val": {
+      "maximum": 123.0,
+      "median": 12.0,
+      "minimum": 1.0,
+      "p95": 39.0,
+      "p99": 51.0
+    }
+  },
+  "repository_commit": "8157a03d426b4d4206518f808306fad1beeb7e98",
+  "source_metadata_sha256": "b02e42e5f1c53609298b47b1246a5dbed725fcae88e2cff407b772dfe10d2ddc",
+  "split_cases": {
+    "test": 6503,
+    "train": 29283,
+    "val": 6280
+  },
+  "split_membership_used_labels": false,
+  "split_membership_used_predictions": false,
+  "split_membership_used_report_content": false,
+  "split_patients": {
+    "test": 3940,
+    "train": 17583,
+    "val": 3819
+  },
+  "validation_reference_seen_exactly_in_training_fraction": 0.3695859872611465,
+  "version": "v1.0.0"
+}

@@ -1,0 +1,87 @@
+{
+  "artifact": "Objective 6 clinical report-generation protocol",
+  "dataset": "PadChest-small",
+  "eligibility": {
+    "adult_only": true,
+    "available_image": true,
+    "exclude_all_objective5_padchest_patients": true,
+    "frontal_projections": [
+      "PA",
+      "AP",
+      "AP_horizontal"
+    ],
+    "nonempty_report": true,
+    "one_representative_image_per_study": true
+  },
+  "evaluation": {
+    "clinical_metrics": [
+      "concept precision",
+      "concept recall",
+      "concept F1",
+      "negation error rate"
+    ],
+    "confidence_intervals": "1000-replicate patient-cluster bootstrap",
+    "lexical_metrics": [
+      "BLEU-1",
+      "BLEU-2",
+      "BLEU-3",
+      "BLEU-4",
+      "ROUGE-L",
+      "METEOR",
+      "CIDEr"
+    ],
+    "locked_test_evaluations": 1,
+    "primary_population": "all locked-test studies",
+    "safety_metrics": [
+      "empty-report rate",
+      "repetition rate",
+      "training-report exact-match rate"
+    ],
+    "sensitivity_population": "locked-test references not exactly present in training"
+  },
+  "feasibility_audit_sha256": "f69eab8e5b9d8a9608d71ecd1c0dfef3dde83791e86c1b4bb36e4ce410ed4be0",
+  "model_comparisons": [
+    "nearest-training-image report retrieval",
+    "image-only DenseNet-Transformer",
+    "image-plus-clinical DenseNet-Transformer"
+  ],
+  "primary_model": {
+    "clinical_inputs": [
+      "age",
+      "sex",
+      "projection"
+    ],
+    "decoder": "four-layer autoregressive Transformer",
+    "ground_truth_labels_as_decoder_input": false,
+    "visual_encoder": "Objective 5 PadChest-adapted DenseNet-121",
+    "visual_encoder_sha256": "109db89a723c6e2f24442cb5866bfcf4084e85083936cda91bce3b8ae4365d9d"
+  },
+  "privacy": {
+    "case_level_predictions_public": false,
+    "identifiers_public": false,
+    "medical_images_public": false,
+    "private_manifests_public": false,
+    "raw_reports_public": false
+  },
+  "report_language": "Spanish",
+  "seed": 42,
+  "source_metadata_sha256": "b02e42e5f1c53609298b47b1246a5dbed725fcae88e2cff407b772dfe10d2ddc",
+  "split": {
+    "algorithm": "SHA-256 deterministic patient partition",
+    "locked_test_fraction": 0.15,
+    "patient_disjoint": true,
+    "training_fraction": 0.7,
+    "unit": "patient",
+    "uses_labels": false,
+    "uses_predictions": false,
+    "uses_report_content_after_nonempty_eligibility": false,
+    "validation_fraction": 0.15
+  },
+  "status": "locked before cohort materialisation, vocabulary fitting, training, and evaluation",
+  "training": {
+    "private_epoch_recovery": true,
+    "validation_only_model_selection": true,
+    "vocabulary_fit": "training reports only"
+  },
+  "version": "v1.0.0"
+}
