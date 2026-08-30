@@ -14,8 +14,8 @@ from torch.utils.data import Dataset
 from cxr_thesis.objective1.features import encode_clinical_features
 from cxr_thesis.objective1.preprocessing import load_image
 
+from .evaluation import parse_padchest6_labels
 from .text import ReportVocabulary
-
 
 REQUIRED_COLUMNS = {
     "image_path", "patient_id", "study_id", "report", "age", "sex", "view"
@@ -41,6 +41,7 @@ class ReportGenerationDataset(Dataset):
         *,
         image_size: int = 320,
         maximum_length: int = 160,
+        include_clinical_labels: bool = False,
     ) -> None:
         missing = sorted(REQUIRED_COLUMNS - set(manifest.columns))
         if missing:
@@ -51,6 +52,9 @@ class ReportGenerationDataset(Dataset):
         self.vocabulary = vocabulary
         self.image_size = int(image_size)
         self.maximum_length = int(maximum_length)
+        self.include_clinical_labels = bool(include_clinical_labels)
+        if self.include_clinical_labels and "labels" not in manifest.columns:
+            raise ValueError("Clinical-guided report training requires labels")
 
     def __len__(self) -> int:
         return len(self.records)
@@ -75,11 +79,16 @@ class ReportGenerationDataset(Dataset):
         identifiers = self.vocabulary.encode(
             record["report"], maximum_length=self.maximum_length
         )
-        return {
+        sample = {
             "image": torch.from_numpy(np.ascontiguousarray(channels)).float(),
             "clinical": torch.tensor(list(clinical.values()), dtype=torch.float32),
             "report_ids": torch.tensor(identifiers, dtype=torch.long),
         }
+        if self.include_clinical_labels:
+            sample["clinical_labels"] = torch.from_numpy(
+                parse_padchest6_labels(record["labels"]).astype(np.float32)
+            )
+        return sample
 
 
 def collate_reports(
@@ -92,8 +101,15 @@ def collate_reports(
     for row, sample in enumerate(samples):
         values = sample["report_ids"]
         reports[row, : values.numel()] = values
-    return {
+    batch = {
         "image": torch.stack([sample["image"] for sample in samples]),
         "clinical": torch.stack([sample["clinical"] for sample in samples]),
         "report_ids": reports,
     }
+    if all("clinical_labels" in sample for sample in samples):
+        batch["clinical_labels"] = torch.stack(
+            [sample["clinical_labels"] for sample in samples]
+        )
+    elif any("clinical_labels" in sample for sample in samples):
+        raise ValueError("A report batch cannot mix labelled and unlabelled samples")
+    return batch

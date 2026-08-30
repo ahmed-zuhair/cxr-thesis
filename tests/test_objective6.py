@@ -114,6 +114,45 @@ class Objective6ModelTests(unittest.TestCase):
         self.assertLessEqual(generated.shape[1], 5)
         self.assertFalse(any(parameter.requires_grad for parameter in model.image_encoder.parameters()))
 
+    def test_v1_1_concept_token_partial_unfreezing_and_beam_search(self) -> None:
+        baseline = DenseNetTransformerReportGenerator(
+            24, d_model=32, heads=4, layers=1, feedforward_dim=64,
+            maximum_length=10, pretrained=False, use_concept_token=False,
+        )
+        self.assertFalse(any("concept_projection" in key for key in baseline.state_dict()))
+        enhanced = DenseNetTransformerReportGenerator(
+            24, d_model=32, heads=4, layers=1, feedforward_dim=64,
+            maximum_length=10, pretrained=False, use_concept_token=True,
+        )
+        load = enhanced.load_state_dict(baseline.state_dict(), strict=False)
+        self.assertEqual(
+            set(load.missing_keys),
+            {
+                "concept_projection.0.weight", "concept_projection.0.bias",
+                "concept_projection.2.weight", "concept_projection.2.bias",
+            },
+        )
+        self.assertFalse(load.unexpected_keys)
+        enhanced.set_final_image_block_trainable()
+        trainable = {
+            name for name, parameter in enhanced.image_encoder.named_parameters()
+            if parameter.requires_grad
+        }
+        self.assertTrue(trainable)
+        self.assertTrue(all(
+            name.startswith(("denseblock4", "norm5"))
+            for name in trainable
+        ))
+        enhanced.eval()
+        with torch.no_grad():
+            generated = enhanced.generate_beam(
+                torch.rand(1, 3, 64, 64), torch.rand(1, 9),
+                maximum_length=6, beam_width=3,
+                length_normalization_alpha=0.7, no_repeat_ngram_size=4,
+            )
+        self.assertEqual(generated.shape[0], 1)
+        self.assertLessEqual(generated.shape[1], 6)
+
 
 class Objective6CliTests(unittest.TestCase):
     def test_retrieval_manifest_hashes_are_complete_and_consistent(self) -> None:
@@ -307,6 +346,21 @@ class Objective6CliTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, msg=result.stderr)
             self.assertIn(expected, result.stdout)
 
+    def test_enhancement_training_clis_import(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        for script in (
+            "train_objective6_enhanced_report_generator.py",
+            "train_objective6_enhanced_with_private_recovery.py",
+        ):
+            result = subprocess.run(
+                [sys.executable, str(repository / "scripts" / script), "--help"],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, msg=result.stderr)
+            self.assertIn("--enhancement-protocol", result.stdout)
+
     def test_training_cli_writes_resumable_test_blind_checkpoint(self) -> None:
         repository = Path(__file__).resolve().parents[1]
         with tempfile.TemporaryDirectory() as directory:
@@ -400,6 +454,24 @@ class Objective6CohortTests(unittest.TestCase):
         batch = collate_reports([sample, longer])
         self.assertEqual(batch["report_ids"].shape, (2, 4))
         self.assertEqual(int(batch["report_ids"][0, -1]), 0)
+
+    def test_report_collation_preserves_clinical_guidance_targets(self) -> None:
+        samples = [
+            {
+                "image": torch.zeros(3, 8, 8),
+                "clinical": torch.zeros(9),
+                "report_ids": torch.tensor([1, 2]),
+                "clinical_labels": torch.tensor([1, 0, 0, 0, 1, 0]).float(),
+            },
+            {
+                "image": torch.ones(3, 8, 8),
+                "clinical": torch.ones(9),
+                "report_ids": torch.tensor([1, 4, 2]),
+                "clinical_labels": torch.tensor([0, 1, 0, 0, 0, 0]).float(),
+            },
+        ]
+        batch = collate_reports(samples)
+        self.assertEqual(batch["clinical_labels"].shape, (2, 6))
 
 
 if __name__ == "__main__":
