@@ -191,6 +191,23 @@ class Objective6ModelTests(unittest.TestCase):
 
 
 class Objective6CliTests(unittest.TestCase):
+    def test_english_v2_remediation_protocol_clis_import(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        expectations = {
+            "lock_objective6_english_v2_remediation.py": "--translation-diagnostic",
+            "publish_objective6_english_v2_remediation.py": "--expected-lock-sha256",
+        }
+        for script, expected in expectations.items():
+            with self.subTest(script=script):
+                result = subprocess.run(
+                    [sys.executable, str(repository / "scripts" / script), "--help"],
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                )
+                self.assertEqual(result.returncode, 0, msg=result.stderr)
+                self.assertIn(expected, result.stdout)
+
     def test_english_v2_translation_clis_import(self) -> None:
         repository = Path(__file__).resolve().parents[1]
         for script in (
