@@ -1,0 +1,46 @@
+{
+  "additional_enhancement_rounds_allowed": false,
+  "artifact": "Objective 6 validation-results public inventory",
+  "candidate_advanced": false,
+  "case_level_outputs_included": false,
+  "figure_sha256": "87f9b656864feb80a5a06f152c2e406e03bb54efc894616de002d68713f4a243",
+  "files": {
+    "FINAL_OBJECTIVE6_V1_1_VALIDATION.json": {
+      "bytes": 818,
+      "sha256": "5fb7694f578649dfc08912f0e2b1af6e2ac972e4eff87fa7c9b3232e433ab852"
+    },
+    "FINAL_OBJECTIVE6_V1_1_VALIDATION.json.sha256": {
+      "bytes": 104,
+      "sha256": "3b98009f18edffd30237d4488519532c5830a4491b7adc5b55c77515e355c58a"
+    },
+    "README.md": {
+      "bytes": 683,
+      "sha256": "f3dc0e33bdc3397d450690d8d99bab4d1e3343097edb8a98e8263893602508f5"
+    },
+    "objective6_v1_1_validation_comparison.png": {
+      "bytes": 199524,
+      "sha256": "87f9b656864feb80a5a06f152c2e406e03bb54efc894616de002d68713f4a243"
+    },
+    "objective6_v1_1_validation_comparison.png.sha256": {
+      "bytes": 108,
+      "sha256": "06be0e9a33e8c0d11919b1991c63024631417378778112707043a0f64b1e0627"
+    },
+    "objective6_v1_1_validation_summary_public.json": {
+      "bytes": 10482,
+      "sha256": "7e63d60beeeba2c4a4876cd2f0df9d8f82c444b1b7fa993ee1f842a24c067a14"
+    },
+    "objective6_v1_1_validation_summary_public.json.sha256": {
+      "bytes": 113,
+      "sha256": "117355af29801bd90cff5e20dfd16012426538ed233f52fa1d512a92a7bb2eb1"
+    }
+  },
+  "final_lock_sha256": "5fb7694f578649dfc08912f0e2b1af6e2ac972e4eff87fa7c9b3232e433ab852",
+  "locked_test_results_included": false,
+  "medical_images_included": false,
+  "negative_result_reported": true,
+  "patient_or_image_identifiers_included": false,
+  "private_checkpoints_included": false,
+  "private_manifests_included": false,
+  "raw_or_generated_reports_included": false,
+  "summary_sha256": "7e63d60beeeba2c4a4876cd2f0df9d8f82c444b1b7fa993ee1f842a24c067a14"
+}
