@@ -1,0 +1,140 @@
+{
+  "artifact": "Objective 6 validation generation and comparison protocol",
+  "candidate_training_results": {
+    "image_only": {
+      "best_epoch": 6,
+      "checkpoint_sha256": "beb45ceb8fb160e6322ef1fac2289a4ff0dda13f05ba508cf38ff40fe64e2e25",
+      "epochs_completed": 10,
+      "test_evaluated": false,
+      "validation_loss": 2.4653053906440925,
+      "validation_perplexity": 11.767075157978814,
+      "variant": "image_only",
+      "vocabulary_sha256": "a691540a366051fa2685baa7acc095d821037fda7ba0023bc22f4146de6b9fa9"
+    },
+    "multimodal": {
+      "best_epoch": 6,
+      "checkpoint_sha256": "18aa4293195b77aaf04df1ba310431df83f75e51ee6aa5837ff43a48a8ec10d3",
+      "epochs_completed": 10,
+      "test_evaluated": false,
+      "validation_loss": 2.4648350282036398,
+      "validation_perplexity": 11.761541669265164,
+      "variant": "multimodal",
+      "vocabulary_sha256": "a691540a366051fa2685baa7acc095d821037fda7ba0023bc22f4146de6b9fa9"
+    }
+  },
+  "clinical_efficacy": {
+    "concepts": [
+      "Atelectasis",
+      "Cardiomegaly",
+      "Consolidation",
+      "Edema",
+      "Effusion",
+      "Pneumothorax"
+    ],
+    "generated_report_labeler": {
+      "features": "Spanish character TF-IDF word-boundary n-grams 3-5",
+      "model": "six independent logistic regressions",
+      "probability_threshold": 0.5,
+      "training_targets": "the six fixed PadChest concepts",
+      "training_text": "Objective 6 training reports only",
+      "validation_or_test_outputs_used_to_fit_labeler": false
+    },
+    "metrics": [
+      "micro concept precision",
+      "micro concept recall",
+      "micro concept F1",
+      "macro concept F1",
+      "explicit-negation contradiction rate"
+    ],
+    "name": "PadChest-6 clinical efficacy",
+    "primary_metric": "macro concept F1",
+    "reference": "private PadChest metadata labels"
+  },
+  "comparison_systems": [
+    "nearest-training-image report retrieval",
+    "image_only",
+    "multimodal"
+  ],
+  "decoding": {
+    "beam_search": false,
+    "maximum_tokens_including_bos_eos": 160,
+    "method": "deterministic greedy autoregressive decoding",
+    "sampling": false,
+    "temperature_tuning": false,
+    "validation_generation_repetitions": 1
+  },
+  "interpretation_rule": {
+    "all_preregistered_metrics_reported": true,
+    "primary_claim": "multimodal minus image_only macro concept F1 on validation",
+    "primary_model_is_not_changed_by_validation_result": true,
+    "secondary_claim": "multimodal minus image_only CIDEr-D on validation"
+  },
+  "lexical_metrics": {
+    "case_handling": "NFKC-normalised lowercase",
+    "one_reference_per_study": true,
+    "reported": [
+      "BLEU-1",
+      "BLEU-2",
+      "BLEU-3",
+      "BLEU-4",
+      "ROUGE-L",
+      "METEOR",
+      "CIDEr-D"
+    ],
+    "secondary_metric": "CIDEr-D",
+    "tokenisation": "locked Objective 6 Unicode Spanish tokenizer"
+  },
+  "pretraining_lock_sha256": "9c66e494f3247aa00782133d671e004ded0a28d4a9626491279ff65d36b0aa6d",
+  "pretraining_protocol_sha256": "1afed66a5d1cde28acd4271e3a102bdaea38228bb96dbe826395c0a3030b83f3",
+  "primary_system": {
+    "basis": "fixed by the published pretraining protocol",
+    "selected_after_generation_metrics": false,
+    "variant": "multimodal"
+  },
+  "privacy": {
+    "aggregate_metrics_public": true,
+    "case_level_metrics_public": false,
+    "generated_reports_public": false,
+    "medical_images_public": false,
+    "patient_or_image_identifiers_public": false,
+    "private_checkpoints_public": false,
+    "raw_reference_reports_public": false
+  },
+  "repository_commit": "5dc0694c73cf664b8daa17d636fe32d98524f7f7",
+  "retrieval_baseline": {
+    "candidate_reports": "training cohort only",
+    "encoder": "frozen Objective 5 PadChest-adapted DenseNet-121",
+    "labels_used": false,
+    "report_content_used_to_choose_neighbor": false,
+    "representation": "global-average-pooled final convolutional features",
+    "similarity": "cosine",
+    "tie_break": "lexicographic private case_code"
+  },
+  "safety_metrics": {
+    "empty_after_special_token_removal": true,
+    "reported": [
+      "empty-report rate",
+      "report-with-repeated-4-gram rate",
+      "training-report exact-match rate",
+      "unique-generated-report fraction"
+    ]
+  },
+  "safety_state": {
+    "full_validation_generation_started": false,
+    "locked_test_evaluated": false,
+    "locked_test_manifest_opened": false,
+    "locked_test_reports_accessed": false
+  },
+  "source_checkpoint_sha256": "109db89a723c6e2f24442cb5866bfcf4084e85083936cda91bce3b8ae4365d9d",
+  "status": "locked after validation-loss training and before full validation generation or locked-test access",
+  "train_manifest_sha256": "278addf3c0a216bb206b4e4b79364f26bacbee977f3209e9275e2abbd8fda7d7",
+  "uncertainty": {
+    "confidence_level": 0.95,
+    "method": "paired patient-cluster percentile bootstrap",
+    "replicates": 1000,
+    "same_resamples_for_all_systems": true,
+    "seed": 6042
+  },
+  "validation_manifest_sha256": "829573501a62a2269269486218889e908db586da98ec2c264402c345bac5f2d6",
+  "version": "v1.0.0"
+}

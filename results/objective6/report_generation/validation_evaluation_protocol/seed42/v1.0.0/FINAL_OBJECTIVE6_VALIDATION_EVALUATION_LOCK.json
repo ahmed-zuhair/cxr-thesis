@@ -1,0 +1,13 @@
+{
+  "artifact": "Final Objective 6 pre-validation-generation lock",
+  "candidate_checkpoint_sha256": {
+    "image_only": "beb45ceb8fb160e6322ef1fac2289a4ff0dda13f05ba508cf38ff40fe64e2e25",
+    "multimodal": "18aa4293195b77aaf04df1ba310431df83f75e51ee6aa5837ff43a48a8ec10d3"
+  },
+  "full_validation_generation_started": false,
+  "immutable": true,
+  "locked_test_evaluated": false,
+  "locked_test_evaluation_count": 0,
+  "primary_system": "multimodal",
+  "protocol_sha256": "81424c30f1619707325f0a83ef9a6fba3a859743e3b4ee0c33ac68dba6161438"
+}

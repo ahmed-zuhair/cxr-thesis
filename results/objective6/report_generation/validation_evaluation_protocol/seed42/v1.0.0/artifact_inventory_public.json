@@ -1,0 +1,33 @@
+{
+  "artifact": "Objective 6 validation-protocol public inventory",
+  "case_level_outputs_included": false,
+  "files": {
+    "FINAL_OBJECTIVE6_VALIDATION_EVALUATION_LOCK.json": {
+      "bytes": 542,
+      "sha256": "e48b11cc0af8be0866b873ae91dd5f4c55738b39927d6dec52d2f29cf5f8275a"
+    },
+    "FINAL_OBJECTIVE6_VALIDATION_EVALUATION_LOCK.json.sha256": {
+      "bytes": 115,
+      "sha256": "bb7f1c608dc5e2aae0f45b1b7f8af112319591fcf20d05e78d5e12576b37a9dd"
+    },
+    "README.md": {
+      "bytes": 448,
+      "sha256": "593a911526146dea287c7ced4c9c285b5d82c83475bc6d03a6818f296b8f86cb"
+    },
+    "objective6_validation_evaluation_protocol_public.json": {
+      "bytes": 5064,
+      "sha256": "81424c30f1619707325f0a83ef9a6fba3a859743e3b4ee0c33ac68dba6161438"
+    },
+    "objective6_validation_evaluation_protocol_public.json.sha256": {
+      "bytes": 120,
+      "sha256": "0d09b9295fe862074d0f7b06e37ad68088827ebf1b218e318e5c9a46c8ad40b0"
+    }
+  },
+  "final_lock_sha256": "e48b11cc0af8be0866b873ae91dd5f4c55738b39927d6dec52d2f29cf5f8275a",
+  "medical_images_included": false,
+  "patient_or_image_identifiers_included": false,
+  "private_checkpoints_included": false,
+  "private_manifests_included": false,
+  "protocol_sha256": "81424c30f1619707325f0a83ef9a6fba3a859743e3b4ee0c33ac68dba6161438",
+  "raw_or_generated_reports_included": false
+}
