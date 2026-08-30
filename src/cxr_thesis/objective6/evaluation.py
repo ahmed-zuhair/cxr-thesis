@@ -177,7 +177,13 @@ def cider_d_score(
     for order in range(1, 5):
         reference_vector = _tfidf(reference, order, document_frequency[order - 1], documents)
         hypothesis_vector = _tfidf(hypothesis, order, document_frequency[order - 1], documents)
-        dot = sum(value * reference_vector.get(gram, 0.0) for gram, value in hypothesis_vector.items())
+        # CIDEr-D clips hypothesis TF-IDF weights to the reference weights so
+        # repeated phrases cannot inflate similarity.
+        dot = sum(
+            min(value, reference_vector.get(gram, 0.0))
+            * reference_vector.get(gram, 0.0)
+            for gram, value in hypothesis_vector.items()
+        )
         reference_norm = math.sqrt(sum(value * value for value in reference_vector.values()))
         hypothesis_norm = math.sqrt(sum(value * value for value in hypothesis_vector.values()))
         cosine = dot / (reference_norm * hypothesis_norm) if reference_norm and hypothesis_norm else 0.0
