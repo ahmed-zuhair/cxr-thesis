@@ -127,7 +127,10 @@ def snapshot(output: Path, target: Path) -> tuple[list[Path], int]:
         "last.pt", "last.pt.sha256", "best.pt", "best.pt.sha256",
         "history_progress.csv", "vocabulary.json", "vocabulary.json.sha256",
     )
-    target.mkdir(parents=True)
+    # TemporaryDirectory creates its path before yielding it.  Accept an
+    # existing snapshot directory so the polling uploader can copy a stable
+    # epoch without failing before the private backup is committed.
+    target.mkdir(parents=True, exist_ok=True)
     paths: list[Path] = []
     for name in names:
         source = output / name

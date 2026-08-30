@@ -21,6 +21,7 @@ from cxr_thesis.objective6.cohorts import (
 from cxr_thesis.objective6.text import ReportVocabulary, normalise_report, tokenise_report
 import pandas as pd
 from cxr_thesis.objective2.models import build_classifier
+from scripts.train_objective6_with_private_recovery import snapshot
 
 
 class Objective6TextTests(unittest.TestCase):
@@ -67,6 +68,28 @@ class Objective6ModelTests(unittest.TestCase):
 
 
 class Objective6CliTests(unittest.TestCase):
+    def test_private_recovery_snapshot_accepts_existing_temporary_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "output"
+            output.mkdir()
+            checkpoint = output / "last.pt"
+            torch.save({"epoch_completed": 3, "test_evaluated": False}, checkpoint)
+            checksum = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+            (output / "last.pt.sha256").write_text(
+                f"{checksum}  last.pt\n", encoding="utf-8"
+            )
+            target = root / "already_created"
+            target.mkdir()
+
+            paths, epoch = snapshot(output, target)
+
+            self.assertEqual(epoch, 3)
+            self.assertEqual(
+                {path.name for path in paths}, {"last.pt", "last.pt.sha256"}
+            )
+            self.assertTrue((target / "last.pt").is_file())
+
     def test_read_only_audit_cli_imports(self) -> None:
         repository = Path(__file__).resolve().parents[1]
         result = subprocess.run(
