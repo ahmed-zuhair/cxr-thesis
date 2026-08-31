@@ -36,7 +36,7 @@ from typing import Any
 
 import numpy as np
 
-ANSATZ_NAMES = ("v1_0_bottleneck", "v1_1_reupload")
+GRAPH_STRUCTURED_ANSATZ_NAME = "graph_structured"
 
 
 # --------------------------------------------------------------------------
@@ -199,6 +199,43 @@ ANSATZE: dict[str, tuple[Callable[..., np.ndarray], int, int]] = {
     "v1_1_reupload": (v1_1_states, 3, 36),
 }
 
+# Kept as a tuple for compatibility with the Part 3 API and tests. The graph
+# ansatz is registered by Part 6 through ``register_graph_structured_ansatz``.
+ANSATZ_NAMES = ("v1_0_bottleneck", "v1_1_reupload")
+
+
+def register_graph_structured_ansatz(
+    builder: Callable[..., np.ndarray],
+    *,
+    default_layers: int,
+    parameter_count_at_4_qubits: int,
+) -> None:
+    """Register the Part 6 graph circuit without changing this diagnostic API.
+
+    ``builder`` must accept ``(inputs, weights, qubits)`` and return a batched
+    statevector. Its weights use the common ``[samples, layers, qubits, 3]``
+    layout, which lets all three preregistered diagnostics run unchanged.
+    """
+
+    if not callable(builder):
+        raise TypeError("The graph-structured ansatz builder must be callable")
+    if default_layers < 1 or parameter_count_at_4_qubits < 1:
+        raise ValueError("Graph ansatz layers and parameter count must be positive")
+    ANSATZE[GRAPH_STRUCTURED_ANSATZ_NAME] = (
+        builder,
+        int(default_layers),
+        int(parameter_count_at_4_qubits),
+    )
+
+
+def registered_ansatz_names() -> tuple[str, ...]:
+    """Return implemented ansätze in fixed reporting order."""
+
+    ordered = list(ANSATZ_NAMES)
+    if GRAPH_STRUCTURED_ANSATZ_NAME in ANSATZE:
+        ordered.append(GRAPH_STRUCTURED_ANSATZ_NAME)
+    return tuple(ordered)
+
 
 # --------------------------------------------------------------------------
 # expressibility
@@ -238,6 +275,29 @@ def fidelity_kl_divergence(
     return float(np.sum(empirical * np.log(empirical / haar)))
 
 
+def fidelity_histogram(
+    fidelities: np.ndarray,
+    qubits: int,
+    bins: int = 75,
+) -> dict[str, list[float]]:
+    """Return aggregate empirical and exact Haar bin probabilities."""
+
+    if bins < 2:
+        raise ValueError("At least two fidelity bins are required")
+    values = np.clip(np.asarray(fidelities, dtype=np.float64), 0.0, 1.0)
+    if values.size < 1:
+        raise ValueError("At least one fidelity is required")
+    edges = np.linspace(0.0, 1.0, bins + 1)
+    counts, _ = np.histogram(values, bins=edges)
+    empirical = counts.astype(np.float64) / counts.sum()
+    haar = haar_bin_probabilities(edges, qubits)
+    return {
+        "bin_edges": edges.tolist(),
+        "empirical_probability": empirical.tolist(),
+        "haar_probability": haar.tolist(),
+    }
+
+
 def expressibility(
     ansatz: str,
     qubits: int = 4,
@@ -245,6 +305,7 @@ def expressibility(
     samples: int = 5000,
     seed: int = 42,
     fixed_input: bool = True,
+    bins: int = 75,
 ) -> dict[str, Any]:
     """Sample parameter pairs and score the ansatz against Haar randomness."""
 
@@ -265,11 +326,15 @@ def expressibility(
     first = builder(inputs, left, qubits)
     second = builder(inputs, right, qubits)
     fidelities = np.abs(np.sum(np.conj(first) * second, axis=1)) ** 2
+    histogram = fidelity_histogram(fidelities, qubits, bins=bins)
     return {
         "ansatz": ansatz,
         "qubits": int(qubits),
         "layers": int(depth),
         "samples": int(samples),
+        "seed": int(seed),
+        "fixed_input": bool(fixed_input),
+        "fidelity_histogram": histogram,
         "kl_divergence_from_haar": fidelity_kl_divergence(fidelities, qubits),
         "mean_fidelity": float(np.mean(fidelities)),
         "haar_mean_fidelity": float(1.0 / (2**qubits)),
@@ -325,11 +390,14 @@ def entangling_capability(
         else generator.uniform(-np.pi, np.pi, size=(samples, qubits))
     )
     measure = meyer_wallach(builder(inputs, weights, qubits), qubits)
+    measure = np.clip(measure, 0.0, 1.0)
     return {
         "ansatz": ansatz,
         "qubits": int(qubits),
         "layers": int(depth),
         "samples": int(samples),
+        "seed": int(seed),
+        "fixed_input": bool(fixed_input),
         "meyer_wallach_mean": float(np.mean(measure)),
         "meyer_wallach_std": float(np.std(measure, ddof=1)),
     }
@@ -354,17 +422,28 @@ def gradient_variance(
     layers: int,
     samples: int = 200,
     seed: int = 42,
-    parameter: tuple[int, int, int] = (0, 0, 0),
+    parameter: tuple[int, int, int] = (0, 0, 1),
 ) -> dict[str, Any]:
     """Variance of d<Z_0>/d(one parameter) under random initialisation.
 
     Uses the exact parameter-shift rule: every parameter here drives a single
     rotation whose generator has eigenvalues +/-1/2, so the derivative is
     ``[f(theta + pi/2) - f(theta - pi/2)] / 2``.
+
+    The parameter choice is not free. ``Rot(phi, theta, omega)`` expands to
+    ``RZ(omega) RY(theta) RZ(phi)``, and the inputs here are zeros, so the state
+    entering the first layer is exactly ``|0...0>``. A leading ``RZ`` on ``|0>``
+    contributes only a global phase, which makes the gradient with respect to
+    ``phi`` at ``(0, wire, 0)`` identically zero and any variance computed from
+    it pure round-off. The default therefore targets the ``RY`` component, and
+    ``degenerate`` flags the case anyway so a silently meaningless number cannot
+    reach a figure.
     """
 
     if ansatz not in ANSATZE:
         raise ValueError(f"Unknown ansatz {ansatz!r}; expected {ANSATZ_NAMES}")
+    if samples < 2:
+        raise ValueError("At least two gradient samples are required")
     builder, _, _ = ANSATZE[ansatz]
     layer, wire, component = parameter
     if layer >= layers or wire >= qubits or component >= 3:
@@ -387,9 +466,12 @@ def gradient_variance(
         "qubits": int(qubits),
         "layers": int(layers),
         "samples": int(samples),
+        "seed": int(seed),
+        "fixed_parameter": [int(layer), int(wire), int(component)],
         "gradient_variance": float(np.var(gradients, ddof=1)),
         "gradient_mean": float(np.mean(gradients)),
         "gradient_abs_mean": float(np.mean(np.abs(gradients))),
+        "degenerate": bool(np.mean(np.abs(gradients)) < 1e-12),
     }
 
 

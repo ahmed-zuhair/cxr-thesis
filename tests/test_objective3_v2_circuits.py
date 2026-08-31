@@ -149,6 +149,10 @@ class DiagnosticTests(unittest.TestCase):
             result = expressibility(name, qubits=4, samples=400, seed=6)
             self.assertGreaterEqual(result["kl_divergence_from_haar"], 0.0)
             self.assertEqual(result["ansatz"], name)
+            histogram = result["fidelity_histogram"]
+            self.assertAlmostEqual(sum(histogram["empirical_probability"]), 1.0)
+            self.assertAlmostEqual(sum(histogram["haar_probability"]), 1.0)
+            self.assertNotIn("fidelities", result)
 
     def test_deeper_circuits_are_more_expressible(self) -> None:
         shallow = expressibility("v1_0_bottleneck", layers=1, samples=3000, seed=7)
@@ -164,7 +168,22 @@ class DiagnosticTests(unittest.TestCase):
 
     def test_gradient_variance_is_positive_at_small_scale(self) -> None:
         result = gradient_variance("v1_1_reupload", qubits=4, layers=3, samples=200)
-        self.assertGreater(result["gradient_variance"], 0.0)
+        # "> 0" is not enough: round-off from a structurally zero gradient also
+        # passes that. Require a magnitude a real gradient would have.
+        self.assertGreater(result["gradient_variance"], 1e-6)
+        self.assertFalse(result["degenerate"])
+        self.assertEqual(result["fixed_parameter"], [0, 0, 1])
+
+    def test_leading_rz_parameter_is_detected_as_degenerate(self) -> None:
+        # Rot = RZ(omega) RY(theta) RZ(phi); with zero inputs the first layer
+        # acts on |0...0>, so phi only adds a global phase and its gradient
+        # vanishes identically. The guard must catch this rather than report
+        # a variance built from round-off.
+        result = gradient_variance(
+            "v1_1_reupload", qubits=4, layers=3, samples=200, parameter=(0, 0, 0)
+        )
+        self.assertTrue(result["degenerate"])
+        self.assertLess(result["gradient_variance"], 1e-20)
 
     def test_gradient_variance_falls_as_qubits_grow(self) -> None:
         variances = [
