@@ -13,3 +13,6 @@ artifacts/
 checkpoints/
 *.pt
 *.pth
+
+# Kaggle transfer bundles are rebuildable from source; keep them out of git.
+dist/
