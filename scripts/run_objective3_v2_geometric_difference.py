@@ -31,6 +31,7 @@ from cxr_thesis.objective3_v2.guards import assert_no_locked_test, require_exist
 from cxr_thesis.objective3_v2.io_utils import read_json, sha256_file, write_results
 from cxr_thesis.objective3_v2.kernels import (
     ENCODINGS,
+    boundary_warning,
     classical_kernels,
     concentration_diagnostic,
     fidelity_kernel,
@@ -214,7 +215,10 @@ def evaluate(values: np.ndarray, args: argparse.Namespace) -> dict[str, object]:
                     )
 
     ratios = [float(row["min_ratio"]) for row in summary]
+    boundary = boundary_warning([str(row["closest_classical_kernel"]) for row in summary])
     return {
+        "classical_family": sorted(classical),
+        "boundary_check": boundary,
         "samples": int(values.shape[0]),
         "sqrt_samples": float(np.sqrt(values.shape[0])),
         "advantage_threshold": ADVANTAGE_THRESHOLD,

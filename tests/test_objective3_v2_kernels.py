@@ -6,7 +6,9 @@ from importlib.util import find_spec
 import numpy as np
 
 from cxr_thesis.objective3_v2.kernels import (
+    RBF_GAMMA_SCALES,
     angle_statevectors,
+    boundary_warning,
     bloch_features,
     classical_kernels,
     fidelity_kernel,
@@ -194,9 +196,19 @@ class KernelTests(unittest.TestCase):
         values = generator.normal(size=(30, 12))
         kernels = classical_kernels(values)
         self.assertIn("linear", kernels)
-        self.assertEqual(len(kernels), 4)
+        self.assertIn("cosine", kernels)
+        self.assertEqual(len(kernels), 2 + len(RBF_GAMMA_SCALES))
         for name, kernel in kernels.items():
             self.assertAlmostEqual(float(np.trace(kernel)), 30.0, places=6, msg=name)
+
+    def test_boundary_warning_flags_edge_selections(self) -> None:
+        widest = f"rbf_gamma_{max(RBF_GAMMA_SCALES):g}_over_d"
+        flagged = boundary_warning([widest, "linear"])
+        self.assertTrue(flagged["closest_kernel_on_sweep_boundary"])
+        self.assertIn("Widen", flagged["note"])
+        clean = boundary_warning(["rbf_gamma_1_over_d", "linear"])
+        self.assertFalse(clean["closest_kernel_on_sweep_boundary"])
+        self.assertIn("interior", clean["note"])
 
     def test_reduce_to_qubits_bounds_angles(self) -> None:
         generator = np.random.default_rng(8)

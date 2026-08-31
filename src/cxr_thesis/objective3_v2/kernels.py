@@ -200,11 +200,20 @@ def reduce_to_qubits(values: np.ndarray, qubits: int, seed: int = 42) -> np.ndar
     return np.pi * reduced / spread
 
 
-def classical_kernels(values: np.ndarray) -> dict[str, np.ndarray]:
+RBF_GAMMA_SCALES = (0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0)
+
+
+def classical_kernels(
+    values: np.ndarray,
+    gamma_scales: tuple[float, ...] = RBF_GAMMA_SCALES,
+) -> dict[str, np.ndarray]:
     """Candidate classical kernels, each trace-normalised to N.
 
     The comparison must be against the *best* classical kernel, so a family is
-    returned rather than a single choice.
+    returned rather than a single choice. The bandwidth range is deliberately
+    wide: if the closest classical kernel turns out to sit at either end of the
+    sweep, the family was too narrow and the geometric difference is an upper
+    bound rather than a measurement. :func:`boundary_warning` checks for that.
     """
 
     array = np.asarray(values, dtype=np.float64)
@@ -215,13 +224,48 @@ def classical_kernels(values: np.ndarray) -> dict[str, np.ndarray]:
     distances = np.maximum(
         squared[:, None] + squared[None, :] - 2.0 * (array @ array.T), 0.0
     )
-    kernels = {"linear": normalise_trace(array @ array.T)}
-    for scale in (0.1, 1.0, 10.0):
-        gamma = scale / dimension
+    kernels = {
+        "linear": normalise_trace(array @ array.T),
+        "cosine": normalise_trace(
+            (array / np.maximum(np.linalg.norm(array, axis=1, keepdims=True), 1e-12))
+            @ (array / np.maximum(np.linalg.norm(array, axis=1, keepdims=True), 1e-12)).T
+        ),
+    }
+    for scale in gamma_scales:
         kernels[f"rbf_gamma_{scale:g}_over_d"] = normalise_trace(
-            np.exp(-gamma * distances)
+            np.exp(-(scale / dimension) * distances)
         )
     return kernels
+
+
+def boundary_warning(
+    closest_kernel_names: list[str],
+    gamma_scales: tuple[float, ...] = RBF_GAMMA_SCALES,
+) -> dict[str, Any]:
+    """Flag when the closest classical kernel sits at the edge of the sweep.
+
+    An argmin on the boundary means a better classical kernel may lie outside
+    the family, so the geometric difference is an upper bound and any claim that
+    a separation exists is not yet supported.
+    """
+
+    edges = {
+        f"rbf_gamma_{min(gamma_scales):g}_over_d",
+        f"rbf_gamma_{max(gamma_scales):g}_over_d",
+    }
+    hits = sorted({name for name in closest_kernel_names if name in edges})
+    return {
+        "closest_kernel_on_sweep_boundary": bool(hits),
+        "boundary_kernels_selected": hits,
+        "gamma_scales_swept": [float(value) for value in gamma_scales],
+        "note": (
+            "The closest classical kernel sits at the edge of the swept "
+            "bandwidth range. Widen gamma_scales before reporting any "
+            "geometric difference as evidence that a separation exists."
+        )
+        if hits
+        else "The closest classical kernel is interior to the swept range.",
+    }
 
 
 def fidelity_kernel(states: np.ndarray) -> np.ndarray:
