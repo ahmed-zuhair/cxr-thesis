@@ -87,11 +87,15 @@ def build_cache(
     from cxr_thesis.objective1.graphs import GraphSample
     from cxr_thesis.objective2.graph_generation import safe_graph_name
 
+    from cxr_thesis.objective3.training import labels_from_manifest
+
     frame = pd.read_csv(manifest).head(cases)
+    # Label columns carry a "label_" prefix; use the tested reader, not raw names.
+    label_matrix = labels_from_manifest(frame, PRIMARY_LABELS)
     pooled_all, adjacency_all, labels_all = [], [], []
     node_counts, edge_counts, densities = [], [], []
 
-    for _, record in frame.iterrows():
+    for position, (_, record) in enumerate(frame.iterrows()):
         path = assert_no_locked_test(
             Path(graph_root) / f"{safe_graph_name(record['image_id'])}.npz"
         )
@@ -101,7 +105,7 @@ def build_cache(
         )
         pooled_all.append(pooled)
         adjacency_all.append(adjacency)
-        labels_all.append([float(record[label]) for label in PRIMARY_LABELS])
+        labels_all.append(label_matrix[position].tolist())
         node_counts.append(int(sample.x.shape[0]))
         edge_counts.append(int(sample.edge_index.shape[1]))
         densities.append(float((adjacency > 0).sum()) / (supernodes * (supernodes - 1)))

@@ -187,12 +187,18 @@ def _validate_frozen_inputs(args: argparse.Namespace, protocol: dict[str, Any]) 
 
 def _validation_prevalence(path: Path, expected_hash: str) -> list[dict[str, Any]]:
     verify_sha256(assert_no_locked_test(path), expected_hash)
-    frame = pd.read_csv(path, usecols=PRIMARY_LABELS)
+    # Manifest label columns are prefixed "label_"; labels_from_manifest is the
+    # single tested place that knows this. Reading bare names silently assumes a
+    # schema the cohorts do not have.
+    frame = pd.read_csv(path)
     if frame.empty:
         raise RuntimeError("Validation manifest has no rows")
     rows: list[dict[str, Any]] = []
-    for label in PRIMARY_LABELS:
-        values = pd.to_numeric(frame[label], errors="raise").to_numpy(dtype=float)
+    from cxr_thesis.objective3.training import labels_from_manifest
+
+    matrix = labels_from_manifest(frame, PRIMARY_LABELS)
+    for index, label in enumerate(PRIMARY_LABELS):
+        values = matrix[:, index].astype(float)
         if not np.isin(values, [0.0, 1.0]).all():
             raise RuntimeError(f"Validation label {label} is not binary")
         rows.append(
@@ -526,7 +532,11 @@ def smoke(output_root: Path | None) -> tuple[Path, str]:
         embedding_root.mkdir()
         generator = np.random.default_rng(seed)
         frame = pd.DataFrame(
-            {label: generator.integers(0, 2, size=24) for label in PRIMARY_LABELS}
+            # the "label_" prefix mirrors the real cohort schema
+            {
+                f"label_{label}": generator.integers(0, 2, size=24)
+                for label in PRIMARY_LABELS
+            }
         )
         frame.to_csv(train, index=False)
         frame.to_csv(validation, index=False)

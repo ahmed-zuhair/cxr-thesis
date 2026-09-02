@@ -165,12 +165,13 @@ def evaluate(
     """Score one frozen checkpoint on the locked test cohort, exactly once."""
 
     from cxr_thesis.objective2.metrics import multilabel_metrics
+    from cxr_thesis.objective3.training import labels_from_manifest
 
     path = open_locked_test(manifest, authorisation)
     frame = pd.read_csv(path)
     payload = torch.load(checkpoint, map_location="cpu", weights_only=False)
     scores = np.asarray(payload["locked_test_scores"], dtype=np.float64)
-    targets = frame[PRIMARY_LABELS].to_numpy(dtype=np.int8)
+    targets = labels_from_manifest(frame, PRIMARY_LABELS).astype(np.int8)
     if scores.shape != targets.shape:
         raise ValueError(
             f"scores {scores.shape} do not match the locked cohort {targets.shape}"
