@@ -59,8 +59,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--hf-repo", required=True)
     parser.add_argument(
         "--hf-base-path",
-        default="objective3_v2/sizing_pilot/v2.0.0",
-        help="Private recovery prefix; must not collide with the v1.1 runs",
+        default=f"objective3_v2/sizing_pilot/{ARCHITECTURE}/v2.0.0",
+        help=(
+            "Private recovery prefix. The architecture is part of the path so a "
+            "run of one architecture can never recover another's checkpoints."
+        ),
     )
     parser.add_argument("--expected-train-sha256", required=True)
     parser.add_argument("--expected-val-sha256", required=True)
