@@ -46,7 +46,12 @@ from cxr_thesis.objective3_v2.seeds import seed_everything
 PART = "part4_powered_validation"
 ARCHITECTURE = "v1_1_reupload_gated"
 VARIANTS = ("classical_matched", "quantum")
-TRAINER = REPOSITORY_ROOT / "scripts" / "train_objective3_with_private_recovery.py"
+# The plain trainer, not the private-recovery wrapper. The wrapper commits a
+# checkpoint to Hugging Face every epoch; ten seeds across two arms is roughly
+# four hundred commits and exceeds the 128-per-hour limit. Each run here takes
+# under three minutes and a lost run is simply re-run by the resume logic, so
+# per-epoch remote checkpointing buys nothing and costs the study.
+TRAINER = REPOSITORY_ROOT / "scripts" / "train_objective3_head.py"
 PRIMARY_LABELS = [
     "Infiltration",
     "Effusion",
@@ -310,10 +315,6 @@ def run_one(args: argparse.Namespace, variant: str, seed: int) -> dict[str, Any]
             str(args.embedding_root),
             "--output-dir",
             str(output),
-            "--hf-repo",
-            args.hf_repo,
-            "--hf-path",
-            remote,
             "--expected-train-sha256",
             args.expected_train_sha256,
             "--expected-val-sha256",
@@ -338,8 +339,6 @@ def run_one(args: argparse.Namespace, variant: str, seed: int) -> dict[str, Any]
             str(args.dropout),
             "--seed",
             str(seed),
-            "--poll-seconds",
-            str(args.poll_seconds),
         ]
         print(f"--- STARTING {variant} seed {seed} ---", flush=True)
         started = time.perf_counter()
