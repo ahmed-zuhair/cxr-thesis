@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 import time
@@ -211,6 +212,24 @@ def check_summary(summary: dict[str, Any], variant: str, seed: int) -> None:
         raise RuntimeError(f"Run {variant}/n{seed} failed checks: {failed}")
 
 
+def clear_partial_run(output: Path, variant: str, seed: object) -> None:
+    """Remove a run directory that exists but never produced a summary.
+
+    A directory with no validation_summary.json is a crashed run, not a result:
+    the trainer refuses to write into an existing directory, so leaving it in
+    place blocks the retry forever. Only incomplete runs are removed, and the
+    removal is announced, so a completed result can never be discarded silently.
+    """
+
+    if not output.exists():
+        return
+    print(
+        f"--- CLEARING partial {variant} seed {seed} (no summary; crashed run) ---",
+        flush=True,
+    )
+    shutil.rmtree(output)
+
+
 def run_one(
     args: argparse.Namespace,
     variant: str,
@@ -230,6 +249,7 @@ def run_one(
             raise FileNotFoundError(
                 f"--aggregate-only set but n{size}/{variant}/seed{seed} is missing"
             )
+        clear_partial_run(output, variant, seed)
         command = [
             sys.executable,
             str(REPOSITORY_ROOT / TRAINER),
