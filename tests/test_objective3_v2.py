@@ -77,6 +77,30 @@ class EquivalenceTests(unittest.TestCase):
         self.assertTrue(result.equivalent)
         self.assertEqual(result.p_tost, max(result.p_lower, result.p_upper))
 
+    def test_a_tiny_p_value_is_never_printed_as_zero(self) -> None:
+        # A decisive equivalence has p far below the printing resolution.
+        # "p = 0.0000" claims infinite evidence; the honest form is p < 0.0001.
+        generator = np.random.default_rng(11)
+        first = generator.normal(0.65, 0.0002, size=10)
+        second = first + generator.normal(0.0, 0.0002, size=10)
+        result = tost_equivalence(first, second, margin=0.005)
+        self.assertTrue(result.equivalent)
+        self.assertLess(result.p_tost, 1e-4)
+        self.assertEqual(result.p_value_text, "p < 0.0001")
+        self.assertNotIn("0.0000", result.sentence())
+        self.assertIn("p < 0.0001", result.sentence())
+
+    def test_an_ordinary_p_value_is_printed_normally(self) -> None:
+        # A difference near the margin leaves one one-sided test marginal, so
+        # the TOST p lands in the range where a printed value is meaningful.
+        generator = np.random.default_rng(12)
+        first = generator.normal(0.65, 0.001, size=10)
+        second = first - 0.004 + generator.normal(0.0, 0.003, size=10)
+        result = tost_equivalence(first, second, margin=0.005)
+        self.assertGreater(result.p_tost, 1e-4)
+        self.assertTrue(result.p_value_text.startswith("p = "))
+        self.assertIn(result.p_value_text, result.sentence())
+
     def test_margin_must_be_positive(self) -> None:
         with self.assertRaises(ValueError):
             tost_equivalence([1.0, 2.0, 3.0], [1.0, 2.0, 3.0], margin=0.0)

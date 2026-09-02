@@ -137,6 +137,18 @@ class EquivalenceResult:
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
 
+    @property
+    def p_value_text(self) -> str:
+        """Format the p-value without ever rounding a small one to zero.
+
+        ``p = 0.0000`` claims infinite evidence and is never true. Below the
+        printing resolution the honest statement is an inequality.
+        """
+
+        if self.p_tost < 1e-4:
+            return "p < 0.0001"
+        return f"p = {self.p_tost:.4f}"
+
     def sentence(self, label_a: str = "quantum", label_b: str = "classical") -> str:
         """Return the claim in the form it should appear in the thesis."""
 
@@ -144,12 +156,12 @@ class EquivalenceResult:
             return (
                 f"{label_a.capitalize()} and {label_b} were statistically "
                 f"equivalent within ±{self.margin:g} macro AUROC "
-                f"(TOST, p = {self.p_tost:.4f}, n = {self.pairs} seeds)."
+                f"(TOST, {self.p_value_text}, n = {self.pairs} seeds)."
             )
         return (
             f"Equivalence between {label_a} and {label_b} within "
             f"±{self.margin:g} macro AUROC could NOT be established "
-            f"(TOST, p = {self.p_tost:.4f}, n = {self.pairs} seeds); the result "
+            f"(TOST, {self.p_value_text}, n = {self.pairs} seeds); the result "
             "is inconclusive rather than a demonstration of equivalence."
         )
 
