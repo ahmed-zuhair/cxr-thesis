@@ -48,6 +48,10 @@ ARCHITECTURE = "v1_1_reupload_gated"
 PILOT_SEED_BASE = 900_042
 CANDIDATE_MARGINS = (0.005, 0.010)
 SD_UPPER_BOUND_CONFIDENCE = 0.80
+# Mirrors the floor in lock_objective3_v2_protocol.py. Statistical sufficiency is
+# not the only constraint: a handful of seeds invites the objection that the
+# result is a fluke, however favourable the arithmetic.
+MINIMUM_SEEDS = 10
 # The pilot calls the plain trainer, not the private-recovery wrapper. Its seeds
 # are discarded before the study, each run takes about two minutes, and the
 # wrapper commits a checkpoint to Hugging Face every epoch - which exhausts the
@@ -272,6 +276,10 @@ def summarise(runs: list[dict[str, object]], seeds: list[int]) -> dict[str, obje
                 "margin": float(margin),
                 "seeds_required_point_estimate": required_pairs(margin, deviation),
                 "seeds_required_upper_bound": required_pairs(margin, sizing_deviation),
+                "seeds_after_minimum_floor": max(
+                    MINIMUM_SEEDS, required_pairs(margin, sizing_deviation)
+                ),
+                "minimum_seeds_floor": MINIMUM_SEEDS,
             }
         )
 
