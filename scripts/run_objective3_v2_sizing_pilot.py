@@ -41,6 +41,9 @@ from cxr_thesis.objective3_v2.stats import (
 )
 
 VARIANTS = ("classical_matched", "quantum")
+# train_objective3_head.py defaults --architecture to v1_concat (the v1.0 design).
+# The pilot must size the v1.1 pipeline, so this is passed explicitly on every run.
+ARCHITECTURE = "v1_1_reupload_gated"
 PILOT_SEED_BASE = 900_042
 CANDIDATE_MARGINS = (0.005, 0.010)
 SD_UPPER_BOUND_CONFIDENCE = 0.80
@@ -100,7 +103,7 @@ def check_summary(summary: dict[str, object], variant: str, seed: int) -> None:
     """Refuse a run that drifted from the v1.1 architecture or touched the test set."""
 
     checks = {
-        "architecture": summary.get("architecture_version") == "v1_1_reupload_gated",
+        "architecture": summary.get("architecture_version") == ARCHITECTURE,
         "variant": summary.get("variant") == variant,
         "seed": summary.get("seed") == seed,
         "test_cases": summary.get("test_cases_accessed") == 0,
@@ -110,7 +113,16 @@ def check_summary(summary: dict[str, object], variant: str, seed: int) -> None:
     }
     failed = [name for name, passed in checks.items() if not passed]
     if failed:
-        raise RuntimeError(f"Run {variant}/seed{seed} failed checks: {failed}")
+        found = summary.get("architecture_version")
+        lines = [f"Run {variant}/seed{seed} failed checks: {failed}"]
+        if found is not None and found != ARCHITECTURE:
+            lines += [
+                f"  This run used architecture {found!r}, not {ARCHITECTURE!r}.",
+                "  It is stale output from a run that omitted --architecture.",
+                "  Delete that run's directory, then re-run the pilot:",
+                f"    rm -rf <output-root>/{variant}/seed{seed}",
+            ]
+        raise RuntimeError("\n".join(lines))
 
 
 def run_one(args: argparse.Namespace, variant: str, seed: int) -> dict[str, object]:
@@ -133,6 +145,7 @@ def run_one(args: argparse.Namespace, variant: str, seed: int) -> dict[str, obje
             sys.executable,
             str(REPOSITORY_ROOT / TRAINER),
             "--variant", variant,
+            "--architecture", ARCHITECTURE,
             "--train-manifest", str(args.train_manifest),
             "--val-manifest", str(args.val_manifest),
             "--embedding-root", str(args.embedding_root),
@@ -264,7 +277,7 @@ def main() -> None:
         config={
             "version": VERSION,
             "variants": list(VARIANTS),
-            "architecture": "v1_1_reupload_gated (unchanged)",
+            "architecture": f"{ARCHITECTURE} (unchanged from v1.1)",
             "epochs": args.epochs,
             "patience": args.patience,
             "batch_size": args.batch_size,
