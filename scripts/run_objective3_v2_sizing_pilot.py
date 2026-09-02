@@ -47,7 +47,11 @@ ARCHITECTURE = "v1_1_reupload_gated"
 PILOT_SEED_BASE = 900_042
 CANDIDATE_MARGINS = (0.005, 0.010)
 SD_UPPER_BOUND_CONFIDENCE = 0.80
-TRAINER = "scripts/train_objective3_with_private_recovery.py"
+# The pilot calls the plain trainer, not the private-recovery wrapper. Its seeds
+# are discarded before the study, each run takes about two minutes, and the
+# wrapper commits a checkpoint to Hugging Face every epoch - which exhausts the
+# 128-commits-per-hour limit long before ten seeds finish.
+TRAINER = "scripts/train_objective3_head.py"
 
 
 def parse_args() -> argparse.Namespace:
@@ -56,7 +60,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--val-manifest", type=Path, required=True)
     parser.add_argument("--embedding-root", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
-    parser.add_argument("--hf-repo", required=True)
+    parser.add_argument(
+        "--hf-repo",
+        help="Unused by the pilot; accepted so existing commands keep working",
+    )
     parser.add_argument(
         "--hf-base-path",
         default=f"objective3_v2/sizing_pilot/{ARCHITECTURE}/v2.0.0",
@@ -132,7 +139,6 @@ def run_one(args: argparse.Namespace, variant: str, seed: int) -> dict[str, obje
     """Train one variant at one seed, or reuse it if already complete."""
 
     output = args.output_root / variant / f"seed{seed}"
-    remote = f"{args.hf_base_path}/{variant}/seed{seed}"
 
     existing = read_completed(output)
     if existing is not None:
@@ -153,8 +159,6 @@ def run_one(args: argparse.Namespace, variant: str, seed: int) -> dict[str, obje
             "--val-manifest", str(args.val_manifest),
             "--embedding-root", str(args.embedding_root),
             "--output-dir", str(output),
-            "--hf-repo", args.hf_repo,
-            "--hf-path", remote,
             "--expected-train-sha256", args.expected_train_sha256,
             "--expected-val-sha256", args.expected_val_sha256,
             "--expected-gat-sha256", args.expected_gat_sha256,
@@ -165,7 +169,6 @@ def run_one(args: argparse.Namespace, variant: str, seed: int) -> dict[str, obje
             "--weight-decay", str(args.weight_decay),
             "--dropout", str(args.dropout),
             "--seed", str(seed),
-            "--poll-seconds", str(args.poll_seconds),
         ]
         print(f"\n--- STARTING {variant} seed {seed} ---", flush=True)
         started = time.perf_counter()
