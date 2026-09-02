@@ -202,6 +202,39 @@ def summarise(runs: list[dict[str, object]], seeds: list[int]) -> dict[str, obje
     quantum = np.array(
         [indexed[("quantum", s)]["validation_macro_auroc"] for s in seeds]
     )
+    timings = {}
+    for variant in VARIANTS:
+        measured = [
+            run["wall_clock_seconds"]
+            for run in runs
+            if run["variant"] == variant and run["wall_clock_seconds"] is not None
+        ]
+        timings[variant] = {
+            "runs_timed": len(measured),
+            "median_seconds": float(np.median(measured)) if measured else None,
+            "max_seconds": float(np.max(measured)) if measured else None,
+        }
+
+    if len(seeds) < 3:
+        # A one- or two-seed run is a timing probe, not a sizing measurement.
+        # Report the clock and say plainly that no standard deviation exists yet.
+        return {
+            "pilot_seeds": [int(s) for s in seeds],
+            "pilot_seed_count": len(seeds),
+            "timing_probe_only": True,
+            "delta_standard_deviation": None,
+            "wall_clock": timings,
+            "note": (
+                "Fewer than three seeds: this run measured wall-clock only. "
+                "Re-run with --pilot-seeds 10 to obtain the standard deviation "
+                "that lock_objective3_v2_protocol.py requires."
+            ),
+            "quantum_minus_classical_by_seed": (quantum - classical).tolist(),
+            "test_evaluated": False,
+            "test_manifest_opened": False,
+            "test_labels_accessed": False,
+        }
+
     paired = paired_ttest(quantum, classical)
     deviation = paired.standard_deviation
 
@@ -218,19 +251,6 @@ def summarise(runs: list[dict[str, object]], seeds: list[int]) -> dict[str, obje
                 "seeds_required_upper_bound": required_pairs(margin, sizing_deviation),
             }
         )
-
-    timings = {}
-    for variant in VARIANTS:
-        measured = [
-            run["wall_clock_seconds"]
-            for run in runs
-            if run["variant"] == variant and run["wall_clock_seconds"] is not None
-        ]
-        timings[variant] = {
-            "runs_timed": len(measured),
-            "median_seconds": float(np.median(measured)) if measured else None,
-            "max_seconds": float(np.max(measured)) if measured else None,
-        }
 
     return {
         "pilot_seeds": [int(s) for s in seeds],
@@ -300,6 +320,28 @@ def main() -> None:
     print("SIZING PILOT COMPLETE")
     print("=" * 70)
     print(f"Pilot seeds                : {len(seeds)} ({seeds[0]}-{seeds[-1]})")
+
+    if results.get("timing_probe_only"):
+        print("Timing probe only: fewer than three seeds, so no standard deviation.")
+        for variant, timing in results["wall_clock"].items():
+            median = timing["median_seconds"]
+            shown = "n/a" if median is None else f"{median:.0f}s"
+            print(f"  {variant:<18} {shown}")
+        pair = sum(
+            timing["median_seconds"] or 0.0
+            for timing in results["wall_clock"].values()
+        )
+        if pair > 0:
+            print(f"  {'per seed pair':<18} {pair:.0f}s")
+            for count in (10, 20, 30, 50):
+                print(f"    {count:>3} seeds -> {count * pair / 3600.0:5.2f} h")
+        print("")
+        print(f"Results: {path}")
+        print(f"Results SHA-256: {digest}")
+        print("")
+        print("Re-run with --pilot-seeds 10 to size the study.")
+        return
+
     print(f"Classical mean AUROC       : {results['classical_mean_validation_macro_auroc']:.4f}")
     print(f"Quantum mean AUROC         : {results['quantum_mean_validation_macro_auroc']:.4f}")
     print(f"Mean delta                 : {results['mean_quantum_minus_classical']:+.4f}")
