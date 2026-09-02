@@ -117,7 +117,6 @@ def _require_full_args(args: argparse.Namespace) -> None:
         "val_manifest",
         "embedding_root",
         "output_root",
-        "hf_repo",
         "expected_train_sha256",
         "expected_val_sha256",
         "expected_gat_sha256",
@@ -299,7 +298,6 @@ def run_one(args: argparse.Namespace, variant: str, seed: int) -> dict[str, Any]
             raise FileNotFoundError(
                 f"Aggregate-only mode requires {variant}/seed{seed} summary"
             )
-        remote = f"{args.hf_base_path.strip('/')}/{variant}/seed{seed}"
         command = [
             sys.executable,
             str(TRAINER),
