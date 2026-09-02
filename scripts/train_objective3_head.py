@@ -71,7 +71,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--variant",
         required=True,
-        choices=("quantum", "classical_matched"),
+        choices=("quantum", "classical_matched", "quantum_random"),
     )
     parser.add_argument(
         "--architecture",
@@ -522,6 +522,12 @@ def main() -> None:
         "embedding_dimension": 160,
         "bottleneck_parameters": bottleneck_parameters,
         "total_trainable_parameters": total_parameters,
+        "optimiser_updated_parameters": sum(
+            parameter.numel()
+            for parameter in model.parameters()
+            if parameter.requires_grad
+        ),
+        "circuit_frozen": args.variant == "quantum_random",
         "best_epoch": int(checkpoint["epoch"]),
         "validation_thresholds": thresholds.tolist(),
         "validation_metrics": json_safe(final_metrics),
@@ -535,7 +541,7 @@ def main() -> None:
         "torch": torch.__version__,
         "pennylane": (
             __import__("pennylane").__version__
-            if args.variant == "quantum"
+            if args.variant in {"quantum", "quantum_random"}
             else None
         ),
     }

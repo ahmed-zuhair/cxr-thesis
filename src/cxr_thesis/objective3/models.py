@@ -9,7 +9,13 @@ from torch import nn
 
 
 def bottleneck_parameter_count(module: nn.Module) -> int:
-    """Count trainable parameters belonging to one bottleneck."""
+    """Count parameters belonging to one bottleneck, trainable or frozen.
+
+    This counts capacity, not what the optimiser updates, which is what the
+    parameter-matching budget is about: the quantum_random control holds the
+    same 36 angles as the quantum arm and merely does not train them. Use
+    ``requires_grad`` directly when you want the trainable count instead.
+    """
 
     return sum(parameter.numel() for parameter in module.parameters())
 
@@ -126,6 +132,30 @@ class QuantumReuploadingBottleneck(nn.Module):
         return output.to(dtype=inputs.dtype)
 
 
+class QuantumRandomBottleneck(QuantumReuploadingBottleneck):
+    """The v1.1 circuit with its angles frozen at random initialisation.
+
+    The control that separates two explanations of any quantum result: does the
+    benefit come from the quantum *feature map*, or merely from training 36 extra
+    parameters? Here the circuit is identical and untrained, so only the
+    surrounding classical head learns. A quantum arm that beats its matched
+    classical control but not this one has gained nothing from the circuit.
+    """
+
+    def __init__(self, qubits: int = 4, layers: int = 3) -> None:
+        super().__init__(qubits=qubits, layers=layers)
+        for parameter in self.layer.parameters():
+            parameter.requires_grad_(False)
+
+    def train(self, mode: bool = True) -> "QuantumRandomBottleneck":
+        """Keep the circuit frozen even when the module is set to train mode."""
+
+        super().train(mode)
+        for parameter in self.layer.parameters():
+            parameter.requires_grad_(False)
+        return self
+
+
 class HybridGraphHead(nn.Module):
     """Residual classifier using either quantum or matched classical features."""
 
@@ -192,8 +222,12 @@ class EnhancedHybridGraphHead(nn.Module):
             self.bottleneck = QuantumReuploadingBottleneck()
         elif normalised in {"classical", "classical_matched"}:
             self.bottleneck = ClassicalReuploadingBottleneck()
+        elif normalised == "quantum_random":
+            self.bottleneck = QuantumRandomBottleneck()
         else:
-            raise ValueError("bottleneck must be quantum or classical_matched")
+            raise ValueError(
+                "bottleneck must be quantum, classical_matched, or quantum_random"
+            )
         self.bottleneck_name = normalised
         self.output_projection = nn.Linear(4, embedding_dim, bias=False)
         fusion_logit = math.log(initial_fusion_scale / (1.0 - initial_fusion_scale))
