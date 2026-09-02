@@ -84,11 +84,19 @@ def circuit_expectations(
     layers = rotations.shape[0]
     pairs = [(i, j) for i in range(supernodes) for j in range(i + 1, supernodes)]
     wires = tuple(range(supernodes))
-    device = (
-        qml.device("default.mixed", wires=supernodes, shots=shots)
-        if depolarising > 0 or readout > 0 or shots is not None
-        else qml.device("default.qubit", wires=supernodes)
-    )
+    if depolarising > 0 or readout > 0 or shots is not None:
+        # Shot sampling is stochastic. Without an explicit device seed the
+        # finite-shot rows change between runs even though the results JSON
+        # records a seed, which makes a published number irreproducible.
+        try:
+            device = qml.device(
+                "default.mixed", wires=supernodes, shots=shots, seed=seed
+            )
+        except TypeError:  # older PennyLane devices take no seed argument
+            np.random.seed(seed)
+            device = qml.device("default.mixed", wires=supernodes, shots=shots)
+    else:
+        device = qml.device("default.qubit", wires=supernodes)
 
     @qml.qnode(device)
     def circuit(sample_angles, weights):
@@ -109,8 +117,6 @@ def circuit_expectations(
                 qml.BitFlip(readout, wires=wire)
         return [qml.expval(qml.PauliZ(wire)) for wire in wires]
 
-    generator = np.random.default_rng(seed)
-    del generator
     return np.array(
         [
             np.asarray(circuit(angles[index], adjacency[index]), dtype=float)
@@ -170,7 +176,8 @@ def noise_sweep(args: argparse.Namespace) -> dict[str, Any]:
         )
     for count in SHOTS:
         sampled = circuit_expectations(
-            angles[:64], adjacency[:64], rotations, couplings, shots=count
+            angles[:64], adjacency[:64], rotations, couplings,
+            shots=count, seed=args.seed,
         )
         reference = ideal[:64]
         rows.append(

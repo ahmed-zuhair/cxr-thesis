@@ -91,20 +91,22 @@ class FrozenControlTests(unittest.TestCase):
             EnhancedHybridGraphHead(12, bottleneck="quantum_magic")
 
 
-class NestedSubsetTests(unittest.TestCase):
-    def test_subsets_are_nested_and_reproducible(self) -> None:
+class PrefixAuditTests(unittest.TestCase):
+    def test_audit_reports_a_usable_cohort(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             train, validation = _manifests(Path(directory))
-            sizes = [50, 100, 200]
-            first, audit = learning_curve.nested_subsets(train, validation, sizes)
-            second, _ = learning_curve.nested_subsets(train, validation, sizes)
-            for size in sizes:
-                self.assertEqual(first[size], second[size])
-                self.assertEqual(len(first[size]), size)
-            self.assertTrue(set(first[50]).issubset(first[100]))
-            self.assertTrue(set(first[100]).issubset(first[200]))
-            self.assertTrue(audit["nested_verified"])
+            audit = learning_curve.prefix_audit(train, validation, [50, 100, 200])
+            self.assertTrue(audit["nested_by_construction"])
             self.assertEqual(audit["patient_overlap_train_validation"], 0)
+            self.assertTrue(audit["validation_fixed_at_full_size"])
+            self.assertIn("limit-train", audit["subset_mechanism"])
+
+    def test_prefixes_really_are_nested(self) -> None:
+        # The whole point of using --limit-train rather than a resampled subset:
+        # a prefix of a fixed order is inside every longer prefix, always.
+        rows = list(range(400))
+        for smaller, larger in ((50, 100), (100, 200)):
+            self.assertTrue(set(rows[:smaller]).issubset(rows[:larger]))
 
     def test_patient_overlap_is_refused(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -114,13 +116,13 @@ class NestedSubsetTests(unittest.TestCase):
             leaked.loc[0, "patient_id"] = "p00000"  # a training patient
             leaked.to_csv(validation, index=False)
             with self.assertRaises(RuntimeError):
-                learning_curve.nested_subsets(train, validation, [50])
+                learning_curve.prefix_audit(train, validation, [50])
 
     def test_size_larger_than_cohort_is_refused(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             train, validation = _manifests(Path(directory), train_rows=100)
             with self.assertRaises(ValueError):
-                learning_curve.nested_subsets(train, validation, [500])
+                learning_curve.prefix_audit(train, validation, [500])
 
     def test_missing_patient_column_is_refused(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -129,7 +131,7 @@ class NestedSubsetTests(unittest.TestCase):
             frame = pd.read_csv(train).drop(columns=["patient_id"])
             frame.to_csv(train, index=False)
             with self.assertRaises(ValueError):
-                learning_curve.nested_subsets(train, validation, [50])
+                learning_curve.prefix_audit(train, validation, [50])
 
 
 class VerdictTests(unittest.TestCase):

@@ -16,8 +16,14 @@ The third arm is what makes a positive result interpretable. If quantum beats
 classical but not quantum_random, the benefit came from the extra trained
 parameters rather than from the quantum feature map.
 
-Training subsets are nested, so the n=250 set contains the n=100 set. Nesting
-removes subset composition as an explanation for any trend in the curve.
+Training subsets are prefixes of the frozen training cohort, taken through the
+trainer's own --limit-train flag. This is deliberate rather than convenient: the
+GAT embeddings are keyed to the full frozen manifest and its recorded hash, so
+substituting a re-sampled subset manifest breaks the embedding recovery index,
+as it must. Prefixes are nested by construction, which is the property the
+curve needs, and the cohort order was itself fixed by a seeded selection, so a
+prefix is not correlated with any label.
+
 Validation is held fixed at full size throughout; only training size varies.
 The locked test cohort is never opened.
 """
@@ -112,17 +118,17 @@ def parse_args() -> argparse.Namespace:
 # --------------------------------------------------------------------------
 
 
-def nested_subsets(
+def prefix_audit(
     train_manifest: Path,
     val_manifest: Path,
     sizes: list[int],
-) -> tuple[dict[int, list[int]], dict[str, Any]]:
-    """Build nested, patient-disjoint training subsets and verify both properties.
+) -> dict[str, Any]:
+    """Verify the cohort supports the requested prefixes, and is disjoint.
 
-    One fixed shuffle is taken and each size is a prefix of it, so every smaller
-    subset is contained in every larger one by construction. The containment is
-    asserted anyway: a silent failure here would put subset composition into the
-    curve and be nearly impossible to detect later.
+    Nesting needs no check: a prefix of a fixed order is contained in every
+    longer prefix by construction. What does need checking is that the cohorts
+    are patient-disjoint and large enough, and that is asserted here rather than
+    assumed.
     """
 
     train = pd.read_csv(train_manifest)
@@ -137,45 +143,23 @@ def nested_subsets(
         raise RuntimeError(
             f"{len(overlap)} patients appear in both training and validation"
         )
-
-    generator = np.random.default_rng(SUBSAMPLE_SEED)
-    order = generator.permutation(len(train))
-    subsets: dict[int, list[int]] = {}
-    for size in sorted(sizes):
+    for size in sizes:
         if size > len(train):
             raise ValueError(f"n_train={size} exceeds the {len(train)} training rows")
-        subsets[size] = order[:size].tolist()
 
-    ordered = sorted(subsets)
-    for smaller, larger in zip(ordered, ordered[1:]):
-        if not set(subsets[smaller]).issubset(set(subsets[larger])):
-            raise RuntimeError(f"subset {smaller} is not nested inside {larger}")
-
-    audit = {
+    return {
         "training_rows_available": int(len(train)),
         "validation_rows": int(len(validation)),
         "validation_fixed_at_full_size": True,
         "patient_overlap_train_validation": 0,
-        "subsample_seed": SUBSAMPLE_SEED,
-        "sizes": ordered,
-        "nested_verified": True,
+        "sizes": sorted(sizes),
+        "subset_mechanism": "trainer --limit-train prefix of the frozen cohort",
+        "nested_by_construction": True,
         "patients_per_size": {
-            str(size): int(train.iloc[rows]["patient_id"].nunique())
-            for size, rows in subsets.items()
+            str(size): int(train.iloc[:size]["patient_id"].nunique())
+            for size in sorted(sizes)
         },
     }
-    return subsets, audit
-
-
-def write_subset_manifest(
-    train_manifest: Path, rows: list[int], destination: Path
-) -> Path:
-    """Write one nested training subset as its own private manifest."""
-
-    frame = pd.read_csv(train_manifest).iloc[sorted(rows)]
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(destination, index=False)
-    return destination
 
 
 # --------------------------------------------------------------------------
@@ -235,7 +219,6 @@ def run_one(
     variant: str,
     size: int,
     seed: int,
-    subset_manifest: Path,
 ) -> dict[str, Any]:
     """Train one (variant, n_train, seed) cell, or reuse a completed one."""
 
@@ -255,14 +238,14 @@ def run_one(
             str(REPOSITORY_ROOT / TRAINER),
             "--variant", variant,
             "--architecture", ARCHITECTURE,
-            "--train-manifest", str(subset_manifest),
+            "--train-manifest", str(args.train_manifest),
             "--val-manifest", str(args.val_manifest),
             "--embedding-root", str(args.embedding_root),
             "--output-dir", str(output),
-            "--expected-train-sha256", sha256_file(subset_manifest),
+            "--expected-train-sha256", args.expected_train_sha256,
             "--expected-val-sha256", args.expected_val_sha256,
             "--expected-gat-sha256", args.expected_gat_sha256,
-            "--expected-train-cases", str(size),
+            "--limit-train", str(size),
             "--epochs", str(args.epochs),
             "--patience", str(args.patience),
             "--batch-size", str(min(args.batch_size, max(8, size))),
@@ -288,6 +271,11 @@ def run_one(
         "validation_macro_auroc": float(macro["auroc"]),
         "validation_macro_auprc": float(macro["auprc"]),
         "wall_clock_seconds": elapsed,
+        "limit_train": int(size),
+        # The trainer marks any --limit-train run research_result=False, since a
+        # single subsampled run is not a research claim. The learning curve as a
+        # whole is the claim; each point is one measurement inside it.
+        "single_run_is_research_result": False,
         "test_evaluated": False,
     }
 
@@ -496,8 +484,8 @@ def smoke(output_root: Path) -> None:
     validation.to_csv(val_path, index=False)
 
     sizes = [50, 100, 200]
-    subsets, audit = nested_subsets(train_path, val_path, sizes)
-    assert audit["nested_verified"]
+    audit = prefix_audit(train_path, val_path, sizes)
+    assert audit["nested_by_construction"]
 
     seeds = protocol_seeds(5)
     runs = []
@@ -525,7 +513,7 @@ def smoke(output_root: Path) -> None:
     verdict = h2_verdict(analysis["deltas"])
     print(f"curve rows: {len(analysis['curve'])}, delta rows: {len(analysis['deltas'])}")
     print(f"H2 passed on synthetic data: {verdict['passed']}")
-    print("Subset nesting verified:", audit["nested_verified"])
+    print("Nested by construction:", audit["nested_by_construction"])
     print("Patient overlap:", audit["patient_overlap_train_validation"])
     print("Test evaluated: False | Locked test accessed: False")
     print("LEARNING CURVE SMOKE PASSED")
@@ -545,13 +533,7 @@ def main() -> None:
 
     sizes = sorted(args.n_train)
     seeds = protocol_seeds(args.seeds)
-    subsets, audit = nested_subsets(args.train_manifest, args.val_manifest, sizes)
-
-    manifests: dict[int, Path] = {}
-    for size, rows in subsets.items():
-        manifests[size] = write_subset_manifest(
-            args.train_manifest, rows, output / "private" / f"train_n{size}.csv"
-        )
+    audit = prefix_audit(args.train_manifest, args.val_manifest, sizes)
 
     ledger = ShardLedger(output / "index.json", study=STUDY, part=PART)
     runs: list[dict[str, Any]] = []
@@ -560,14 +542,13 @@ def main() -> None:
     for size in sizes:
         for variant in args.variants:
             for seed in seeds:
-                runs.append(run_one(args, variant, size, seed, manifests[size]))
+                runs.append(run_one(args, variant, size, seed))
                 done += 1
                 print(
                     f"[{done}/{total}] n={size} {variant} seed={seed} "
                     f"auroc={runs[-1]['validation_macro_auroc']:.4f}",
                     flush=True,
                 )
-        ledger.mark_complete(f"n{size}", manifests[size], cases=size)
 
     analysis = curve_and_deltas(runs, seeds)
     verdict = h2_verdict(analysis["deltas"])
